@@ -30,7 +30,7 @@ const mockWikiData: WikiEntry[] = [
 ]
 
 const ExampleComponent: React.FC = () => {
-  const [wikiEntries, setWikiEntries] = useState<WikiEntry[]>(mockWikiData)
+  const [wikiEntries, _setWikiEntries] = useState<WikiEntry[]>(mockWikiData)
   const [selectedEntry, setSelectedEntry] = useState<WikiEntry | null>(null)
 
   const handleEntrySelect = (entry: WikiEntry) => {
