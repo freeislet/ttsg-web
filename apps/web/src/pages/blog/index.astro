@@ -1,0 +1,54 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="블로그">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">TTSG 블로그</h1>
+    <div class="border-b mb-8"></div>
+    
+    <div class="grid gap-8">
+      <article class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-2">
+          <a href="/blog/astro-introduction" class="hover:text-blue-600">Astro로 시작하는 현대적인 웹 개발</a>
+        </h2>
+        <p class="text-gray-500 mb-3">2025년 7월 27일</p>
+        <p class="text-gray-700 mb-4">
+          Astro는 콘텐츠 중심 웹사이트를 위한 새로운 프레임워크로, 최소한의 JavaScript를 사용하여 빠른 성능을 제공합니다. 
+          이 게시물에서는 Astro의 주요 기능과 사용 방법을 알아봅니다.
+        </p>
+        <a href="/blog/astro-introduction" class="text-blue-600 hover:underline">더 읽기 &rarr;</a>
+      </article>
+      
+      <article class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-2">
+          <a href="/blog/monorepo-benefits" class="hover:text-blue-600">모노레포의 장점과 pnpm workspace 활용법</a>
+        </h2>
+        <p class="text-gray-500 mb-3">2025년 7월 20일</p>
+        <p class="text-gray-700 mb-4">
+          모노레포 구조는 여러 프로젝트를 하나의 저장소에서 관리할 수 있게 해주며, 코드 공유와 의존성 관리를 단순화합니다.
+          pnpm workspace를 활용한 모노레포 구성 방법과 장점에 대해 알아봅니다.
+        </p>
+        <a href="/blog/monorepo-benefits" class="text-blue-600 hover:underline">더 읽기 &rarr;</a>
+      </article>
+      
+      <article class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-2">
+          <a href="/blog/cloudflare-r2-guide" class="hover:text-blue-600">Cloudflare R2로 정적 콘텐츠 호스팅하기</a>
+        </h2>
+        <p class="text-gray-500 mb-3">2025년 7월 15일</p>
+        <p class="text-gray-700 mb-4">
+          Cloudflare R2는 정적 콘텐츠 호스팅을 위한 효율적인 스토리지 솔루션입니다.
+          R2를 활용하여 웹 애플리케이션의 정적 콘텐츠를 관리하고 배포하는 방법을 알아봅니다.
+        </p>
+        <a href="/blog/cloudflare-r2-guide" class="text-blue-600 hover:underline">더 읽기 &rarr;</a>
+      </article>
+    </div>
+    
+    <div class="mt-12 flex justify-center">
+      <a href="#" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+        더 많은 글 보기
+      </a>
+    </div>
+  </div>
+</Layout>

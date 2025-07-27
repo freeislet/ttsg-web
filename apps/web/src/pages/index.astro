@@ -1,0 +1,41 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="홈">
+  <section class="bg-blue-50 py-16">
+    <div class="container mx-auto px-4">
+      <div class="text-center">
+        <h1 class="text-4xl font-bold mb-4">TTSG (통통 스터디 그룹)</h1>
+        <p class="text-xl text-gray-600 mb-8">AI 및 소프트웨어 개발 관련 정보, 예제, 위키 문서를 공유하는 웹사이트</p>
+        <div class="flex justify-center space-x-4">
+          <a href="/wiki" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg">위키 보기</a>
+          <a href="/blog" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg">블로그 보기</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold mb-8 text-center">주요 콘텐츠</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-2">기술 블로그</h3>
+          <p class="text-gray-600 mb-4">최신 AI 기술 및 소프트웨어 개발 관련 아티클</p>
+          <a href="/blog" class="text-blue-600 hover:underline">더 보기 &rarr;</a>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-2">위키 문서</h3>
+          <p class="text-gray-600 mb-4">스터디 그룹에서 정리한 기술 위키 및 참고자료</p>
+          <a href="/wiki" class="text-blue-600 hover:underline">더 보기 &rarr;</a>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-2">앱 예제</h3>
+          <p class="text-gray-600 mb-4">React, Vue, AI 관련 데모 애플리케이션</p>
+          <a href="/app" class="text-blue-600 hover:underline">더 보기 &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

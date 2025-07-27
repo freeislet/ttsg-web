@@ -1,0 +1,54 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'TTSG (통통 스터디 그룹) - AI 및 소프트웨어 개발 정보 공유 사이트' } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | TTSG</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <header class="bg-blue-600 text-white shadow-md">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex justify-between items-center">
+          <a href="/" class="text-2xl font-bold">TTSG</a>
+          <nav>
+            <ul class="flex space-x-6">
+              <li><a href="/" class="hover:underline">홈</a></li>
+              <li><a href="/blog" class="hover:underline">블로그</a></li>
+              <li><a href="/wiki" class="hover:underline">위키</a></li>
+              <li><a href="/app" class="hover:underline">앱 예제</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </header>
+    
+    <main>
+      <slot />
+    </main>
+    
+    <footer class="bg-gray-100 mt-12">
+      <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-gray-600">&copy; {new Date().getFullYear()} TTSG. All rights reserved.</p>
+          </div>
+          <div>
+            <a href="https://github.com/your-ttsg-repo" class="text-gray-600 hover:text-blue-600">GitHub</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
