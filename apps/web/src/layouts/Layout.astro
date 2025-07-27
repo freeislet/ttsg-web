@@ -1,10 +1,11 @@
 ---
 interface Props {
-  title: string;
-  description?: string;
+  title: string
+  description?: string
 }
 
-const { title, description = 'TTSG (통통 스터디 그룹) - AI 및 소프트웨어 개발 정보 공유 사이트' } = Astro.props;
+const { title, description = 'TTSG (통통 스터디 그룹) - AI 및 소프트웨어 개발 정보 공유 사이트' } =
+  Astro.props
 ---
 
 <!DOCTYPE html>
@@ -33,19 +34,23 @@ const { title, description = 'TTSG (통통 스터디 그룹) - AI 및 소프트�
         </div>
       </div>
     </header>
-    
+
     <main>
       <slot />
     </main>
-    
+
     <footer class="bg-gray-100 mt-12">
       <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center">
           <div>
-            <p class="text-gray-600">&copy; {new Date().getFullYear()} TTSG. All rights reserved.</p>
+            <p class="text-gray-600">
+              &copy; {new Date().getFullYear()} TTSG. All rights reserved.
+            </p>
           </div>
           <div>
-            <a href="https://github.com/your-ttsg-repo" class="text-gray-600 hover:text-blue-600">GitHub</a>
+            <a href="https://github.com/your-ttsg-repo" class="text-gray-600 hover:text-blue-600"
+              >GitHub</a
+            >
           </div>
         </div>
       </div>

@@ -32,17 +32,20 @@ packages/
 ### 설치 및 개발 서버 실행
 
 1. 저장소 클론
+
 ```bash
 git clone <repository-url>
 cd ttsg
 ```
 
 2. 의존성 설치
+
 ```bash
 pnpm install
 ```
 
 3. 개발 서버 실행
+
 ```bash
 # 메인 웹 앱 실행
 pnpm dev

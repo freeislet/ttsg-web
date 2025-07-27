@@ -8,7 +8,7 @@ TTSG 웹사이트는 AI 및 소프트웨어 개발 관련 정보, 예제, 위키
 
 - **프레임워크**: [Astro](https://astro.build/)
 - **패키지 관리**: `pnpm workspace` 기반 모노레포
-- **배포**: 
+- **배포**:
   - 메인 앱: Vercel
   - 예제 앱 및 일부 위키 콘텐츠: Cloudflare R2
 
@@ -33,6 +33,7 @@ ttsg/
 ### 3.1 루트 디렉토리
 
 - **pnpm-workspace.yaml**: 워크스페이스 패키지 지정
+
   ```yaml
   packages:
     - apps/*
@@ -42,6 +43,7 @@ ttsg/
   ```
 
 - **package.json**: 루트 패키지 설정 및 스크립트
+
   ```json
   {
     "name": "ttsg",
@@ -136,11 +138,13 @@ pnpm install 시 다음 경고가 발생할 수 있습니다:
 ### 6.2 해결책
 
 1. **Astro 통합 패키지 업데이트**:
+
    ```bash
    pnpm add @astrojs/mdx@latest @astrojs/node@latest @astrojs/tailwind@latest
    ```
 
 2. **esbuild 빌드 스크립트 승인**:
+
    ```bash
    pnpm approve-builds
    ```

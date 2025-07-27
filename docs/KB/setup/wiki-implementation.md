@@ -39,23 +39,23 @@ export async function fetchWikiContent(slug: string): Promise<string | null> {
     // 1. 로컬 파일 시스템에서 먼저 확인
     try {
       // Astro의 content collections에서 콘텐츠 가져오기 시도
-      const localContent = await import(`../content/wiki/${slug}.md`);
-      return localContent.default;
+      const localContent = await import(`../content/wiki/${slug}.md`)
+      return localContent.default
     } catch (localError) {
-      console.log(`Local content for ${slug} not found, trying R2...`);
+      console.log(`Local content for ${slug} not found, trying R2...`)
     }
-    
+
     // 2. Cloudflare R2에서 가져오기 시도
-    const r2Response = await fetch(`https://storage.example.com/wiki/${slug}.md`);
-    
+    const r2Response = await fetch(`https://storage.example.com/wiki/${slug}.md`)
+
     if (!r2Response.ok) {
-      throw new Error(`R2 fetch failed: ${r2Response.status}`);
+      throw new Error(`R2 fetch failed: ${r2Response.status}`)
     }
-    
-    return await r2Response.text();
+
+    return await r2Response.text()
   } catch (error) {
-    console.error(`Failed to fetch wiki content for ${slug}:`, error);
-    return null;
+    console.error(`Failed to fetch wiki content for ${slug}:`, error)
+    return null
   }
 }
 ```
@@ -65,10 +65,10 @@ export async function fetchWikiContent(slug: string): Promise<string | null> {
 위키 콘텐츠 렌더링을 위해 `marked` 라이브러리를 사용합니다:
 
 ```typescript
-import { marked } from 'marked';
+import { marked } from 'marked'
 
 // 마크다운을 HTML로 변환
-const htmlContent = marked(markdownContent);
+const htmlContent = marked(markdownContent)
 ```
 
 ## 4. 위키 페이지 구현
@@ -77,31 +77,31 @@ const htmlContent = marked(markdownContent);
 
 ```astro
 ---
-import Layout from '../../layouts/Layout.astro';
-import { fetchWikiContent } from '../../utils/wiki';
-import { marked } from 'marked';
+import Layout from '../../layouts/Layout.astro'
+import { fetchWikiContent } from '../../utils/wiki'
+import { marked } from 'marked'
 
-export const prerender = false; // SSR 활성화
+export const prerender = false // SSR 활성화
 
-const { slug } = Astro.params;
+const { slug } = Astro.params
 
 if (!slug) {
-  return Astro.redirect('/wiki');
+  return Astro.redirect('/wiki')
 }
 
 // 위키 콘텐츠 가져오기
-const content = await fetchWikiContent(slug);
+const content = await fetchWikiContent(slug)
 
 if (!content) {
-  return Astro.redirect('/wiki?error=not-found');
+  return Astro.redirect('/wiki?error=not-found')
 }
 
 // 마크다운을 HTML로 변환
-const htmlContent = marked(content);
+const htmlContent = marked(content)
 
 // 제목 추출 (첫 번째 H1 태그)
-const titleMatch = content.match(/^#\s+(.+)$/m);
-const title = titleMatch ? titleMatch[1] : slug;
+const titleMatch = content.match(/^#\s+(.+)$/m)
+const title = titleMatch ? titleMatch[1] : slug
 ---
 
 <Layout title={`${title} | TTSG Wiki`}>
@@ -117,11 +117,11 @@ const title = titleMatch ? titleMatch[1] : slug;
 
 ```astro
 ---
-import Layout from '../../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro'
+import { getCollection } from 'astro:content'
 
 // 로컬 위키 항목 가져오기
-const localWikiEntries = await getCollection('wiki');
+const localWikiEntries = await getCollection('wiki')
 
 // R2 위키 목록도 가져올 수 있습니다 (구현 예시)
 // const r2WikiEntries = await fetch('https://storage.example.com/wiki/index.json')
@@ -130,30 +130,32 @@ const localWikiEntries = await getCollection('wiki');
 
 // 모든 위키 항목 합치기
 const allWikiEntries = [
-  ...localWikiEntries.map(entry => ({
+  ...localWikiEntries.map((entry) => ({
     slug: entry.slug,
     title: entry.data.title,
     description: entry.data.description,
-    source: 'local'
+    source: 'local',
   })),
   // ...r2WikiEntries
-];
+]
 ---
 
 <Layout title="TTSG Wiki">
   <main class="container mx-auto p-4">
     <h1 class="text-3xl font-bold mb-8">TTSG 위키</h1>
-    
+
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {allWikiEntries.map(entry => (
-        <a href={`/wiki/${entry.slug}`} class="block">
-          <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
-            <h2 class="text-xl font-semibold">{entry.title}</h2>
-            <p class="text-gray-600 mt-2">{entry.description}</p>
-            <span class="text-sm text-blue-500 mt-3 inline-block">자세히 보기 →</span>
-          </div>
-        </a>
-      ))}
+      {
+        allWikiEntries.map((entry) => (
+          <a href={`/wiki/${entry.slug}`} class="block">
+            <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
+              <h2 class="text-xl font-semibold">{entry.title}</h2>
+              <p class="text-gray-600 mt-2">{entry.description}</p>
+              <span class="text-sm text-blue-500 mt-3 inline-block">자세히 보기 →</span>
+            </div>
+          </a>
+        ))
+      }
     </div>
   </main>
 </Layout>
@@ -164,7 +166,7 @@ const allWikiEntries = [
 ### 5.1 콘텐츠 설정 파일 (src/content/config.ts)
 
 ```typescript
-import { defineCollection, z } from 'astro:content';
+import { defineCollection, z } from 'astro:content'
 
 const wikiCollection = defineCollection({
   type: 'content',
@@ -174,18 +176,18 @@ const wikiCollection = defineCollection({
     date: z.date().optional(),
     tags: z.array(z.string()).optional(),
   }),
-});
+})
 
 export const collections = {
   wiki: wikiCollection,
-};
+}
 ```
 
 ## 6. 샘플 위키 콘텐츠
 
 ### 6.1 astro-guide.md 예시
 
-```markdown
+````markdown
 # Astro 프레임워크 가이드
 
 Astro는 콘텐츠 중심 웹사이트를 위한 최신 웹 프레임워크입니다.
@@ -203,6 +205,7 @@ Astro는 콘텐츠 중심 웹사이트를 위한 최신 웹 프레임워크입�
 # 새 프로젝트 생성
 npm create astro@latest
 ```
+````
 
 ## SSR과 정적 사이트 생성
 
@@ -215,14 +218,15 @@ Astro는 기본적으로 정적 사이트 생성(SSG)를 지원하며, 필요에
 export default defineConfig({
   output: 'server',
   adapter: node({
-    mode: 'standalone'
-  })
-});
+    mode: 'standalone',
+  }),
+})
 ```
 
 ## 마무리
 
 Astro는 콘텐츠 중심 사이트에 이상적인 프레임워크이며, 성능과 개발자 경험 사이의 균형을 잘 맞춥니다.
+
 ```
 
 ## 7. 확장 및 개선 가능성
@@ -232,3 +236,4 @@ Astro는 콘텐츠 중심 사이트에 이상적인 프레임워크이며, 성�
 3. **편집 기능**: 인증된 사용자가 위키를 편집할 수 있는 기능
 4. **버전 관리**: 위키 콘텐츠의 변경 내역 추적
 5. **댓글/토론**: 위키 콘텐츠에 대한 의견 교환 기능
+```

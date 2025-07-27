@@ -19,20 +19,20 @@ Astro는 "Islands Architecture"를 채택하여 필요한 JavaScript만 클라�
 ```astro
 ---
 // 서버 사이드에서만 실행되는 코드 (클라이언트에 전송되지 않음)
-import { getLatestPosts } from '../utils/posts';
-const posts = await getLatestPosts();
+import { getLatestPosts } from '../utils/posts'
+const posts = await getLatestPosts()
 ---
 
 <!-- 정적 HTML -->
 <h1>최신 블로그 포스트</h1>
 <ul>
-  {posts.map(post => <li>{post.title}</li>)}
+  {posts.map((post) => <li>{post.title}</li>)}
 </ul>
 
 <!-- 필요한 경우에만 JavaScript 사용 -->
 <script>
   // 이 스크립트는 클라이언트에서 실행됩니다
-  console.log('클라이언트 사이드 코드');
+  console.log('클라이언트 사이드 코드')
 </script>
 ```
 
@@ -42,9 +42,9 @@ Astro는 React, Vue, Svelte 등 다양한 UI 프레임워크를 동일한 페이
 
 ```astro
 ---
-import ReactComponent from '../components/ReactComponent.jsx';
-import VueComponent from '../components/VueComponent.vue';
-import SvelteComponent from '../components/SvelteComponent.svelte';
+import ReactComponent from '../components/ReactComponent.jsx'
+import VueComponent from '../components/VueComponent.vue'
+import SvelteComponent from '../components/SvelteComponent.svelte'
 ---
 
 <div>
@@ -91,11 +91,11 @@ TTSG 프로젝트에서는 Astro를 메인 프레임워크로 사용하여 다�
 ```astro
 ---
 // src/pages/wiki/[slug].astro
-import { fetchWikiContent } from '../../utils/wiki';
-import Layout from '../../layouts/Layout.astro';
+import { fetchWikiContent } from '../../utils/wiki'
+import Layout from '../../layouts/Layout.astro'
 
-const { slug } = Astro.params;
-const wikiContent = await fetchWikiContent(slug || 'index');
+const { slug } = Astro.params
+const wikiContent = await fetchWikiContent(slug || 'index')
 ---
 
 <Layout title={wikiContent.title}>

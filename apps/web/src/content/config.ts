@@ -1,4 +1,4 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection, z } from 'astro:content'
 
 const wikiCollection = defineCollection({
   type: 'content',
@@ -7,8 +7,8 @@ const wikiCollection = defineCollection({
     description: z.string().optional(),
     updatedDate: z.date().optional(),
   }),
-});
+})
 
 export const collections = {
   wiki: wikiCollection,
-};
+}
