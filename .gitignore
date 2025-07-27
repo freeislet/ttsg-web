@@ -1,6 +1,3 @@
-# Ignore Obsidian configuration
-docs/.obsidian/
-
 # Dependency directories
 node_modules/
 .pnpm-store/
@@ -32,3 +29,6 @@ pnpm-debug.log*
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Ignore Obsidian configuration
+docs/.obsidian/
