@@ -1,8 +1,8 @@
+import { getEntry } from 'astro:content'
 import { marked } from 'marked'
 
 // Base URLs for different wiki content sources
 const SOURCES = {
-  LOCAL: '/content/wiki', // Local content collection path
   R2: 'https://static.ttsg.dev/wiki', // Cloudflare R2 path (placeholder)
 }
 
@@ -21,13 +21,10 @@ export interface WikiContent {
 export async function fetchWikiContent(slug: string): Promise<WikiContent> {
   // First try to get from local content
   try {
-    // In a real implementation, this would use the Astro content collection API
-    // For now, we'll simulate with a fetch to a local path
-    const localPath = `${SOURCES.LOCAL}/${slug}.md`
-    const response = await fetch(localPath)
+    const entry = await getEntry('wiki', slug)
 
-    if (response.ok) {
-      const content = await response.text()
+    if (entry) {
+      const content = entry.body
       const html = marked.parse(content)
       return {
         title: slug.replace(/-/g, ' '),
