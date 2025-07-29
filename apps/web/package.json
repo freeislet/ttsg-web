@@ -11,9 +11,14 @@
   "dependencies": {
     "@astrojs/mdx": "^4.3.1",
     "@astrojs/node": "^9.3.0",
+    "@astrojs/react": "^4.3.0",
     "@astrojs/tailwind": "^6.0.2",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
     "astro": "^5.12.3",
     "marked": "^9.0.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
