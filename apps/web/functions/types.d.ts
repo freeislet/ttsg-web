@@ -62,6 +62,6 @@ type PagesFunction<Env = unknown> = (context: {
   env: Env
   params: Record<string, string | string[]>
   data: Record<string, unknown>
-  waitUntil: (promise: Promise<any>) => void
+  waitUntil: (promise: Promise<unknown>) => void
   next: () => Promise<Response>
 }) => Response | Promise<Response>

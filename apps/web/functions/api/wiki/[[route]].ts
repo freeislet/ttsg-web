@@ -71,7 +71,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     return new Response('Method not allowed', { status: 405, headers })
   } catch (error) {
-    return new Response(JSON.stringify({ error: `Error: ${error.message}` }), {
+    return new Response(JSON.stringify({ error: `Error: ${(error as Error).message}` }), {
       status: 500,
       headers: { ...headers, 'Content-Type': 'application/json' },
     })

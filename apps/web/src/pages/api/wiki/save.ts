@@ -32,8 +32,8 @@ export const POST: APIRoute = async ({ request, url }) => {
         headers: { 'Content-Type': 'application/json' },
       })
     }
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: `오류 발생: ${error.message}` }), {
+  } catch (error) {
+    return new Response(JSON.stringify({ error: `오류 발생: ${(error as Error).message}` }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })

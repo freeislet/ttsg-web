@@ -57,11 +57,8 @@ if (Astro.request.method === 'POST') {
         client:load
         initialContent=""
         onSave={async (content) => {
-          const slugValue = document
-            .getElementById('slug')
-            .value.trim()
-            .toLowerCase()
-            .replace(/\s+/g, '-')
+          const slugInput = document?.getElementById('slug') as HTMLInputElement
+          const slugValue = slugInput?.value.trim().toLowerCase().replace(/\s+/g, '-')
 
           if (!slugValue) {
             alert('페이지 식별자를 입력해주세요.')
