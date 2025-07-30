@@ -1,5 +1,6 @@
 # Wrangler 설정 파일 (Cloudflare Pages 배포용)
 name = "ttsg-web"
+pages_build_output_dir = "./dist"
 compatibility_date = "2023-08-15"
 
 # R2 버킷 바인딩 설정
@@ -11,9 +12,6 @@ bucket_name = "ttsg"
 [build]
 command = "pnpm run build"
 output_directory = "dist"
-
-# Cloudflare Pages에서 필요한 설정
-pages_build_output_dir = "dist"
 
 # 빌드 및 개발 환경 구성
 [build.environment]
