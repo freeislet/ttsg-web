@@ -1,38 +1,8 @@
 # Cloudflare Pages 배포 가이드
 
-이 문서는 TTSG 프로젝트를 Cloudflare Pages에 배포하고 R2 버킷과 연동하는 방법을 안내합니다.
+이 문서는 TTSG 프로젝트를 Cloudflare Pages에 배포하기 위한 단계별 가이드입니다.
 
-## 1. 사전 준비
-
-### 필요한 계정 및 설정
-
-- Cloudflare 계정 (회원가입: https://dash.cloudflare.com/sign-up)
-- GitHub 계정 (리포지토리 연결용)
-- 이미 생성된 R2 버킷 (없다면 아래 R2 버킷 생성 부분 참조)
-
-### 필요한 도구
-
-- Node.js 18.x 이상
-- npm 또는 yarn
-
-## 2. 로컬 프로젝트 설정
-
-이미 다음 단계를 완료했습니다:
-
-- Astro 프로젝트에 Cloudflare 어댑터 설치
-- `astro.config.mjs` 파일 업데이트
-- Pages Functions 구성 (API 엔드포인트)
-- R2 클라이언트 코드 업데이트
-
-## 3. R2 버킷 생성 (아직 하지 않은 경우)
-
-1. Cloudflare 대시보드에 로그인
-2. 왼쪽 메뉴에서 "R2" 선택
-3. "Create bucket" 버튼 클릭
-4. 버킷 이름으로 "ttsg-wiki" 입력 (또는 원하는 이름)
-5. "Create bucket" 버튼 클릭
-
-## 4. Cloudflare Pages 프로젝트 생성 및 배포
+## 1. Cloudflare Pages 프로젝트 생성 및 배포
 
 ### GitHub 저장소 연결
 
@@ -48,12 +18,14 @@
 
 ### R2 버킷 바인딩 설정
 
+프로젝트의 `wrangler.toml` 파일에 R2 버킷 바인딩이 이미 구성되어 있지만, Cloudflare Pages 대시보드에서도 동일한 바인딩을 설정해야 합니다:
+
 1. 프로젝트 생성 후 Pages 대시보드에서 프로젝트 선택
 2. "Settings" → "Functions" 탭으로 이동
 3. "R2 bucket bindings" 섹션에서 "Add binding" 클릭
-4. 다음 정보 입력:
-   - Variable name: `WIKI_BUCKET`
-   - R2 bucket: 생성한 R2 버킷 선택 (예: ttsg-wiki)
+4. 다음 정보 입력(wrangler.toml과 동일하게):
+   - Variable name: `BUCKET`
+   - R2 bucket: 생성한 R2 버킷 선택 (예: ttsg)
 5. "Save" 버튼 클릭
 
 ### 배포 시작
@@ -62,14 +34,14 @@
 2. "Retry deployment" 또는 새 커밋 푸시하여 배포 시작
 3. 빌드 로그와 배포 상태 확인
 
-## 5. 커스텀 도메인 설정 (선택사항)
+## 2. 커스텀 도메인 설정 (선택사항)
 
 1. "Custom domains" 탭으로 이동
 2. "Set up a custom domain" 클릭
 3. 도메인 이름 입력 (예: wiki.ttsg.dev)
 4. DNS 설정 완료 (자동 또는 수동)
 
-## 6. 로컬 개발 환경 설정
+## 3. 로컬 개발 환경 설정
 
 ### Wrangler CLI 설치
 
@@ -86,7 +58,7 @@ wrangler pages dev dist
 
 이 명령은 로컬에서 Pages Functions과 함께 사이트를 실행합니다. 단, 로컬에서 R2 바인딩을 테스트하려면 추가 설정이 필요합니다.
 
-## 7. 문제 해결
+## 4. 문제 해결
 
 ### R2 접근 오류
 

@@ -1,8 +1,8 @@
-# Cloudflare Pages와 R2 통합: 위키 시스템 구현
+# Cloudflare Pages와 R2 통합: 위키 & 블로그 시스템 구현
 
 ## 1. 개요
 
-이 문서는 Astro 기반 TTSG 프로젝트를 Cloudflare Pages에 배포하고, Cloudflare R2와 통합하여 위키 콘텐츠를 관리하는 방법을 설명합니다. 이 접근 방식은 별도의 API 서버 없이 직접 R2 버킷에 접근할 수 있는 장점이 있습니다.
+이 문서는 Astro 기반 TTSG 프로젝트를 Cloudflare Pages에 배포하고, Cloudflare R2와 통합하여 위키와 블로그 콘텐츠를 관리하는 방법을 설명합니다. 이 접근 방식은 별도의 API 서버 없이 직접 R2 버킷에 접근할 수 있는 장점이 있습니다.
 
 ### 1.1 이전 아키텍처와의 차이점
 
@@ -19,27 +19,57 @@
 - 인증 및 권한 관리 통합
 - 별도 API 서버 불필요
 
+### 1.2 사전 준비
+
+#### 필요한 계정 및 설정
+
+- Cloudflare 계정 (회원가입: https://dash.cloudflare.com/sign-up)
+- GitHub 계정 (리포지토리 연결용)
+- 이미 생성된 R2 버킷 (없다면 아래 R2 버킷 생성 부분 참조)
+
+#### 필요한 도구
+
+- Node.js 18.x 이상
+- pnpm (패키지 관리자)
+
+### 1.3 R2 버킷 생성
+
+1. Cloudflare 대시보드에 로그인
+2. 왼쪽 메뉴에서 "R2" 선택
+3. "Create bucket" 버튼 클릭
+4. 버킷 이름으로 "ttsg" 입력 (또는 원하는 이름)
+5. "Create bucket" 버튼 클릭
+
 ## 2. 시스템 아키텍처
 
 ### 2.1 기본 구조
 
 ```
 apps/web/ (Astro 기반 웹 앱)
-├── src/
-│   ├── pages/
-│   │   └── wiki/
-│   │       ├── [slug].astro         # 위키 페이지 표시
-│   │       ├── edit/[slug].astro    # 위키 편집 UI
-│   │       └── new.astro            # 새 위키 페이지 생성
-│   ├── components/
-│   │   └── WikiEditor.tsx           # 마크다운 에디터 컴포넌트
-│   └── utils/
-│       └── wiki.ts                  # 위키 콘텐츠 로드 로직
-└── functions/                       # Cloudflare Pages Functions
-    └── api/
-        └── wiki/
-            ├── [[route]].ts         # 위키 CRUD 작업 처리
-            └── _middleware.ts       # 인증 및 권한 검사
+├─ src/
+│   ├─ pages/
+│   │   ├─ wiki/
+│   │   │   ├─ [slug].astro         # 위키 페이지 표시
+│   │   │   ├─ edit/[slug].astro    # 위키 편집 UI
+│   │   │   └─ new.astro            # 새 위키 페이지 생성
+│   │   └─ blog/
+│   │       ├─ [slug].astro         # 블로그 포스트 표시
+│   │       ├─ edit/[slug].astro    # 블로그 편집 UI
+│   │       └─ new.astro            # 새 블로그 포스트 작성
+│   ├─ components/
+│   │   ├─ WikiEditor.tsx           # 위키 마크다운 에디터 컴포넌트
+│   │   └─ BlogEditor.tsx           # 블로그 마크다운 에디터 컴포넌트
+│   └─ utils/
+│       ├─ r2Client.ts              # R2 버킷 접근 클라이언트 (위키 & 블로그)
+│       ├─ wiki.ts                  # 위키 콘텐츠 관련 유틸리티
+│       └─ blog.ts                  # 블로그 콘텐츠 관련 유틸리티
+└─ functions/                       # Cloudflare Pages Functions
+    └─ api/
+        ├─ _middleware.ts           # 공통 API 미들웨어 (인증 및 권한 검사)
+        ├─ wiki/
+        │   └─ [[route]].ts         # 위키 CRUD 작업 처리
+        └─ blog/
+            └─ [[route]].ts         # 블로그 CRUD 작업 처리
 ```
 
 ### 2.2 데이터 흐름
