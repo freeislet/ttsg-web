@@ -24,8 +24,8 @@
 
 ## ⚛️ React 컴포넌트 사용 시 주의할 점
 
-1. **client:* 지시어의 이해와 사용**
-   - 클라이언트에서 실행되어야 하는 React 컴포넌트에는 client:* 지시어 필수
+1. **client:\* 지시어의 이해와 사용**
+   - 클라이언트에서 실행되어야 하는 React 컴포넌트에는 client:\* 지시어 필수
    - 예: `<ReactComponent client:load />`, `<ReactComponent client:idle />`, `<ReactComponent client:visible />`
 
 2. **서버 렌더링과 클라이언트 하이드레이션**
@@ -54,10 +54,11 @@ export default defineConfig({
   adapter: node({
     mode: 'standalone',
   }),
-});
+})
 ```
 
 주요 설정:
+
 - `output: 'server'` - 서버 사이드 렌더링을 활성화합니다.
 - `adapter: node({ mode: 'standalone' })` - Node.js 어댑터를 사용하여 SSR을 구현합니다.
 
@@ -74,25 +75,26 @@ Astro에서 API 기능을 추가하는 주요 방법은 다음과 같습니다:
 export async function get({ params, request }) {
   // GET 요청 처리 로직
   return {
-    body: JSON.stringify({ message: "Success" }),
-    headers: { "Content-Type": "application/json" }
-  };
+    body: JSON.stringify({ message: 'Success' }),
+    headers: { 'Content-Type': 'application/json' },
+  }
 }
 
 export async function post({ params, request }) {
   // POST 요청 처리 로직
-  const body = await request.json();
-  
+  const body = await request.json()
+
   return {
-    body: JSON.stringify({ message: "Received", data: body }),
-    headers: { "Content-Type": "application/json" }
-  };
+    body: JSON.stringify({ message: 'Received', data: body }),
+    headers: { 'Content-Type': 'application/json' },
+  }
 }
 ```
 
 ### 2. API 구조 확장
 
 필요에 따라 더 많은 경로와 기능을 추가할 수 있습니다:
+
 - `src/pages/api/users.ts` - 사용자 관리
 - `src/pages/api/auth.ts` - 인증 관련
 - `src/pages/api/data/[id].ts` - 동적 파라미터를 사용한 데이터 액세스
@@ -108,6 +110,7 @@ Astro API 라우트에서 외부 API나 데이터베이스에 연결할 수 있�
 ## Vercel vs Cloudflare 배포
 
 ### Vercel 장점
+
 - Astro 프로젝트와의 통합이 잘 되어 있음
 - 설정이 간단하고 직관적인 UI 제공
 - 자동 미리보기 배포와 CI/CD 파이프라인 제공
@@ -115,6 +118,7 @@ Astro API 라우트에서 외부 API나 데이터베이스에 연결할 수 있�
 - 글로벌 CDN으로 빠른 콘텐츠 제공
 
 ### Cloudflare 장점
+
 - Cloudflare Workers를 통한 글로벌 엣지 컴퓨팅 제공
 - 일반적으로 더 저렴한 가격 정책 (특히 많은 트래픽에 대해)
 - DDoS 보호 및 추가 보안 기능 내장
@@ -127,17 +131,17 @@ Astro API 라우트에서 외부 API나 데이터베이스에 연결할 수 있�
 
 ```javascript
 // astro.config.mjs
-import { defineConfig } from 'astro/config';
-import mdx from '@astrojs/mdx';
-import tailwind from '@astrojs/tailwind';
-import cloudflare from '@astrojs/cloudflare';
-import react from '@astrojs/react';
+import { defineConfig } from 'astro/config'
+import mdx from '@astrojs/mdx'
+import tailwind from '@astrojs/tailwind'
+import cloudflare from '@astrojs/cloudflare'
+import react from '@astrojs/react'
 
 export default defineConfig({
   integrations: [mdx(), tailwind(), react()],
   output: 'server',
-  adapter: cloudflare()
-});
+  adapter: cloudflare(),
+})
 ```
 
 2. 현재 R2를 이미 사용하고 있어 Cloudflare 인프라로의 통합이 더 자연스러울 수 있습니다.

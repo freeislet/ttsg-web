@@ -33,7 +33,7 @@ apps/web/ (Astro 기반 웹 앱)
 │   │   └── r2-client.ts         # R2 인터페이스 (CRUD 기능)
 │   └── api/                     # API 엔드포인트 (Astro에서 서버 측 로직)
 │       └── wiki/
-│           ├── get.ts           # 콘텐츠 조회 
+│           ├── get.ts           # 콘텐츠 조회
 │           ├── save.ts          # 콘텐츠 저장
 │           ├── list.ts          # 위키 목록 조회
 │           └── delete.ts        # 콘텐츠 삭제
@@ -44,12 +44,14 @@ apps/web/ (Astro 기반 웹 앱)
 ### 2.2 데이터 흐름
 
 #### 읽기 흐름
+
 1. 사용자가 `/wiki/page-name` 접속
 2. `[slug].astro`가 `fetchWikiContent` 호출
 3. 로컬 캐시/Astro 컬렉션 확인 → 없으면 R2에서 로드
 4. 마크다운 변환 후 페이지 렌더링
 
 #### 쓰기 흐름
+
 1. 사용자가 `/wiki/edit/page-name` 접속
 2. `edit/[slug].astro`가 기존 콘텐츠 로드 (있을 경우)
 3. `WikiEditor` 컴포넌트로 마크다운 편집
@@ -65,18 +67,18 @@ R2와의 통신을 담당하는 클라이언트 모듈입니다.
 
 ```typescript
 // src/utils/r2-client.ts
-const R2_BASE_URL = 'https://api.ttsg.dev/r2';  // Cloudflare Function 엔드포인트
+const R2_BASE_URL = 'https://api.ttsg.dev/r2' // Cloudflare Function 엔드포인트
 
 export async function getWikiFromR2(slug: string): Promise<string | null> {
   try {
-    const response = await fetch(`${R2_BASE_URL}/wiki/${slug}.md`);
+    const response = await fetch(`${R2_BASE_URL}/wiki/${slug}.md`)
     if (response.ok) {
-      return await response.text();
+      return await response.text()
     }
-    return null;
+    return null
   } catch (error) {
-    console.error('R2 fetch error:', error);
-    return null;
+    console.error('R2 fetch error:', error)
+    return null
   }
 }
 
@@ -85,41 +87,41 @@ export async function saveWikiToR2(slug: string, content: string): Promise<boole
     const response = await fetch(`${R2_BASE_URL}/wiki/${slug}.md`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'text/markdown'
+        'Content-Type': 'text/markdown',
       },
-      body: content
-    });
-    
-    return response.ok;
+      body: content,
+    })
+
+    return response.ok
   } catch (error) {
-    console.error('R2 save error:', error);
-    return false;
+    console.error('R2 save error:', error)
+    return false
   }
 }
 
 export async function listWikiPages(): Promise<string[]> {
   try {
-    const response = await fetch(`${R2_BASE_URL}/wiki/list`);
+    const response = await fetch(`${R2_BASE_URL}/wiki/list`)
     if (response.ok) {
-      return await response.json();
+      return await response.json()
     }
-    return [];
+    return []
   } catch (error) {
-    console.error('R2 list error:', error);
-    return [];
+    console.error('R2 list error:', error)
+    return []
   }
 }
 
 export async function deleteWikiPage(slug: string): Promise<boolean> {
   try {
     const response = await fetch(`${R2_BASE_URL}/wiki/${slug}.md`, {
-      method: 'DELETE'
-    });
-    
-    return response.ok;
+      method: 'DELETE',
+    })
+
+    return response.ok
   } catch (error) {
-    console.error('R2 delete error:', error);
-    return false;
+    console.error('R2 delete error:', error)
+    return false
   }
 }
 ```
@@ -165,7 +167,7 @@ export async function fetchWikiContent(slug: string): Promise<WikiContent> {
         html,
         source: 'local',
         slug,
-        metadata: entry.data
+        metadata: entry.data,
       }
     }
   } catch (error) {
@@ -175,7 +177,7 @@ export async function fetchWikiContent(slug: string): Promise<WikiContent> {
   // If not found locally, try to fetch from R2
   try {
     const content = await getWikiFromR2(slug)
-    
+
     if (content) {
       const html = marked.parse(content)
       return {
@@ -207,67 +209,67 @@ React를 사용한 마크다운 에디터 컴포넌트입니다.
 
 ```tsx
 // src/components/WikiEditor.tsx
-import { useState, useEffect } from 'react';
-import { marked } from 'marked';
+import { useState, useEffect } from 'react'
+import { marked } from 'marked'
 
 interface WikiEditorProps {
-  initialContent?: string;
-  onSave: (content: string) => Promise<boolean>;
+  initialContent?: string
+  onSave: (content: string) => Promise<boolean>
 }
 
 export function WikiEditor({ initialContent = '', onSave }: WikiEditorProps) {
-  const [content, setContent] = useState(initialContent);
-  const [preview, setPreview] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
+  const [content, setContent] = useState(initialContent)
+  const [preview, setPreview] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
-    setPreview(marked.parse(content));
-  }, [content]);
-  
+    setPreview(marked.parse(content))
+  }, [content])
+
   const handleSave = async () => {
-    setSaving(true);
-    setError(null);
+    setSaving(true)
+    setError(null)
     try {
-      const success = await onSave(content);
+      const success = await onSave(content)
       if (!success) {
-        setError('저장 실패. 다시 시도해주세요.');
+        setError('저장 실패. 다시 시도해주세요.')
       }
     } catch (err) {
-      setError('오류 발생: ' + String(err));
+      setError('오류 발생: ' + String(err))
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
-  
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div>
-        <textarea 
+        <textarea
           className="w-full h-96 p-4 border rounded"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="마크다운으로 작성..."
         />
-        
+
         <div className="mt-4 flex justify-between">
-          <button 
+          <button
             onClick={handleSave}
             disabled={saving}
             className="px-4 py-2 bg-blue-600 text-white rounded"
           >
             {saving ? '저장 중...' : '저장'}
           </button>
-          
+
           {error && <p className="text-red-500">{error}</p>}
         </div>
       </div>
-      
+
       <div className="p-4 border rounded prose">
         <div dangerouslySetInnerHTML={{ __html: preview }} />
       </div>
     </div>
-  );
+  )
 }
 ```
 
@@ -277,49 +279,34 @@ export function WikiEditor({ initialContent = '', onSave }: WikiEditorProps) {
 
 ```astro
 // src/pages/wiki/edit/[slug].astro
----
-import Layout from '../../../layouts/Layout.astro';
-import { WikiEditor } from '../../../components/WikiEditor';
-import { fetchWikiContent } from '../../../utils/wiki';
-import { saveWikiToR2 } from '../../../utils/r2-client';
 
-// 인증 확인 (구현 필요)
-// const isAuthenticated = checkAuth(Astro.request);
-// if (!isAuthenticated) return Astro.redirect('/login');
-
-const { slug } = Astro.params;
-const wikiContent = await fetchWikiContent(slug || '');
-
-// POST 요청 처리
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-  const content = String(formData.get('content') || '');
-  
-  const success = await saveWikiToR2(slug || '', content);
-  if (success) {
-    return Astro.redirect(`/wiki/${slug}`);
-  }
-}
----
+ import Layout from '../../../layouts/Layout.astro'; import { WikiEditor } from
+'../../../components/WikiEditor'; import { fetchWikiContent } from '../../../utils/wiki'; import {
+saveWikiToR2 } from '../../../utils/r2-client'; // 인증 확인 (구현 필요) // const isAuthenticated =
+checkAuth(Astro.request); // if (!isAuthenticated) return Astro.redirect('/login'); const { slug } =
+Astro.params; const wikiContent = await fetchWikiContent(slug || ''); // POST 요청 처리 if
+(Astro.request.method === 'POST') { const formData = await Astro.request.formData(); const content =
+String(formData.get('content') || ''); const success = await saveWikiToR2(slug || '', content); if
+(success) { return Astro.redirect(`/wiki/${slug}`); } }
 
 <Layout title={`Edit: ${wikiContent.title}`}>
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Edit: {wikiContent.title}</h1>
-    
-    <WikiEditor 
+
+    <WikiEditor
       client:load
       initialContent={wikiContent.content}
       onSave={async (content) => {
         const response = await fetch(`/api/wiki/save?slug=${slug}`, {
           method: 'POST',
-          body: content
-        });
-        
+          body: content,
+        })
+
         if (response.ok) {
-          window.location.href = `/wiki/${slug}`;
-          return true;
+          window.location.href = `/wiki/${slug}`
+          return true
         }
-        return false;
+        return false
       }}
     />
   </div>
@@ -332,41 +319,21 @@ if (Astro.request.method === 'POST') {
 
 ```astro
 // src/pages/wiki/new.astro
----
-import Layout from '../../layouts/Layout.astro';
-import { WikiEditor } from '../../components/WikiEditor';
-import { saveWikiToR2 } from '../../utils/r2-client';
 
-// 인증 확인 (구현 필요)
-// const isAuthenticated = checkAuth(Astro.request);
-// if (!isAuthenticated) return Astro.redirect('/login');
-
-let error = '';
-let slug = '';
-
-// POST 요청 처리
-if (Astro.request.method === 'POST') {
-  const formData = await Astro.request.formData();
-  slug = String(formData.get('slug') || '').trim().toLowerCase().replace(/\s+/g, '-');
-  const content = String(formData.get('content') || '');
-  
-  if (!slug) {
-    error = '페이지 식별자를 입력해주세요.';
-  } else {
-    const success = await saveWikiToR2(slug, content);
-    if (success) {
-      return Astro.redirect(`/wiki/${slug}`);
-    } else {
-      error = '페이지 저장에 실패했습니다. 다시 시도해주세요.';
-    }
-  }
-}
----
+ import Layout from '../../layouts/Layout.astro'; import { WikiEditor } from
+'../../components/WikiEditor'; import { saveWikiToR2 } from '../../utils/r2-client'; // 인증 확인
+(구현 필요) // const isAuthenticated = checkAuth(Astro.request); // if (!isAuthenticated) return
+Astro.redirect('/login'); let error = ''; let slug = ''; // POST 요청 처리 if (Astro.request.method
+=== 'POST') { const formData = await Astro.request.formData(); slug = String(formData.get('slug') ||
+'').trim().toLowerCase().replace(/\s+/g, '-'); const content = String(formData.get('content') ||
+''); if (!slug) { error = '페이지 식별자를 입력해주세요.'; } else { const success = await
+saveWikiToR2(slug, content); if (success) { return Astro.redirect(`/wiki/${slug}`); } else { error =
+'페이지 저장에 실패했습니다. 다시 시도해주세요.'; } } }
 
 <Layout title="Create New Wiki Page">
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Create New Wiki Page</h1>
-    
+
     <form method="POST" class="mb-6">
       <div class="mb-4">
         <label for="slug" class="block text-sm font-medium text-gray-700">
@@ -382,30 +349,34 @@ if (Astro.request.method === 'POST') {
           required
         />
       </div>
-      
+
       {error && <p class="text-red-500 mb-4">{error}</p>}
-      
-      <WikiEditor 
+
+      <WikiEditor
         client:load
         initialContent=""
         onSave={async (content) => {
-          const slugValue = document.getElementById('slug').value.trim().toLowerCase().replace(/\s+/g, '-');
-          
+          const slugValue = document
+            .getElementById('slug')
+            .value.trim()
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+
           if (!slugValue) {
-            alert('페이지 식별자를 입력해주세요.');
-            return false;
+            alert('페이지 식별자를 입력해주세요.')
+            return false
           }
-          
+
           const response = await fetch(`/api/wiki/save?slug=${slugValue}`, {
             method: 'POST',
-            body: content
-          });
-          
+            body: content,
+          })
+
           if (response.ok) {
-            window.location.href = `/wiki/${slugValue}`;
-            return true;
+            window.location.href = `/wiki/${slugValue}`
+            return true
           }
-          return false;
+          return false
         }}
       />
     </form>
@@ -417,36 +388,33 @@ if (Astro.request.method === 'POST') {
 
 ```typescript
 // src/pages/api/wiki/save.ts
-import type { APIRoute } from 'astro';
-import { saveWikiToR2 } from '../../../utils/r2-client';
+import type { APIRoute } from 'astro'
+import { saveWikiToR2 } from '../../../utils/r2-client'
 
 export const POST: APIRoute = async ({ request, url }) => {
   // 인증 확인 (구현 필요)
   // if (!isAuthenticated(request)) {
   //   return new Response(JSON.stringify({ error: '인증 필요' }), { status: 401 });
   // }
-  
-  const slug = url.searchParams.get('slug');
+
+  const slug = url.searchParams.get('slug')
   if (!slug) {
-    return new Response(JSON.stringify({ error: '페이지 식별자 필요' }), { status: 400 });
+    return new Response(JSON.stringify({ error: '페이지 식별자 필요' }), { status: 400 })
   }
-  
+
   try {
-    const content = await request.text();
-    const success = await saveWikiToR2(slug, content);
-    
+    const content = await request.text()
+    const success = await saveWikiToR2(slug, content)
+
     if (success) {
-      return new Response(JSON.stringify({ success: true }));
+      return new Response(JSON.stringify({ success: true }))
     } else {
-      return new Response(JSON.stringify({ error: '저장 실패' }), { status: 500 });
+      return new Response(JSON.stringify({ error: '저장 실패' }), { status: 500 })
     }
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: `오류 발생: ${error.message}` }), 
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: `오류 발생: ${error.message}` }), { status: 500 })
   }
-};
+}
 ```
 
 ### 3.7 Cloudflare Function: R2 조작
@@ -454,57 +422,54 @@ export const POST: APIRoute = async ({ request, url }) => {
 ```javascript
 // functions/r2-wiki-operations.js
 export async function onRequest(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  const path = url.pathname.replace('/r2/', ''); // /r2/wiki/page-name.md -> wiki/page-name.md
-  const method = request.method;
-  
+  const { request, env } = context
+  const url = new URL(request.url)
+  const path = url.pathname.replace('/r2/', '') // /r2/wiki/page-name.md -> wiki/page-name.md
+  const method = request.method
+
   // CORS 헤더 설정
   const headers = new Headers({
     'Access-Control-Allow-Origin': 'https://ttsg.dev',
     'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-  });
-  
+  })
+
   // OPTIONS 요청 처리 (CORS preflight)
   if (method === 'OPTIONS') {
-    return new Response(null, { headers });
+    return new Response(null, { headers })
   }
-  
+
   try {
     // R2 버킷 접근
-    const bucket = env.WIKI_BUCKET;
-    
+    const bucket = env.WIKI_BUCKET
+
     // 리스트 조회 요청 처리
     if (path === 'wiki/list') {
-      const objects = await bucket.list({ prefix: 'wiki/' });
-      const files = objects.objects.map(obj => obj.key.replace('wiki/', '').replace('.md', ''));
-      return new Response(JSON.stringify(files), { 
-        headers: { ...headers, 'Content-Type': 'application/json' } 
-      });
+      const objects = await bucket.list({ prefix: 'wiki/' })
+      const files = objects.objects.map((obj) => obj.key.replace('wiki/', '').replace('.md', ''))
+      return new Response(JSON.stringify(files), {
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      })
     }
-    
+
     // 개별 파일 처리
     if (method === 'GET') {
-      const object = await bucket.get(path);
+      const object = await bucket.get(path)
       if (object === null) {
-        return new Response('Not found', { status: 404, headers });
+        return new Response('Not found', { status: 404, headers })
       }
-      return new Response(await object.text(), { headers });
-      
+      return new Response(await object.text(), { headers })
     } else if (method === 'PUT') {
-      await bucket.put(path, request.body);
-      return new Response('Saved', { headers });
-      
+      await bucket.put(path, request.body)
+      return new Response('Saved', { headers })
     } else if (method === 'DELETE') {
-      await bucket.delete(path);
-      return new Response('Deleted', { headers });
+      await bucket.delete(path)
+      return new Response('Deleted', { headers })
     }
-    
-    return new Response('Method not allowed', { status: 405, headers });
-    
+
+    return new Response('Method not allowed', { status: 405, headers })
   } catch (error) {
-    return new Response(`Error: ${error.message}`, { status: 500, headers });
+    return new Response(`Error: ${error.message}`, { status: 500, headers })
   }
 }
 ```

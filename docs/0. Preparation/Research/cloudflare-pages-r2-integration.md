@@ -7,11 +7,13 @@
 ### 1.1 이전 아키텍처와의 차이점
 
 기존의 접근 방식은 다음과 같습니다:
+
 - Vercel에 웹사이트 배포
 - R2에 접근하기 위한 별도의 Cloudflare Worker API 필요
 - 클라이언트 → API → R2 버킷의 3단계 구조
 
 새로운 접근 방식의 장점:
+
 - Cloudflare Pages에 통합 배포
 - Pages Functions을 통한 R2 버킷 직접 바인딩
 - 인증 및 권한 관리 통합
@@ -43,12 +45,14 @@ apps/web/ (Astro 기반 웹 앱)
 ### 2.2 데이터 흐름
 
 #### 읽기 흐름
+
 1. 사용자가 `/wiki/page-name` 접속
 2. Astro 페이지에서 Cloudflare Function API 호출
 3. Function이 R2 버킷에서 콘텐츠 로드
 4. 마크다운 변환 후 페이지 렌더링
 
 #### 쓰기 흐름
+
 1. 사용자가 `/wiki/edit/page-name` 접속
 2. WikiEditor 컴포넌트로 마크다운 편집
 3. 저장 시 Cloudflare Function API 호출
@@ -68,15 +72,15 @@ npm install @astrojs/cloudflare
 `astro.config.mjs` 파일 업데이트:
 
 ```javascript
-import { defineConfig } from 'astro/config';
-import cloudflare from '@astrojs/cloudflare';
+import { defineConfig } from 'astro/config'
+import cloudflare from '@astrojs/cloudflare'
 
 export default defineConfig({
   output: 'server',
   adapter: cloudflare({
-    mode: 'directory'  // Pages Functions 사용 모드
+    mode: 'directory', // Pages Functions 사용 모드
   }),
-});
+})
 ```
 
 ### 3.2 Pages Functions 구성
@@ -87,76 +91,71 @@ Cloudflare Pages Functions는 특정 경로 패턴에 맞는 요청을 처리하
 
 ```typescript
 export interface Env {
-  WIKI_BUCKET: R2Bucket;
+  WIKI_BUCKET: R2Bucket
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
-  const { request, env, params } = context;
-  const url = new URL(request.url);
-  const route = params.route ? params.route.toString() : '';
-  const slug = route || url.searchParams.get('slug') || '';
-  const method = request.method;
-  
+  const { request, env, params } = context
+  const url = new URL(request.url)
+  const route = params.route ? params.route.toString() : ''
+  const slug = route || url.searchParams.get('slug') || ''
+  const method = request.method
+
   // CORS 헤더 설정
   const headers = new Headers({
     'Access-Control-Allow-Origin': url.origin,
     'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-  });
-  
+  })
+
   // OPTIONS 요청 처리
   if (method === 'OPTIONS') {
-    return new Response(null, { headers });
+    return new Response(null, { headers })
   }
-  
+
   try {
     // R2 버킷 접근 (바인딩 사용)
-    const bucket = env.WIKI_BUCKET;
-    
+    const bucket = env.WIKI_BUCKET
+
     // 목록 조회
     if (route === 'list') {
-      const objects = await bucket.list({ prefix: 'wiki/' });
-      const files = objects.objects.map(obj => obj.key.replace('wiki/', '').replace('.md', ''));
+      const objects = await bucket.list({ prefix: 'wiki/' })
+      const files = objects.objects.map((obj) => obj.key.replace('wiki/', '').replace('.md', ''))
       return new Response(JSON.stringify(files), {
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      });
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      })
     }
-    
+
     // 개별 파일 처리
-    const path = `wiki/${slug}.md`;
-    
+    const path = `wiki/${slug}.md`
+
     if (method === 'GET') {
-      const object = await bucket.get(path);
+      const object = await bucket.get(path)
       if (object === null) {
-        return new Response('Not found', { status: 404, headers });
+        return new Response('Not found', { status: 404, headers })
       }
-      return new Response(await object.text(), { headers });
-      
+      return new Response(await object.text(), { headers })
     } else if (method === 'PUT' || method === 'POST') {
-      const content = await request.text();
-      await bucket.put(path, content);
+      const content = await request.text()
+      await bucket.put(path, content)
       return new Response(JSON.stringify({ success: true }), {
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      });
-      
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      })
     } else if (method === 'DELETE') {
-      await bucket.delete(path);
+      await bucket.delete(path)
       return new Response(JSON.stringify({ success: true }), {
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      });
+        headers: { ...headers, 'Content-Type': 'application/json' },
+      })
     }
-    
-    return new Response('Method not allowed', { status: 405, headers });
-    
+
+    return new Response('Method not allowed', { status: 405, headers })
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: `Error: ${error.message}` }), {
-        status: 500,
-        headers: { ...headers, 'Content-Type': 'application/json' }
-      }
-    );
+    return new Response(JSON.stringify({ error: `Error: ${error.message}` }), {
+      status: 500,
+      headers: { ...headers, 'Content-Type': 'application/json' },
+    })
   }
-};
+}
 ```
 
 ### 3.3 인증 미들웨어 구현 (선택사항)
@@ -169,14 +168,13 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
   if (['PUT', 'POST', 'DELETE'].includes(request.method)) {
     // 여기에 인증 로직 구현
     // 예: JWT 토큰 검증, 세션 확인 등
-    
     // 인증 실패 시
     // return new Response('Unauthorized', { status: 401 });
   }
-  
+
   // 인증 성공 또는 읽기 작업은 계속 진행
-  return next();
-};
+  return next()
+}
 ```
 
 ## 4. 클라이언트 측 코드 업데이트
@@ -185,21 +183,21 @@ export const onRequest: PagesFunction = async ({ request, next }) => {
 
 ```typescript
 // src/utils/r2-client.ts
-const API_BASE_URL = '/api/wiki';  // Pages Functions 경로
+const API_BASE_URL = '/api/wiki' // Pages Functions 경로
 
 /**
  * R2에서 위키 콘텐츠 가져오기
  */
 export async function getWikiFromR2(slug: string): Promise<string | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/${slug}`);
+    const response = await fetch(`${API_BASE_URL}/${slug}`)
     if (response.ok) {
-      return await response.text();
+      return await response.text()
     }
-    return null;
+    return null
   } catch (error) {
-    console.error('R2 fetch error:', error);
-    return null;
+    console.error('R2 fetch error:', error)
+    return null
   }
 }
 
@@ -211,15 +209,15 @@ export async function saveWikiToR2(slug: string, content: string): Promise<boole
     const response = await fetch(`${API_BASE_URL}/${slug}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'text/markdown'
+        'Content-Type': 'text/markdown',
       },
-      body: content
-    });
-    
-    return response.ok;
+      body: content,
+    })
+
+    return response.ok
   } catch (error) {
-    console.error('R2 save error:', error);
-    return false;
+    console.error('R2 save error:', error)
+    return false
   }
 }
 
@@ -228,14 +226,14 @@ export async function saveWikiToR2(slug: string, content: string): Promise<boole
  */
 export async function listWikiPages(): Promise<string[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/list`);
+    const response = await fetch(`${API_BASE_URL}/list`)
     if (response.ok) {
-      return await response.json();
+      return await response.json()
     }
-    return [];
+    return []
   } catch (error) {
-    console.error('R2 list error:', error);
-    return [];
+    console.error('R2 list error:', error)
+    return []
   }
 }
 
@@ -245,13 +243,13 @@ export async function listWikiPages(): Promise<string[]> {
 export async function deleteWikiPage(slug: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/${slug}`, {
-      method: 'DELETE'
-    });
-    
-    return response.ok;
+      method: 'DELETE',
+    })
+
+    return response.ok
   } catch (error) {
-    console.error('R2 delete error:', error);
-    return false;
+    console.error('R2 delete error:', error)
+    return false
   }
 }
 ```

@@ -42,7 +42,7 @@ export async function fetchWikiContent(slug: string): Promise<WikiContent> {
   // If not found locally, try to fetch from R2
   try {
     const content = await getWikiFromR2(slug)
-    
+
     if (content) {
       const html = marked.parse(content)
       return {

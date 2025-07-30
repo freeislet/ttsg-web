@@ -46,12 +46,12 @@ TinaCMS는 콘텐츠를 여러 방식으로 저장할 수 있습니다:
 
 - **구성**: Tina Cloud에서 호스팅되는 콘텐츠 API
 - **워크플로우**: Tina Cloud 편집기에서 편집 → Git 저장소에 자동 커밋 → 배포
-- **장점**: 
+- **장점**:
   - 사용자 인증 및 권한 관리
   - 웹 기반 편집기 (개발 환경 불필요)
   - 실시간 협업
   - 편집 중인 콘텐츠 미리보기
-- **단점**: 
+- **단점**:
   - 월간 구독 비용 발생
   - 외부 서비스 의존성
 
@@ -59,11 +59,11 @@ TinaCMS는 콘텐츠를 여러 방식으로 저장할 수 있습니다:
 
 - **구성**: 자체 서버에 Tina 데이터 레이어 호스팅
 - **워크플로우**: 자체 호스팅 편집기에서 편집 → Git 저장소에 커밋 → 배포
-- **장점**: 
+- **장점**:
   - 데이터 소유권 완전 보장
   - 커스텀 인증 시스템 연동 가능
   - 외부 의존성 최소화
-- **단점**: 
+- **단점**:
   - 설정 및 유지보수 복잡성 증가
   - 서버 인프라 필요
 
@@ -72,10 +72,11 @@ TinaCMS는 콘텐츠를 여러 방식으로 저장할 수 있습니다:
 ### 4.1 통합 단계
 
 1. **TinaCMS 설치 및 기본 설정**:
+
    ```bash
    # TinaCMS 패키지 설치
    pnpm add tinacms @tinacms/cli
-   
+
    # Tina 구성 파일 생성
    npx @tinacms/cli init
    ```
@@ -101,47 +102,44 @@ TinaCMS는 콘텐츠를 여러 방식으로 저장할 수 있습니다:
 TinaCMS의 인라인 편집 기능을 통해 WYSIWYG 경험을 제공할 수 있습니다:
 
 1. **Tina UI 컴포넌트 설치**:
+
    ```bash
    pnpm add @tinacms/toolkit
    ```
 
 2. **편집 모드 활성화**:
+
    ```tsx
    // src/components/TinaWrapper.tsx
-   import { TinaEditProvider } from 'tinacms/dist/edit-state';
-   
+   import { TinaEditProvider } from 'tinacms/dist/edit-state'
+
    export const TinaWrapper = ({ children }) => {
-     const isEditing = useIsEditing();
-     
-     return (
-       <TinaEditProvider editMode={isEditing}>
-         {children}
-       </TinaEditProvider>
-     );
-   };
+     const isEditing = useIsEditing()
+
+     return <TinaEditProvider editMode={isEditing}>{children}</TinaEditProvider>
+   }
    ```
 
 3. **인라인 편집 필드 구현**:
+
    ```tsx
    // src/components/EditableContent.tsx
-   import { useTina } from 'tinacms/dist/react';
-   
+   import { useTina } from 'tinacms/dist/react'
+
    export const EditableContent = ({ data, query, variables }) => {
      const { data: tinaData } = useTina({
        query,
        variables,
        data,
-     });
-     
+     })
+
      return (
        <div>
          <h1 data-tina-field={tinaData.title}>{tinaData.title}</h1>
-         <div data-tina-field={tinaData.content}>
-           {/* 마크다운 또는 리치 텍스트 렌더링 */}
-         </div>
+         <div data-tina-field={tinaData.content}>{/* 마크다운 또는 리치 텍스트 렌더링 */}</div>
        </div>
-     );
-   };
+     )
+   }
    ```
 
 4. **미디어 관리 UI 통합**:
@@ -157,6 +155,7 @@ TinaCMS의 인라인 편집 기능을 통해 WYSIWYG 경험을 제공할 수 있
 TinaCMS는 콘텐츠 검색 기능을 지원합니다:
 
 1. **GraphQL API를 통한 쿼리**:
+
    ```tsx
    const SEARCH_QUERY = `
      query SearchContent($searchTerm: String!) {
@@ -170,13 +169,13 @@ TinaCMS는 콘텐츠 검색 기능을 지원합니다:
          }
        }
      }
-   `;
-   
+   `
+
    // 검색 구현
    const searchResults = await client.request({
      query: SEARCH_QUERY,
-     variables: { searchTerm: "검색어" }
-   });
+     variables: { searchTerm: '검색어' },
+   })
    ```
 
 2. **고급 검색 기능**:
