@@ -1,6 +1,6 @@
 import { getEntry } from 'astro:content'
 import { marked } from 'marked'
-import { getWikiFromR2 } from './r2-client'
+import { getWikiFromR2 } from './r2Client'
 
 // Base URLs for different wiki content sources (참고용)
 const _SOURCES = {

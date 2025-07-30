@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { saveWikiToR2 } from '../../../utils/r2-client'
+import { saveWikiToR2 } from '../../../utils/r2Client'
 
 /**
  * 위키 콘텐츠 저장 API 엔드포인트
