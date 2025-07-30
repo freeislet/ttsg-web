@@ -4,7 +4,7 @@ compatibility_date = "2023-08-15"
 
 # R2 버킷 바인딩 설정
 [[r2_buckets]]
-binding = "WIKI_BUCKET"  # env.WIKI_BUCKET으로 접근 가능
+binding = "BUCKET"  # env.BUCKET으로 접근 가능
 bucket_name = "ttsg-wiki"
 
 # 빌드 설정 (Pages 대시보드에서 설정할 수 있음)

@@ -1,5 +1,5 @@
 /**
- * Cloudflare Pages Function Middleware for Wiki API
+ * Cloudflare Pages Function Middleware for API
  *
  * 인증 및 권한 검사를 위한 미들웨어입니다.
  * 현재는 모든 요청을 허용하지만, 나중에 인증 로직을 구현할 수 있습니다.

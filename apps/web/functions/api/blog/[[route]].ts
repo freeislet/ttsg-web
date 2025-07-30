@@ -1,7 +1,7 @@
 /**
- * Cloudflare Pages Function for R2 위키 조작
+ * Cloudflare Pages Function for R2 블로그 조작
  *
- * 이 함수는 R2 버킷의 위키 콘텐츠를 읽고, 쓰고, 삭제하는 기능을 제공합니다.
+ * 이 함수는 R2 버킷의 블로그 콘텐츠를 읽고, 쓰고, 삭제하는 기능을 제공합니다.
  * 환경 변수로 BUCKET이 R2 버킷으로 바인딩되어 있어야 합니다.
  */
 
@@ -40,15 +40,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     // 목록 조회 요청 처리
     if (route === 'list') {
-      const objects = await bucket.list({ prefix: 'wiki/' })
-      const files = objects.objects.map((obj) => obj.key.replace('wiki/', '').replace('.md', ''))
+      const objects = await bucket.list({ prefix: 'blog/' })
+      const files = objects.objects.map((obj: R2Object) => obj.key.replace('blog/', '').replace('.md', ''))
       return new Response(JSON.stringify(files), {
         headers: { ...headers, 'Content-Type': 'application/json' },
       })
     }
 
     // 개별 파일 처리
-    const path = `wiki/${slug}.md`
+    const path = `blog/${slug}.md`
 
     if (method === 'GET') {
       const object = await bucket.get(path)
@@ -67,13 +67,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...headers, 'Content-Type': 'application/json' },
       })
+    } else {
+      return new Response('Method not allowed', { status: 405, headers })
     }
-
-    return new Response('Method not allowed', { status: 405, headers })
   } catch (error) {
-    return new Response(JSON.stringify({ error: `Error: ${(error as Error).message}` }), {
+    console.error('Error:', error)
+    return new Response(`Error: ${(error as Error).message}`, {
       status: 500,
-      headers: { ...headers, 'Content-Type': 'application/json' },
+      headers,
     })
   }
 }
