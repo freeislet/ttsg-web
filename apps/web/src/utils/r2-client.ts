@@ -3,7 +3,7 @@
  * Cloudflare R2와의 통신을 담당하는 클라이언트 모듈
  */
 
-const R2_BASE_URL = 'https://api.ttsg.dev/r2';  // Cloudflare Function 엔드포인트
+const API_BASE_URL = '/api/wiki';  // Cloudflare Pages Functions 엔드포인트
 
 /**
  * R2에서 위키 콘텐츠 가져오기
@@ -12,7 +12,7 @@ const R2_BASE_URL = 'https://api.ttsg.dev/r2';  // Cloudflare Function 엔드포
  */
 export async function getWikiFromR2(slug: string): Promise<string | null> {
   try {
-    const response = await fetch(`${R2_BASE_URL}/wiki/${slug}.md`);
+    const response = await fetch(`${API_BASE_URL}/${slug}`);
     if (response.ok) {
       return await response.text();
     }
@@ -31,7 +31,7 @@ export async function getWikiFromR2(slug: string): Promise<string | null> {
  */
 export async function saveWikiToR2(slug: string, content: string): Promise<boolean> {
   try {
-    const response = await fetch(`${R2_BASE_URL}/wiki/${slug}.md`, {
+    const response = await fetch(`${API_BASE_URL}/${slug}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'text/markdown'
@@ -52,7 +52,7 @@ export async function saveWikiToR2(slug: string, content: string): Promise<boole
  */
 export async function listWikiPages(): Promise<string[]> {
   try {
-    const response = await fetch(`${R2_BASE_URL}/wiki/list`);
+    const response = await fetch(`${API_BASE_URL}/list`);
     if (response.ok) {
       return await response.json();
     }
@@ -70,7 +70,7 @@ export async function listWikiPages(): Promise<string[]> {
  */
 export async function deleteWikiPage(slug: string): Promise<boolean> {
   try {
-    const response = await fetch(`${R2_BASE_URL}/wiki/${slug}.md`, {
+    const response = await fetch(`${API_BASE_URL}/${slug}`, {
       method: 'DELETE'
     });
     

@@ -1,0 +1,26 @@
+# Wrangler 설정 파일 (Cloudflare Pages 배포용)
+name = "ttsg-web"
+compatibility_date = "2023-08-15"
+
+# R2 버킷 바인딩 설정
+[[r2_buckets]]
+binding = "WIKI_BUCKET"  # env.WIKI_BUCKET으로 접근 가능
+bucket_name = "ttsg-wiki"
+
+# 빌드 설정 (Pages 대시보드에서 설정할 수 있음)
+[build]
+command = "npm run build"
+output_directory = "dist"
+
+# 빌드 및 개발 환경 구성
+[build.environment]
+NODE_VERSION = "18"
+
+# 라우트 설정
+[routes]
+include = ["/*"]
+exclude = ["/api/*"]  # API 경로는 Functions로 처리
+
+# 함수 설정
+[functions]
+directory = "functions"
