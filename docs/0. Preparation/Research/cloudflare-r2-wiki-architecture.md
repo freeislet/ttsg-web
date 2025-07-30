@@ -1,4 +1,6 @@
-# Cloudflare R2 기반 위키 아키텍처
+# [DEPRECATED] Cloudflare R2 기반 위키 아키텍처
+
+> **참고**: 이 문서는 더 이상 사용되지 않습니다. 새로운 접근 방식은 [Cloudflare Pages와 R2 통합](./cloudflare-pages-r2-integration.md) 문서를 참조하세요.
 
 ## 1. 개요
 

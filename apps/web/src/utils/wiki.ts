@@ -1,5 +1,6 @@
 import { getEntry } from 'astro:content'
 import { marked } from 'marked'
+import { getWikiFromR2 } from './r2-client'
 
 // Base URLs for different wiki content sources
 const SOURCES = {
@@ -40,11 +41,9 @@ export async function fetchWikiContent(slug: string): Promise<WikiContent> {
 
   // If not found locally, try to fetch from R2
   try {
-    const r2Path = `${SOURCES.R2}/${slug}.md`
-    const response = await fetch(r2Path)
-
-    if (response.ok) {
-      const content = await response.text()
+    const content = await getWikiFromR2(slug)
+    
+    if (content) {
       const html = marked.parse(content)
       return {
         title: slug.replace(/-/g, ' '),

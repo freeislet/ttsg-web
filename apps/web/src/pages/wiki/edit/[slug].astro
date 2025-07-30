@@ -1,0 +1,48 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { WikiEditor } from '../../../components/WikiEditor';
+import { fetchWikiContent } from '../../../utils/wiki';
+
+// 인증 확인 (구현 필요)
+// const isAuthenticated = checkAuth(Astro.request);
+// if (!isAuthenticated) return Astro.redirect('/login');
+
+const { slug } = Astro.params;
+if (!slug) {
+  return Astro.redirect('/wiki');
+}
+
+const wikiContent = await fetchWikiContent(slug);
+---
+
+<Layout title={`Edit: ${wikiContent.title}`}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-6 flex justify-between items-center">
+      <h1 class="text-3xl font-bold">Edit: {wikiContent.title}</h1>
+      <a href={`/wiki/${slug}`} class="text-blue-600 hover:text-blue-800">View Page</a>
+    </div>
+    
+    {wikiContent.source === 'not-found' && 
+      <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
+        <p>This is a new page. It will be created when you save.</p>
+      </div>
+    }
+    
+    <WikiEditor 
+      client:load
+      initialContent={wikiContent.content}
+      onSave={async (content) => {
+        const response = await fetch(`/api/wiki/save?slug=${slug}`, {
+          method: 'POST',
+          body: content
+        });
+        
+        if (response.ok) {
+          window.location.href = `/wiki/${slug}`;
+          return true;
+        }
+        return false;
+      }}
+    />
+  </div>
+</Layout>

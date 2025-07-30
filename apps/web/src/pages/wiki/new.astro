@@ -1,0 +1,79 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { WikiEditor } from '../../components/WikiEditor';
+
+// 인증 확인 (구현 필요)
+// const isAuthenticated = checkAuth(Astro.request);
+// if (!isAuthenticated) return Astro.redirect('/login');
+
+let error = '';
+let slug = '';
+
+// POST 요청 처리
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  slug = String(formData.get('slug') || '').trim().toLowerCase().replace(/\s+/g, '-');
+  const content = String(formData.get('content') || '');
+  
+  if (!slug) {
+    error = '페이지 식별자를 입력해주세요.';
+  } else {
+    // 클라이언트 측에서 redirect하도록 처리하므로 여기서는 아무 작업 없음
+    return Astro.redirect(`/wiki/edit/${slug}`);
+  }
+}
+---
+
+<Layout title="Create New Wiki Page">
+  <div class="container mx-auto px-4 py-8">
+    <div class="mb-6 flex justify-between items-center">
+      <h1 class="text-3xl font-bold">Create New Wiki Page</h1>
+      <a href="/wiki" class="text-blue-600 hover:text-blue-800">Back to Wiki</a>
+    </div>
+    
+    <div class="mb-6">
+      <div class="mb-4">
+        <label for="slug" class="block text-sm font-medium text-gray-700">
+          Page Identifier (URL slug)
+        </label>
+        <input
+          type="text"
+          id="slug"
+          name="slug"
+          value={slug}
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          placeholder="page-name"
+          required
+        />
+        <p class="mt-1 text-sm text-gray-500">Will be used in URL: /wiki/page-name</p>
+      </div>
+      
+      {error && <p class="text-red-500 mb-4">{error}</p>}
+      
+      <WikiEditor 
+        client:load
+        initialContent=""
+        onSave={async (content) => {
+          const slugValue = document.getElementById('slug').value.trim()
+            .toLowerCase().replace(/\s+/g, '-');
+          
+          if (!slugValue) {
+            alert('페이지 식별자를 입력해주세요.');
+            return false;
+          }
+          
+          const response = await fetch(`/api/wiki/save?slug=${slugValue}`, {
+            method: 'POST',
+            body: content
+          });
+          
+          if (response.ok) {
+            window.location.href = `/wiki/${slugValue}`;
+            return true;
+          }
+          return false;
+        }}
+      />
+    </div>
+  </div>
+</Layout>
