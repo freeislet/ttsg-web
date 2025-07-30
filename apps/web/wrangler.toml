@@ -12,6 +12,9 @@ bucket_name = "ttsg"
 command = "pnpm run build"
 output_directory = "dist"
 
+# Cloudflare Pages에서 필요한 설정
+pages_build_output_dir = "dist"
+
 # 빌드 및 개발 환경 구성
 [build.environment]
 NODE_VERSION = "18"
