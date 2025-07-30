@@ -2,11 +2,6 @@ import { getEntry } from 'astro:content'
 import { marked } from 'marked'
 import { getWikiFromR2 } from './r2Client'
 
-// Base URLs for different wiki content sources (참고용)
-const _SOURCES = {
-  R2: 'https://static.ttsg.dev/wiki', // Cloudflare R2 path (placeholder)
-}
-
 export interface WikiContent {
   title: string
   content: string
