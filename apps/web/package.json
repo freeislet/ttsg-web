@@ -8,8 +8,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "w:types": "wrangler types",
+    "w:deploy": "wrangler pages deploy",
     "w:dev": "wrangler pages dev dist --x-remote-bindings",
-    "w:deploy": "wrangler pages deploy dist"
+    "w:dev:local": "wrangler pages dev dist"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.0",
