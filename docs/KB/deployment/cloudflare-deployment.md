@@ -11,9 +11,9 @@
 3. GitHub 계정 연결 후 TTSG 저장소 선택
 4. 다음 설정으로 프로젝트 구성:
    - Framework preset: `Astro`
-   - Build command: `cd apps/web && npm run build` (모노레포인 경우)
-   - Build output directory: `apps/web/dist` (모노레포인 경우)
-   - Root directory: `/` (저장소 루트)
+   - Root directory: `apps/web` (웹 어플리케이션 폴더)
+   - Build command: `pnpm run build`
+   - Build output directory: `dist`
    - Environment variables: 필요한 경우 설정
 
 ### R2 버킷 바인딩 설정
@@ -43,22 +43,113 @@
 
 ## 3. 로컬 개발 환경 설정
 
-### Wrangler CLI 설치
+### Wrangler CLI 설치 및 설정
 
 ```bash
 npm install -g wrangler
 ```
 
-### 로컬에서 Pages Functions 테스트
+#### wrangler.toml 설정
+
+`wrangler.toml` 파일을 아래와 같이 구성하여 Cloudflare Functions, R2 바인딩, Node.js 호환성 등을 설정합니다.
+
+```toml
+name = "ttsg"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-07-30"
+compatibility_flags = ["nodejs_compat"]
+
+[env]
+production = { }
+
+# R2 버킷 바인딩 설정
+[[r2_buckets]]
+bucket_name = "ttsg"
+binding = "BUCKET"  # env.BUCKET으로 접근 가능
+experimental_remote = true
+```
+
+중요 설정 사항:
+
+- `compatibility_flags = ["nodejs_compat"]`: Node.js 내장 모듈(fs, child_process 등)을 사용하기 위한 필수 설정
+- `bucket_name`과 `binding`: R2 버킷 연결 설정
+- `experimental_remote`: 로컬 개발 시에도 클라우드의 R2 버킷을 사용할 수 있게 함
+
+#### TypeScript 타입 정의 생성
+
+Cloudflare Workers/Pages Functions 환경에 맞는 타입 정의를 생성합니다:
 
 ```bash
 cd apps/web
-wrangler pages dev dist
+pnpm w:types
 ```
 
-이 명령은 로컬에서 Pages Functions과 함께 사이트를 실행합니다. 단, 로컬에서 R2 바인딩을 테스트하려면 추가 설정이 필요합니다.
+이 명령은 `worker-configuration.d.ts` 파일을 생성하며, 이 파일은 Cloudflare Workers API와 R2 등의 타입 정의를 포함합니다. `tsconfig.json`에 다음과 같이 추가되어야 합니다:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["./worker-configuration.d.ts", "node"]
+  }
+}
+```
+
+### 로컬에서 Pages Functions 테스트
+
+로컬 개발 환경에서는 다음 순서로 진행해야 합니다:
+
+```bash
+cd apps/web
+# 1. 먼저 빌드 (React SSR 관련 vite alias가 적용됨)
+pnpm build
+# 2. 빌드된 파일로 Wrangler 개발 서버 실행
+pnpm w:dev
+```
+
+원격 R2 바인딩을 사용해 테스트하려면:
+
+```bash
+pnpm w:dev
+```
 
 ## 4. 문제 해결
+
+### React 19 + Cloudflare Functions 호환성 문제 (MessageChannel Error)
+
+**문제 증상**
+Cloudflare Pages에서 아래와 같은 오류 메시지가 나타나며 Functions 배포가 실패함:
+
+```
+Error: Failed to publish your Function. Got error: Uncaught ReferenceError: MessageChannel is not defined
+  at chunks/_@astro-renderers_GJ0eSamk.mjs:6804:16 in requireReactDomServer_browser_production
+```
+
+**원인**
+React 19와 Astro의 SSR이 Cloudflare Workers 환경에서 사용하는 `MessageChannel` API가 없기 때문입니다. Cloudflare Workers 환경은 일반 Node.js 환경과 달리 제한된 Web API만 지원합니다.
+
+**해결 방법**
+React 19를 그대로 유지하면서 `astro.config.mjs` 파일에 다음과 같이 `vite.resolve.alias` 설정을 추가합니다:
+
+```javascript
+export default defineConfig({
+  // ... 기존 설정 ...
+  vite: {
+    resolve: {
+      alias: {
+        '@': path.resolve('./src'),
+        ...(import.meta.env.PROD && {
+          // Use react-dom/server.edge instead of react-dom/server.browser for React 19.
+          // Without this, MessageChannel from node:worker_threads needs to be polyfilled.
+          // (https://github.com/withastro/astro/issues/12824#issuecomment-2563095382)
+          'react-dom/server': 'react-dom/server.edge',
+        }),
+      },
+    },
+  },
+})
+```
+
+이 설정은 프로덕션 환경에서 React DOM Server를 edge 버전으로 대체하여 MessageChannel 의존성을 제거합니다.
 
 ### R2 접근 오류
 
@@ -78,7 +169,7 @@ wrangler pages dev dist
 - Pages Functions 로그 확인
 - API 엔드포인트 경로 확인
 
-## 8. 마이그레이션 후 변경 사항
+## 5. 마이그레이션 후 변경 사항
 
 기존 시스템과 비교하여 다음과 같은 변경 사항이 있습니다:
 

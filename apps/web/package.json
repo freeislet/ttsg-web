@@ -8,7 +8,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "w:types": "wrangler types",
-    "w:dev": "wrangler pages dev dist",
+    "w:dev": "wrangler pages dev dist --x-remote-bindings",
     "w:deploy": "wrangler pages deploy dist"
   },
   "dependencies": {
