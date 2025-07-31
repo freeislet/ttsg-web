@@ -33,18 +33,9 @@ const wikiContent = await fetchWikiContent(slug)
     <WikiEditor
       client:load
       initialContent={wikiContent.content}
-      onSave={async (content) => {
-        const response = await fetch(`/api/wiki/save?slug=${slug}`, {
-          method: 'POST',
-          body: content,
-        })
-
-        if (response.ok) {
-          window.location.href = `/wiki/${slug}`
-          return true
-        }
-        return false
-      }}
+      mode="edit"
+      slug={slug}
+      redirectAfterSave={true}
     />
   </div>
 </Layout>

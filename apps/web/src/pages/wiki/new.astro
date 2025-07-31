@@ -56,26 +56,8 @@ if (Astro.request.method === 'POST') {
       <WikiEditor
         client:load
         initialContent=""
-        onSave={async (content) => {
-          const slugInput = document?.getElementById('slug') as HTMLInputElement
-          const slugValue = slugInput?.value.trim().toLowerCase().replace(/\s+/g, '-')
-
-          if (!slugValue) {
-            alert('페이지 식별자를 입력해주세요.')
-            return false
-          }
-
-          const response = await fetch(`/api/wiki/save?slug=${slugValue}`, {
-            method: 'POST',
-            body: content,
-          })
-
-          if (response.ok) {
-            window.location.href = `/wiki/${slugValue}`
-            return true
-          }
-          return false
-        }}
+        mode="new"
+        redirectAfterSave={true}
       />
     </div>
   </div>
