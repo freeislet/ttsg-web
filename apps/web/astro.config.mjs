@@ -6,6 +6,8 @@ import react from '@astrojs/react'
 import cloudflare from '@astrojs/cloudflare'
 import path from 'path'
 
+console.log(import.meta.env.VITE_API_PROXY_ENABLED, import.meta.env.VITE_API_PROXY_PORT)
+
 // https://astro.build/config
 export default defineConfig({
   integrations: [mdx(), tailwind(), react()],
@@ -23,5 +25,17 @@ export default defineConfig({
         }),
       },
     },
+    // 환경 변수에 따른 API 프록시 설정
+    ...(import.meta.env.VITE_API_PROXY_ENABLED === 'true' && {
+      server: {
+        proxy: {
+          // API 요청을 로컬 API 서버로 프록시
+          '/api': {
+            target: `http://localhost:${import.meta.env.VITE_API_PROXY_PORT || '8788'}`,
+            changeOrigin: true,
+          },
+        },
+      },
+    }),
   },
 })

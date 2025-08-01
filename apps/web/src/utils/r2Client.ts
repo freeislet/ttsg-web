@@ -10,20 +10,11 @@ const BLOG_API_URL = `${API_BASE}/api/blog` // 블로그 API 엔드포인트
 
 /**
  * 환경에 따른 API 기본 URL 반환
- * 로컬 개발 환경에서는 포트 8788 사용, 프로덕션에서는 상대 경로 사용
+ * 로컬 개발 환경에서도 CORS 문제 방지를 위해 상대 경로 사용
+ * API 서버는 프록시 설정을 통해 접근해야 함
  */
 function getApiBaseUrl(): string {
-  // 브라우저 환경 확인
-  if (typeof window !== 'undefined') {
-    const { hostname, protocol } = window.location
-    
-    // 로컬 개발 환경(localhost 또는 127.0.0.1) 감지
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `${protocol}//${hostname}:8788`
-    }
-  }
-  
-  // 프로덕션 환경 또는 비브라우저 환경에서는 상대 경로 사용
+  // 항상 상대 경로 사용하여 CORS 문제 방지
   return ''
 }
 
@@ -33,34 +24,34 @@ function getApiBaseUrl(): string {
 async function apiRequest<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(url, options)
-    
+
     // 성공 응답
     if (response.ok) {
       // 응답이 JSON인 경우
       const contentType = response.headers.get('content-type')
       if (contentType && contentType.includes('application/json')) {
-        const data = await response.json() as T
+        const data = (await response.json()) as T
         return { success: true, data, status: response.status }
       }
-      
+
       // 응답이 텍스트인 경우
       const text = await response.text()
       return { success: true, data: text as unknown as T, status: response.status }
     }
-    
+
     // 오류 응답
     const errorText = await response.text()
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: errorText || `API 요청 실패: ${response.status} ${response.statusText}`,
-      status: response.status
+      status: response.status,
     }
   } catch (error) {
     console.error('API 요청 오류:', error)
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error instanceof Error ? error.message : '알 수 없는 오류',
-      status: 0
+      status: 0,
     }
   }
 }
@@ -84,7 +75,7 @@ export const wikiApi = {
   getList: async (): Promise<ApiResponse<string[]>> => {
     return apiRequest<string[]>(`${WIKI_API_URL}/list`)
   },
-  
+
   /**
    * 위키 콘텐츠 가져오기
    * @param slug 위키 페이지 식별자
@@ -93,7 +84,7 @@ export const wikiApi = {
   getContent: async (slug: string): Promise<ApiResponse<string>> => {
     return apiRequest<string>(`${WIKI_API_URL}/${slug}`)
   },
-  
+
   /**
    * 위키 콘텐츠 저장
    * @param slug 위키 페이지 식별자
@@ -104,12 +95,12 @@ export const wikiApi = {
     return apiRequest(`${WIKI_API_URL}/${slug}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain'
+        'Content-Type': 'text/plain',
       },
-      body: content
+      body: content,
     })
   },
-  
+
   /**
    * 위키 페이지 삭제
    * @param slug 위키 페이지 식별자
@@ -117,9 +108,9 @@ export const wikiApi = {
    */
   deletePage: async (slug: string): Promise<ApiResponse<unknown>> => {
     return apiRequest(`${WIKI_API_URL}/${slug}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     })
-  }
+  },
 }
 
 /**
@@ -133,7 +124,7 @@ export const blogApi = {
   getList: async (): Promise<ApiResponse<unknown[]>> => {
     return apiRequest<unknown[]>(`${BLOG_API_URL}/list`)
   },
-  
+
   /**
    * 블로그 포스트 가져오기
    * @param slug 블로그 포스트 식별자
@@ -142,7 +133,7 @@ export const blogApi = {
   getPost: async (slug: string): Promise<ApiResponse<unknown>> => {
     return apiRequest<unknown>(`${BLOG_API_URL}/${slug}`)
   },
-  
+
   /**
    * 블로그 포스트 저장
    * @param slug 블로그 포스트 식별자
@@ -153,11 +144,11 @@ export const blogApi = {
     return apiRequest(`${BLOG_API_URL}/${slug}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/markdown'
+        'Content-Type': 'text/markdown',
       },
-      body: content
+      body: content,
     })
-  }
+  },
 }
 
 // 하위 호환성 유지를 위한 기존 함수 (deprecated)
@@ -166,7 +157,7 @@ export const blogApi = {
  */
 export async function getWikiFromR2(slug: string): Promise<string | null> {
   const response = await wikiApi.getContent(slug)
-  return response.success ? (response.data || null) : null
+  return response.success ? response.data || null : null
 }
 
 /**
