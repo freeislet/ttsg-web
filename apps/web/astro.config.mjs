@@ -6,8 +6,6 @@ import react from '@astrojs/react'
 import cloudflare from '@astrojs/cloudflare'
 import path from 'path'
 
-console.log(import.meta.env.VITE_API_PROXY_ENABLED, import.meta.env.VITE_API_PROXY_PORT)
-
 // https://astro.build/config
 export default defineConfig({
   integrations: [mdx(), tailwind(), react()],
