@@ -13,12 +13,12 @@
     "w:dev:local": "wrangler pages dev dist"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.6.0",
-    "@astrojs/mdx": "^4.3.1",
-    "@astrojs/node": "^9.3.0",
+    "@astrojs/cloudflare": "^12.6.1",
+    "@astrojs/mdx": "^4.3.2",
+    "@astrojs/node": "^9.3.2",
     "@astrojs/react": "^4.3.0",
     "@astrojs/tailwind": "^6.0.2",
-    "astro": "^5.12.3",
+    "astro": "^5.12.7",
     "marked": "^9.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -28,6 +28,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.9",
-    "@types/react-dom": "^19.1.7"
+    "@types/react-dom": "^19.1.7",
+    "wrangler": "4.27.0"
   }
 }
