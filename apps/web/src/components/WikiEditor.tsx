@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { marked } from 'marked'
 
+import { wikiApi } from '@/utils/r2Client'
+
 interface WikiEditorProps {
   initialContent?: string
-  slug?: string       // 위키 페이지 슬러그
+  slug?: string // 위키 페이지 슬러그
   mode: 'new' | 'edit' // 새 페이지 생성 또는 기존 페이지 수정 모드
   redirectAfterSave?: boolean // 저장 후 리디렉션 여부
 }
@@ -12,7 +14,12 @@ interface WikiEditorProps {
  * 위키 편집을 위한 마크다운 에디터 컴포넌트
  * 편집 영역과 미리보기 영역을 포함
  */
-export function WikiEditor({ initialContent = '', slug, mode, redirectAfterSave = true }: WikiEditorProps) {
+export function WikiEditor({
+  initialContent = '',
+  slug,
+  mode,
+  redirectAfterSave = true,
+}: WikiEditorProps) {
   const [content, setContent] = useState(initialContent)
   const [preview, setPreview] = useState('')
   const [saving, setSaving] = useState(false)
@@ -27,47 +34,45 @@ export function WikiEditor({ initialContent = '', slug, mode, redirectAfterSave 
   const handleSave = async () => {
     setSaving(true)
     setError(null)
-    
+
     try {
       // 새 페이지 모드에서는 slug 입력 필드에서 값을 가져옴
       let targetSlug = slug
-      
+
       if (mode === 'new') {
         const slugInput = document.getElementById('slug') as HTMLInputElement
         if (!slugInput) {
           setError('페이지 식별자 입력란을 찾을 수 없습니다.')
           return
         }
-        
+
         targetSlug = slugInput.value.trim().toLowerCase().replace(/\s+/g, '-')
-        
+
         if (!targetSlug) {
           setError('페이지 식별자를 입력해주세요.')
           return
         }
       }
-      
+
       // 이미 slug가 있는 경우 (편집 모드)
       if (!targetSlug) {
         setError('페이지 식별자가 없습니다.')
         return
       }
-      
+
       // API 요청
-      const response = await fetch(`/api/wiki/${targetSlug}`, {
-        method: 'POST',
-        body: content,
-      })
-      
-      if (response.ok) {
+      const response = await wikiApi.saveContent(targetSlug, content)
+
+      if (response.success) {
         if (redirectAfterSave) {
           window.location.href = `/wiki/${targetSlug}`
         }
       } else {
-        setError(`저장 실패 (${response.status}): ${await response.text()}`)
+        setError(`저장 실패 (${response.status}): ${response.error || '알 수 없는 오류'}`)
       }
     } catch (err) {
-      setError('오류 발생: ' + String(err))
+      console.error('위키 저장 오류:', err)
+      setError('오류 발생: ' + (err instanceof Error ? err.message : String(err)))
       console.error('Wiki save error:', err)
     } finally {
       setSaving(false)
