@@ -8,19 +8,10 @@ compatibility_flags = ["nodejs_compat"]
 bucket_name = "ttsg"      # 개발 환경 R2 버킷 이름
 binding = "BUCKET"        # env.BUCKET으로 접근 가능
 
-# 환경별 설정
-[env]
-
-# 개발(preview) 환경 설정
-[env.preview]
-
 # 개발 환경에서 사용할 R2 버킷 바인딩 설정
 [[env.preview.r2_buckets]]
 bucket_name = "ttsg"      # 개발 환경 R2 버킷 이름
 binding = "BUCKET"        # env.BUCKET으로 접근 가능
-
-# 프로덕션 환경 설정
-[env.production]
 
 # 프로덕션 환경에서 사용할 R2 버킷 바인딩 설정
 [[env.production.r2_buckets]]
