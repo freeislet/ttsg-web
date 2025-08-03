@@ -5,12 +5,13 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:w": "astro build && wrangler pages functions build --outdir=./dist/_worker.js/",
     "preview": "astro preview",
     "astro": "astro",
     "w:types": "wrangler types --path='./functions/types.d.ts'",
-    "w:dev": "wrangler pages dev",
-    "w:dev:remote": "wrangler pages dev --x-remote-bindings",
-    "w:deploy": "wrangler pages deploy"
+    "w:dev": "wrangler dev",
+    "w:dev:remote": "wrangler dev --remote",
+    "w:deploy": "wrangler deploy"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.1",

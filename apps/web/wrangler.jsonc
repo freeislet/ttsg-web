@@ -1,0 +1,42 @@
+{
+  "name": "ttsg",
+  "compatibility_date": "2025-07-30",
+  "compatibility_flags": ["nodejs_compat"],
+  
+  // main 필드 설정 - Astro 출력이 _worker.js를 생성함
+  "main": "./dist/_worker.js",
+  
+  // 정적 자산 설정
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"  // Workers 스크립트에서 env.ASSETS로 접근 가능
+  },
+  
+  // 로컬 개발 환경에서 사용할 R2 버킷 바인딩 설정
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",  // env.BUCKET으로 접근 가능
+      "bucket_name": "ttsg"  // 개발 환경 R2 버킷 이름
+    }
+  ],
+  
+  // 환경별 설정
+  "env": {
+    "preview": {
+      "r2_buckets": [
+        {
+          "binding": "BUCKET",
+          "bucket_name": "ttsg"
+        }
+      ]
+    },
+    "production": {
+      "r2_buckets": [
+        {
+          "binding": "BUCKET",
+          "bucket_name": "ttsg"
+        }
+      ]
+    }
+  }
+}
