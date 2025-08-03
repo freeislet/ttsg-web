@@ -123,8 +123,109 @@ Astro + Cloudflare Workers 환경에서 성능을 최적화하기 위한 고려�
 3. **Edge Functions**: 지역별 맞춤 콘텐츠 제공 가능
 4. **아일랜드 아키텍처**: 필요한 컴포넌트만 인터랙티브하게 설정
 
+## API 구현 방식
+
+Astro + Cloudflare Workers 환경에서 API를 구현하는 방법은 다음과 같습니다:
+
+### Cloudflare Pages vs Workers API 구현 비교
+
+| Cloudflare Pages | Cloudflare Workers |
+|-----------------|-------------------|
+| `functions/` 폴더에 구현 | `src/pages/api/` 또는 `src/pages/*.js/ts` 파일에 구현 |
+| 파일 기반 라우팅 | Astro의 파일 기반 라우팅 사용 |
+| Worker 런타임 제약 | 완전한 Workers 런타임 기능 활용 |
+
+### API 엔드포인트 생성 위치
+
+- `src/pages/api/` 폴더에 API 파일 생성 (권장)
+- 또는 `src/pages/` 폴더에 `.js` 또는 `.ts` 확장자를 가진 파일 생성
+
+### API 구현 기본 구조
+
+```typescript
+// src/pages/api/index.ts
+export async function GET() {
+  return new Response(
+    JSON.stringify({
+      message: 'TTSG API',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+    }),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+}
+```
+
+### HTTP 메서드 지원
+
+- `GET`, `POST`, `PUT`, `DELETE` 등의 HTTP 메서드를 지원합니다.
+- 각 메서드는 별도의 함수로 export 합니다.
+
+```typescript
+// src/pages/api/users.ts
+export async function GET() {
+  // 사용자 목록 조회 로직
+  return new Response(/* ... */);
+}
+
+export async function POST() {
+  // 사용자 생성 로직
+  return new Response(/* ... */);
+}
+```
+
+### 동적 라우팅
+
+- Astro의 동적 라우팅을 사용할 수 있습니다.
+- `src/pages/api/[id].ts`와 같은 형식으로 파일을 생성합니다.
+
+```typescript
+// src/pages/api/users/[id].ts
+export async function GET({ params }) {
+  const { id } = params;
+  // id를 사용한 데이터 조회 로직
+  return new Response(/* ... */);
+}
+```
+
+### 요청 정보 접근
+
+- API 함수는 `context` 객체를 받아 요청 정보에 접근할 수 있습니다.
+
+```typescript
+export async function POST({ request, params, locals }) {
+  // request: 요청 객체 (body, headers 등)
+  // params: URL 매개변수
+  // locals: 서버 측 상태 공유 (Astro.locals)
+  
+  const data = await request.json();
+  // 데이터 처리 로직
+  
+  return new Response(/* ... */);
+}
+```
+
+### Cloudflare 특정 기능 활용
+
+- Workers 환경에서는 Cloudflare Workers API와 바인딩에 직접 접근할 수 있습니다.
+
+```typescript
+// KV, D1 등의 Cloudflare 서비스 활용 예시
+export async function GET({ request, env }) {
+  // env를 통해 Cloudflare 바인딩에 접근
+  const value = await env.MY_KV.get('key');
+  return new Response(value);
+}
+```
+
 ## 참고 자료
 
 - [Astro 공식 문서](https://docs.astro.build)
 - [Cloudflare Workers 개발자 문서](https://developers.cloudflare.com/workers/)
 - [Astro Cloudflare 어댑터](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)
+- [Astro 엔드포인트 문서](https://docs.astro.build/en/guides/endpoints/)
