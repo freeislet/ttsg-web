@@ -1,0 +1,156 @@
+---
+// Features.astro - 주요 기능 소개 컴포넌트
+---
+
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-4">
+    <h2 class="text-4xl font-bold text-center text-gray-800 mb-2">주요 기능</h2>
+    <p class="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-12">
+      TTSG 프로젝트는 다양한 기능을 통합적으로 제공합니다
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div
+        class="bg-blue-50 rounded-xl p-8 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+      >
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-blue-600"
+            ><path
+              d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"
+            ></path></svg
+          >
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">블로그</h3>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+          최신 동향과 정보를 블로그 형태로 쉽게 공유하고 토론하세요. 카테고리와 태그를 통한 효율적인
+          콘텐츠 관리를 경험해보세요.
+        </p>
+        <a
+          href="/blog"
+          class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-all duration-300 group"
+        >
+          자세히 보기
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="ml-2 group-hover:ml-3 transition-all duration-300"
+            ><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg
+          >
+        </a>
+      </div>
+
+      <div
+        class="bg-blue-50 rounded-xl p-8 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+      >
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-blue-600"
+            ><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
+            ></path><path d="M12 17h.01"></path></svg
+          >
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">위키</h3>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+          공동 작업을 통한 지식 구축 및 관리가 가능한 위키 시스템을 활용하세요. 버전 관리와 변경
+          내역 추적을 지원합니다.
+        </p>
+        <a
+          href="/wiki"
+          class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-all duration-300 group"
+        >
+          자세히 보기
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="ml-2 group-hover:ml-3 transition-all duration-300"
+            ><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg
+          >
+        </a>
+      </div>
+
+      <div
+        class="bg-blue-50 rounded-xl p-8 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-lg"
+      >
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-blue-600"
+            ><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><path d="M8 21h8"
+            ></path><path d="M12 17v4"></path></svg
+          >
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">앱</h3>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+          사용자 맞춤형 대시보드와 데이터 시각화 도구를 통해 정보를 효과적으로 분석하고 관리할 수
+          있습니다.
+        </p>
+        <a
+          href="/app"
+          class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-all duration-300 group"
+        >
+          자세히 보기
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="ml-2 group-hover:ml-3 transition-all duration-300"
+            ><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg
+          >
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

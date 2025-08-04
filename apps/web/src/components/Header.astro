@@ -1,0 +1,67 @@
+---
+// Header.astro - 글로벌 내비게이션을 포함하는 헤더 컴포넌트
+---
+
+<header class="bg-white shadow-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 flex justify-between items-center py-4">
+    <div>
+      <a href="/" class="text-gray-800 no-underline">
+        <h1 class="text-2xl font-bold m-0">TTSG</h1>
+      </a>
+    </div>
+
+    <nav class="hidden md:block">
+      <ul class="flex gap-8 list-none m-0 p-0">
+        <li>
+          <a
+            href="/"
+            class="text-blue-600 font-medium text-lg transition-colors hover:text-blue-800">메인</a
+          >
+        </li>
+        <li>
+          <a
+            href="/blog"
+            class="text-gray-600 font-medium text-lg transition-colors hover:text-blue-600"
+            >블로그</a
+          >
+        </li>
+        <li>
+          <a
+            href="/wiki"
+            class="text-gray-600 font-medium text-lg transition-colors hover:text-blue-600">위키</a
+          >
+        </li>
+        <li>
+          <a
+            href="/app"
+            class="text-gray-600 font-medium text-lg transition-colors hover:text-blue-600">앱</a
+          >
+        </li>
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-4">
+      <button class="text-gray-600 bg-transparent border-none cursor-pointer">
+        <span class="sr-only">검색</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg
+        >
+      </button>
+
+      <a
+        href="/login"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors hover:bg-blue-700"
+        >로그인</a
+      >
+    </div>
+  </div>
+</header>
