@@ -53,12 +53,7 @@ if (Astro.request.method === 'POST') {
 
       {error && <p class="text-red-500 mb-4">{error}</p>}
 
-      <WikiEditor
-        client:load
-        initialContent=""
-        mode="new"
-        redirectAfterSave={true}
-      />
+      <WikiEditor client:load initialContent="" mode="new" redirectAfterSave={true} />
     </div>
   </div>
 </Layout>

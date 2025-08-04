@@ -41,7 +41,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     // 목록 조회 요청 처리
     if (route === 'list') {
       const objects = await bucket.list({ prefix: 'blog/' })
-      const files = objects.objects.map((obj: R2Object) => obj.key.replace('blog/', '').replace('.md', ''))
+      const files = objects.objects.map((obj: R2Object) =>
+        obj.key.replace('blog/', '').replace('.md', '')
+      )
       return new Response(JSON.stringify(files), {
         headers: { ...headers, 'Content-Type': 'application/json' },
       })

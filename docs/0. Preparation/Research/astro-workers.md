@@ -26,6 +26,7 @@ pnpm create cloudflare@latest web --framework=astro
 ```
 
 이 명령어는 다음 작업을 수행합니다:
+
 1. Astro 프로젝트 기본 템플릿 생성
 2. Cloudflare Workers용 설정 추가
 3. 필요한 의존성 설치 (Wrangler, Cloudflare 어댑터 등)
@@ -57,13 +58,13 @@ web/
 이 파일은 Astro 설정을 포함하며, Cloudflare 어댑터가 구성되어 있습니다:
 
 ```javascript
-import { defineConfig } from 'astro/config';
-import cloudflare from '@astrojs/cloudflare';
+import { defineConfig } from 'astro/config'
+import cloudflare from '@astrojs/cloudflare'
 
 export default defineConfig({
   output: 'server',
-  adapter: cloudflare({ mode: 'directory' })
-});
+  adapter: cloudflare({ mode: 'directory' }),
+})
 ```
 
 ### wrangler.jsonc
@@ -106,13 +107,13 @@ pnpm run deploy
 
 기존 프로젝트는 Cloudflare Pages를 사용했으나, 새 프로젝트는 Cloudflare Workers를 사용합니다. 주요 차이점:
 
-| 기능 | Cloudflare Pages | Cloudflare Workers |
-|------|-----------------|-------------------|
-| 실행 환경 | 정적 호스팅 중심 | 서버리스 JavaScript 환경 |
-| 동적 기능 | Functions를 통해 제한적 | 완전한 프로그래밍 가능한 환경 |
-| 빌드 프로세스 | Cloudflare 서버에서 빌드 | 로컬 빌드 후 업로드 |
-| 배포 속도 | 자동화된 Git 통합 | CLI 배포 |
-| 개발자 경험 | 간단한 설정 | 더 많은 제어와 유연성 |
+| 기능          | Cloudflare Pages         | Cloudflare Workers            |
+| ------------- | ------------------------ | ----------------------------- |
+| 실행 환경     | 정적 호스팅 중심         | 서버리스 JavaScript 환경      |
+| 동적 기능     | Functions를 통해 제한적  | 완전한 프로그래밍 가능한 환경 |
+| 빌드 프로세스 | Cloudflare 서버에서 빌드 | 로컬 빌드 후 업로드           |
+| 배포 속도     | 자동화된 Git 통합        | CLI 배포                      |
+| 개발자 경험   | 간단한 설정              | 더 많은 제어와 유연성         |
 
 ## 성능 최적화 고려사항
 
@@ -129,11 +130,11 @@ Astro + Cloudflare Workers 환경에서 API를 구현하는 방법은 다음과 
 
 ### Cloudflare Pages vs Workers API 구현 비교
 
-| Cloudflare Pages | Cloudflare Workers |
-|-----------------|-------------------|
+| Cloudflare Pages         | Cloudflare Workers                                    |
+| ------------------------ | ----------------------------------------------------- |
 | `functions/` 폴더에 구현 | `src/pages/api/` 또는 `src/pages/*.js/ts` 파일에 구현 |
-| 파일 기반 라우팅 | Astro의 파일 기반 라우팅 사용 |
-| Worker 런타임 제약 | 완전한 Workers 런타임 기능 활용 |
+| 파일 기반 라우팅         | Astro의 파일 기반 라우팅 사용                         |
+| Worker 런타임 제약       | 완전한 Workers 런타임 기능 활용                       |
 
 ### API 엔드포인트 생성 위치
 
@@ -170,12 +171,12 @@ export async function GET() {
 // src/pages/api/users.ts
 export async function GET() {
   // 사용자 목록 조회 로직
-  return new Response(/* ... */);
+  return new Response(/* ... */)
 }
 
 export async function POST() {
   // 사용자 생성 로직
-  return new Response(/* ... */);
+  return new Response(/* ... */)
 }
 ```
 
@@ -187,9 +188,9 @@ export async function POST() {
 ```typescript
 // src/pages/api/users/[id].ts
 export async function GET({ params }) {
-  const { id } = params;
+  const { id } = params
   // id를 사용한 데이터 조회 로직
-  return new Response(/* ... */);
+  return new Response(/* ... */)
 }
 ```
 
@@ -202,11 +203,11 @@ export async function POST({ request, params, locals }) {
   // request: 요청 객체 (body, headers 등)
   // params: URL 매개변수
   // locals: 서버 측 상태 공유 (Astro.locals)
-  
-  const data = await request.json();
+
+  const data = await request.json()
   // 데이터 처리 로직
-  
-  return new Response(/* ... */);
+
+  return new Response(/* ... */)
 }
 ```
 
@@ -218,8 +219,8 @@ export async function POST({ request, params, locals }) {
 // KV, D1 등의 Cloudflare 서비스 활용 예시
 export async function GET({ request, env }) {
   // env를 통해 Cloudflare 바인딩에 접근
-  const value = await env.MY_KV.get('key');
-  return new Response(value);
+  const value = await env.MY_KV.get('key')
+  return new Response(value)
 }
 ```
 
