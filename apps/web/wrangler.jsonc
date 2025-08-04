@@ -4,7 +4,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "web",
+  "name": "ttsg",
   "main": "./dist/_worker.js/index.js",
   "compatibility_date": "2025-08-03",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
