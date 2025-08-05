@@ -1,7 +1,7 @@
 {
   "name": "@ttsg/web-redirect",
   "version": "1.0.0",
-  "description": "ttsg.pages.dev에서 ttsg.freeislet.workers.dev로의 301 리디렉션",
+  "description": "ttsg.pages.dev에서 ttsg.space로의 301 리디렉션",
   "private": true,
   "type": "module",
   "scripts": {
