@@ -11,6 +11,5 @@ export function onRequest(context) {
   const targetUrl = 'https://ttsg.freeislet.workers.dev' + url.pathname + url.search
 
   // 301 Moved Permanently 상태 코드로 리디렉션
-  //console.log('Redirecting to:', targetUrl)
   return Response.redirect(targetUrl, 301)
 }
