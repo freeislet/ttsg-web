@@ -1,0 +1,22 @@
+{
+  "name": "@ttsg/web-redirect",
+  "version": "1.0.0",
+  "description": "ttsg.pages.dev에서 ttsg.freeislet.workers.dev로의 301 리디렉션",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev --compatibility-date=2023-08-04 .",
+    "deploy": "wrangler pages deploy . --project-name=ttsg",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cloudflare",
+    "pages",
+    "redirect"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "wrangler": "^3.22.1"
+  }
+}
