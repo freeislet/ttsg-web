@@ -1,5 +1,8 @@
 ---
 // Features.astro - 주요 기능 소개 컴포넌트
+
+import { Icon } from 'astro-icon/components'
+import DetailLink from './ui/DetailLink.astro'
 ---
 
 <section class="py-20 bg-white">
@@ -13,46 +16,14 @@
         <div
           class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="text-blue-600"
-            ><path
-              d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"
-            ></path></svg
-          >
+          <Icon name="mdi:blog-outline" class="text-blue-600 size-8" />
         </div>
         <h3 class="text-2xl font-bold text-gray-800 mb-4">블로그</h3>
         <p class="text-gray-600 mb-6 leading-relaxed">
           최신 기술 트렌드, 개발 경험, 튜토리얼 등을 제공합니다. 위키 콘텐츠, 유튜브, 데모 앱을 함께
           제공하는 통합 허브 역할을 합니다.
         </p>
-        <a
-          href="/blog"
-          class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-all duration-300 group"
-        >
-          자세히 보기
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="ml-2 group-hover:ml-3 transition-all duration-300"
-            ><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg
-          >
-        </a>
+        <DetailLink href="/blog" />
       </div>
 
       <div
@@ -61,44 +32,13 @@
         <div
           class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="text-blue-600"
-            ><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"
-            ></path><path d="M12 17h.01"></path></svg
-          >
+          <Icon name="mdi:wikipedia" class="text-blue-600 size-8" />
         </div>
         <h3 class="text-2xl font-bold text-gray-800 mb-4">위키</h3>
         <p class="text-gray-600 mb-6 leading-relaxed">
           IT, AI, Software 개발에 관한 체계적이고 깊이 있는 기술 문서를 제공합니다.
         </p>
-        <a
-          href="/wiki"
-          class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-all duration-300 group"
-        >
-          자세히 보기
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="ml-2 group-hover:ml-3 transition-all duration-300"
-            ><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg
-          >
-        </a>
+        <DetailLink href="/wiki" />
       </div>
 
       <div
@@ -107,44 +47,13 @@
         <div
           class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="text-blue-600"
-            ><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><path d="M8 21h8"
-            ></path><path d="M12 17v4"></path></svg
-          >
+          <Icon name="mdi:monitor-dashboard" class="text-blue-600 size-8" />
         </div>
-        <h3 class="text-2xl font-bold text-gray-800 mb-4">앱</h3>
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">데모 앱</h3>
         <p class="text-gray-600 mb-6 leading-relaxed">
-          새로운 기술을 테스트하거나 아이디어를 구현한 웹 애플리케이션들을 확인하세요.
+          새로운 기술을 테스트하거나 아이디어를 구현한 데모 앱들을 확인하세요.
         </p>
-        <a
-          href="/app"
-          class="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-all duration-300 group"
-        >
-          자세히 보기
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="ml-2 group-hover:ml-3 transition-all duration-300"
-            ><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg
-          >
-        </a>
+        <DetailLink href="/apps" />
       </div>
     </div>
   </div>
