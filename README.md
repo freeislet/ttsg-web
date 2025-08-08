@@ -8,7 +8,7 @@ AI 및 소프트웨어 개발 관련 정보, 예제, 위키 문서를 공유하�
 - **목표**: AI 및 소프트웨어 개발 관련 정보, 예제, 위키 문서를 공유
 - **프레임워크**: [Astro](https://astro.build/)
 - **패키지 관리 / 구조**: `pnpm workspace` 기반 모노레포
-- **배포**: Vercel (메인 앱), Cloudflare R2 (예제 앱 및 일부 위키 콘텐츠)
+- **배포**: Vercel (메인 앱), Cloudflare R2 (jamstack 앱 및 일부 위키 콘텐츠), fly.io (항시 구동 서버 프로젝트)
 
 ## 📁 프로젝트 구조
 
@@ -16,8 +16,8 @@ AI 및 소프트웨어 개발 관련 정보, 예제, 위키 문서를 공유하�
 apps/
 ├── web/               # 메인 Astro 사이트 (블로그 + 위키 포함)
 ├── react1/            # 예제 앱 1 (React 등 정적 빌드 앱)
-apps-r2/               # Cloudflare R2에 배포되는 앱
-├── ai1/               # AI 데모 앱
+├── ai1/               # AI 데모 앱 (Cloudflare R2에 배포)
+├── server1/           # 항시 구동 서버 프로젝트 (fly.io에 배포)
 packages/
 ├── shared/            # 공통 컴포넌트 또는 유틸리티
 ```

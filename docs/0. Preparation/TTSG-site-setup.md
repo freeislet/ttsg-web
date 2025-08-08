@@ -6,7 +6,7 @@
 - **목표**: AI 및 소프트웨어 개발 관련 정보, 예제, 위키 문서를 공유하는 웹사이트 운영
 - **프레임워크**: [Astro](https://astro.build/)
 - **패키지 관리 / 구조**: `pnpm workspace` 기반 모노레포
-- **배포**: Vercel (메인 앱), Cloudflare R2 (예제 앱 및 일부 위키 콘텐츠)
+- **배포**: Vercel (메인 앱), Cloudflare R2 (jamstack 앱 및 일부 위키 콘텐츠), fly.io (항시 구동 서버 프로젝트)
 
 ---
 
@@ -16,8 +16,8 @@
 apps/
 ├── web/               # 메인 Astro 사이트 (블로그 + 위키 포함)
 ├── react1/            # 예제 앱 1 (React 등 정적 빌드 앱)
-apps-r2/               # Cloudflare R2에 배포되는 앱
-├── ai1/               # AI 데모 앱
+├── ai1/               # AI 데모 앱 (Cloudflare R2에 배포)
+├── server1/           # 항시 구동 서버 프로젝트 (fly.io에 배포)
 packages/
 ├── shared/            # 공통 컴포넌트 또는 유틸
 ```
@@ -26,13 +26,14 @@ packages/
 
 ## 🌐 라우팅 구성
 
-| 경로          | 설명                               | 제공 위치           |
-| ------------- | ---------------------------------- | ------------------- |
-| `/`           | TTSG 메인 페이지                   | Vercel (`apps/web`) |
-| `/blog/*`     | 기술 아티클 (markdown 기반 블로그) | Vercel              |
-| `/wiki/*`     | 위키 스타일 정리된 정보            | Vercel or R2        |
-| `/app/react1` | 예제 앱 (React 등)                 | Vercel              |
-| `/app/ai1`    | AI 데모                            | Cloudflare R2       |
+| 경로           | 설명                               | 제공 위치            |
+| -------------- | ---------------------------------- | ------------------- |
+| `/`            | TTSG 메인 페이지                   | Vercel (`apps/web`)  |
+| `/blog/*`      | 기술 아티클 (markdown 기반 블로그) | Vercel               |
+| `/wiki/*`      | 위키 스타일 정리된 정보            | Vercel or R2         |
+| `/app/react1`  | 예제 앱 (React 등)                 | Vercel               |
+| `/app/ai1`     | AI 데모                            | Cloudflare R2        |
+| `/api/server1` | 항시 구동 서버 API                  | fly.io               |
 
 ---
 
@@ -50,15 +51,27 @@ packages/
   - 블로그
   - 일부 wiki 페이지 (정적 포함)
 
-### 예제 앱 / 위키 일부 페이지
+### jamstack 앱 (Cloudflare R2에 배포)
 
 - **배포 대상**: Cloudflare R2
+- **대상 앱**: `apps/ai1` 등 jamstack 형태의 앱
 - **업로드 방식**:
   - GitHub Actions or CLI 사용
-  - 각 예제 앱 정적 빌드 후 `dist/` 업로드
+  - 각 앱 정적 빌드 후 `dist/` 업로드
 - **접근 방식**:
   - Astro에서 iframe 또는 링크 연결
   - 또는 Astro SSR 시 fetch 후 렌더링
+
+### 항시 구동 서버 (fly.io에 배포)
+
+- **배포 대상**: fly.io
+- **대상 앱**: `apps/server1` 등 항시 구동이 필요한 서버 프로젝트
+- **배포 방식**:
+  - fly.io CLI 또는 GitHub Actions 사용
+  - `fly.toml` 구성 파일 기반 배포
+- **접근 방식**:
+  - API 요청을 통한 접근
+  - 또는 메인 어플리케이션에서 프록시 연결
 
 ---
 

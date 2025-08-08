@@ -10,7 +10,8 @@ TTSG 웹사이트는 AI 및 소프트웨어 개발 관련 정보, 예제, 위키
 - **패키지 관리**: `pnpm workspace` 기반 모노레포
 - **배포**:
   - 메인 앱: Vercel
-  - 예제 앱 및 일부 위키 콘텐츠: Cloudflare R2
+  - jamstack 앱 및 일부 위키 콘텐츠: Cloudflare R2
+  - 항시 구동 서버: fly.io
 
 ## 2. 프로젝트 구조
 
@@ -18,9 +19,9 @@ TTSG 웹사이트는 AI 및 소프트웨어 개발 관련 정보, 예제, 위키
 ttsg/
 ├── apps/
 │   ├── web/                # 메인 Astro 사이트 (블로그 + 위키)
-│   └── react1/             # React 예제 앱
-├── apps-r2/
-│   └── ai1/                # AI 데모 앱 (Cloudflare R2 배포)
+│   ├── react1/             # React 예제 앱
+│   ├── ai1/                # AI 데모 앱 (Cloudflare R2 배포)
+│   └── server1/            # 항시 구동 서버 프로젝트 (fly.io 배포)
 ├── packages/
 │   └── shared/             # 공통 컴포넌트 및 유틸리티
 ├── docs/                   # 프로젝트 문서
@@ -89,13 +90,29 @@ ttsg/
 2. **Cloudflare R2 저장소**:
    - 외부 저장소에서 동적으로 가져오는 마크다운 콘텐츠
    - SSR을 통해 렌더링
+   
+### 4.2 배포 구조
+
+프로젝트는 다음과 같은 배포 전략을 사용합니다:
+
+1. **Vercel 배포**:
+   - 대상: `apps/web`, `apps/react1` 등 정적 사이트
+   - 자동 배포 환경 설정
+   
+2. **Cloudflare R2 배포**:
+   - 대상: `apps/ai1` 등 jamstack 형태의 앱
+   - 정적 파일을 R2에 업로드
+   
+3. **fly.io 배포**:
+   - 대상: `apps/server1` 등 항시 구동 서버 프로젝트
+   - 컨테이너 기반 배포
 
 #### 위키 페이지 라우팅
 
 - `/wiki`: 위키 인덱스 페이지
 - `/wiki/[slug]`: 개별 위키 문서 페이지
 
-### 4.2 공유 컴포넌트 패키지
+### 4.3 공유 컴포넌트 패키지
 
 `packages/shared`는 여러 앱에서 재사용 가능한 UI 컴포넌트와 유틸리티를 제공합니다:
 
