@@ -1,0 +1,121 @@
+version: '3'
+services:
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: outline
+      POSTGRES_PASSWORD: outline
+      POSTGRES_DB: outline
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U outline"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 캐시
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (S3 호환 스토리지)
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ROOT_USER: outline-minio
+      MINIO_ROOT_PASSWORD: outline-minio
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Outline 애플리케이션
+  outline:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # 데이터베이스 설정
+      DATABASE_URL: postgres://outline:outline@postgres:5432/outline
+      DATABASE_CONNECTION_POOL_MIN: 1
+      DATABASE_CONNECTION_POOL_MAX: 5
+      
+      # Redis 설정
+      REDIS_URL: redis://redis:6379
+      
+      # MinIO/S3 설정
+      AWS_ACCESS_KEY_ID: outline-minio
+      AWS_SECRET_ACCESS_KEY: outline-minio
+      AWS_REGION: us-east-1
+      AWS_S3_UPLOAD_BUCKET_NAME: outline-bucket
+      AWS_S3_UPLOAD_BUCKET_URL: http://minio:9000
+      AWS_S3_UPLOAD_MAX_SIZE: 26214400
+      AWS_S3_FORCE_PATH_STYLE: true
+      
+      # 인증 설정
+      SECRET_KEY: "생성된_랜덤_시크릿_키로_교체하세요"
+      UTILS_SECRET: "생성된_랜덤_유틸_시크릿으로_교체하세요"
+      
+      # 로그 설정
+      DEBUG: "sql,cache,presenters,events,emails,mailer,utils,multiplayer,queues,server,services"
+      LOG_LEVEL: info
+      
+      # 기본 포트
+      PORT: 8080
+      
+      # 기타 필수 환경 변수
+      URL: http://localhost:8080
+      NODE_ENV: production
+      
+      # Outline 인증 설정 (실제 배포 시 변경 필요)
+      OIDC_CLIENT_ID: outline-client-id
+      OIDC_CLIENT_SECRET: outline-client-secret
+      OIDC_AUTH_URI: https://example.com/oauth/authorize
+      OIDC_TOKEN_URI: https://example.com/oauth/token
+      OIDC_USERINFO_URI: https://example.com/oauth/userinfo
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+        
+  # MinIO 버킷 생성을 위한 초기화 서비스
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc config host add myminio http://minio:9000 outline-minio outline-minio;
+      /usr/bin/mc mb myminio/outline-bucket;
+      /usr/bin/mc policy set public myminio/outline-bucket;
+      exit 0;
+      "
+      
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
