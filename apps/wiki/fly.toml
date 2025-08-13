@@ -1,4 +1,4 @@
-app = "ttsg-wiki"
+app = "tt-wiki"
 primary_region = "nrt"  # 도쿄 리전 (아시아에서 가장 가까운 리전)
 
 [build]

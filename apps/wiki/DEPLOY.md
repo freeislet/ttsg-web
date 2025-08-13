@@ -1,6 +1,6 @@
-# TTSG Wiki - Outline 배포 가이드
+# TT Wiki - Outline 배포 가이드
 
-이 문서는 TTSG Wiki (Outline)를 Fly.io에 배포하는 방법에 대한 상세한 안내입니다.
+이 문서는 TT Wiki (Outline)를 Fly.io에 배포하는 방법에 대한 상세한 안내입니다.
 
 ## 사전 준비사항
 
@@ -34,8 +34,8 @@ chmod +x setup-fly-resources.sh
 ```
 
 이 스크립트는 다음 리소스를 생성합니다:
-- PostgreSQL 데이터베이스 (ttsg-wiki-db)
-- Redis 인스턴스 (ttsg-wiki-redis)
+- PostgreSQL 데이터베이스 (tt-wiki-db)
+- Redis 인스턴스 (tt-wiki-redis)
 - Outline 데이터용 볼륨 (outline_data)
 - 랜덤 생성된 보안 키
 
@@ -54,13 +54,13 @@ fly secrets set \
 
 ```bash
 # 데이터베이스 및 Redis 연결 정보 확인
-fly postgres show ttsg-wiki-db
-fly redis show ttsg-wiki-redis
+fly postgres show tt-wiki-db
+fly redis show tt-wiki-redis
 
 # 연결 정보로 환경 변수 설정
 fly secrets set \
-  DATABASE_URL="postgres://postgres:비밀번호@ttsg-wiki-db.internal:5432/postgres" \
-  REDIS_URL="redis://ttsg-wiki-redis.internal:6379"
+  DATABASE_URL="postgres://postgres:비밀번호@tt-wiki-db.internal:5432/postgres" \
+  REDIS_URL="redis://tt-wiki-redis.internal:6379"
 ```
 
 인증 및 스토리지 관련 환경 변수를 설정합니다:
@@ -130,7 +130,7 @@ fly deploy
 데이터베이스에 직접 접속해야 할 경우:
 
 ```bash
-fly postgres connect -a ttsg-wiki-db
+fly postgres connect -a tt-wiki-db
 ```
 
 ## 참고 자료

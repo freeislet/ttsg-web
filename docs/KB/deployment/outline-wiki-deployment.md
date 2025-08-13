@@ -1,8 +1,8 @@
-# Outline 위키 Fly.io 배포 가이드
+# TT Wiki - Outline 배포 가이드
 
 ## 개요
 
-TTSG 프로젝트는 위키 솔루션으로 [Outline](https://www.getoutline.com/)을 사용하며, 이를 [Fly.io](https://fly.io/)에 배포합니다. 이 문서는 TTSG 팀원들이 Outline 위키를 배포하고 관리하는 방법에 대한 가이드입니다.
+TT 프로젝트는 위키 솔루션으로 [Outline](https://www.getoutline.com/)을 사용하며, 이를 [Fly.io](https://fly.io/)에 배포합니다. 이 문서는 TT 팀원들이 Outline 위키를 배포하고 관리하는 방법에 대한 가이드입니다.
 
 ## Outline 소개
 
@@ -18,7 +18,7 @@ Outline은 팀을 위한 위키 및 지식 베이스 솔루션으로, 다음과 
 
 ## 프로젝트 구조
 
-Outline 위키 프로젝트는 TTSG 모노레포 내의 `apps/wiki` 디렉토리에 위치합니다:
+Outline 위키 프로젝트는 TT 모노레포 내의 `apps/wiki` 디렉토리에 위치합니다:
 
 ```
 apps/
@@ -69,8 +69,8 @@ chmod +x setup-fly-resources.sh
 ```
 
 이 스크립트는 다음 리소스를 생성합니다:
-- PostgreSQL 데이터베이스 (ttsg-wiki-db)
-- Redis 인스턴스 (ttsg-wiki-redis)
+- PostgreSQL 데이터베이스 (tt-wiki-db)
+- Redis 인스턴스 (tt-wiki-redis)
 - 데이터 저장용 볼륨 (outline_data)
 - 보안에 필요한 시크릿 키
 
@@ -83,7 +83,7 @@ chmod +x setup-fly-resources.sh
 fly secrets set \
   SECRET_KEY="생성된_시크릿_키" \
   UTILS_SECRET="생성된_유틸_시크릿" \
-  URL="https://ttsg-wiki.fly.dev"
+  URL="https://wiki.ttsg.space"
 ```
 
 데이터베이스 및 Redis 연결 정보를 추가합니다:
@@ -91,8 +91,8 @@ fly secrets set \
 ```bash
 # 데이터베이스 및 Redis 연결 정보 설정
 fly secrets set \
-  DATABASE_URL="postgres://postgres:비밀번호@ttsg-wiki-db.internal:5432/postgres" \
-  REDIS_URL="redis://ttsg-wiki-redis.internal:6379"
+  DATABASE_URL="postgres://postgres:비밀번호@tt-wiki-db.internal:5432/postgres" \
+  REDIS_URL="redis://tt-wiki-redis.internal:6379"
 ```
 
 인증 제공자 설정 (예: Google OAuth):
@@ -163,7 +163,7 @@ fly deploy
 
 ```bash
 # 데이터베이스 백업 생성
-fly postgres backup create -a ttsg-wiki-db
+fly postgres backup create -a tt-wiki-db
 ```
 
 ## 문제 해결
@@ -174,10 +174,10 @@ fly postgres backup create -a ttsg-wiki-db
 
 ```bash
 # 데이터베이스 상태 확인
-fly postgres status -a ttsg-wiki-db
+fly postgres status -a tt-wiki-db
 
 # 데이터베이스 직접 접속
-fly postgres connect -a ttsg-wiki-db
+fly postgres connect -a tt-wiki-db
 ```
 
 ### 애플리케이션 재시작

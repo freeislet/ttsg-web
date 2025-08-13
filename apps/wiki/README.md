@@ -1,6 +1,6 @@
-# TTSG Wiki - Outline
+# TT Wiki - Outline
 
-이 프로젝트는 TTSG의 위키 시스템으로, [Outline](https://www.getoutline.com/)을 사용하여 문서를 관리하고 [Fly.io](https://fly.io/)에 배포합니다.
+이 프로젝트는 TT의 위키 시스템으로, [Outline](https://www.getoutline.com/)을 사용하여 문서를 관리하고 [Fly.io](https://fly.io/)에 배포하며 도메인은 wiki.ttsg.space를 사용합니다.
 
 ## 개요
 
