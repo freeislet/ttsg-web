@@ -53,7 +53,18 @@ brew install flyctl
 fly auth login
 ```
 
-### 3. 필요한 리소스 생성
+### 3. 앱 초기화 및 생성
+
+Fly.io에 앱을 먼저 초기화해야 볼륨 등의 리소스를 연결할 수 있습니다:
+
+```bash
+# 앱 초기화 (배포는 나중에 진행)
+flyctl launch --name tt-wiki --region nrt --no-deploy
+```
+
+이 명령어는 현재 디렉토리의 코드를 기반으로 Fly.io에 앱을 초기화하고 fly.toml 파일을 생성합니다.
+
+### 4. 필요한 리소스 생성
 
 프로젝트 폴더의 스크립트를 사용하여 필요한 모든 Fly.io 리소스를 생성합니다:
 
@@ -71,10 +82,12 @@ chmod +x setup-fly-resources.sh
 이 스크립트는 다음 리소스를 생성합니다:
 - PostgreSQL 데이터베이스 (tt-wiki-db)
 - Redis 인스턴스 (tt-wiki-redis)
-- 데이터 저장용 볼륨 (outline_data)
+- 데이터 저장용 볼륨 (outline_data) - **이미 앱이 존재할 때만 생성 가능**
 - 보안에 필요한 시크릿 키
 
-### 4. 환경 변수 설정
+> **중요**: 스크립트는 먼저 tt-wiki 앱이 존재하는지 확인합니다. 앱이 존재하지 않으면 오류가 발생합니다.
+
+### 5. 환경 변수 설정
 
 스크립트 실행 후 생성된 시크릿 키를 사용하여 Fly.io에 환경 변수를 설정합니다:
 
@@ -103,7 +116,7 @@ fly secrets set \
   GOOGLE_CLIENT_SECRET="your-client-secret"
 ```
 
-### 5. 배포 실행
+### 6. 애플리케이션 배포
 
 모든 설정이 완료되면 애플리케이션을 배포합니다:
 
@@ -112,7 +125,7 @@ fly secrets set \
 fly deploy
 ```
 
-### 6. 초기 설정
+### 7. 초기 설정
 
 배포가 완료된 후 다음 단계를 진행하세요:
 
@@ -138,7 +151,17 @@ docker compose up -d
 
 로컬 환경에서는 `http://localhost:8080`으로 접속할 수 있습니다.
 
-## 유지보수 및 관리
+## 배포 순서 요약
+
+1. Fly.io 로그인 및 CLI 설정
+2. 앱 초기화: `flyctl launch --name tt-wiki --region nrt --no-deploy`
+3. 리소스 생성: `./setup-fly-resources.sh` (데이터베이스, Redis, 볼륨 등)
+4. 환경 변수 설정: `flyctl secrets set` 로 시크릿 키 등록
+5. 앱 배포: `flyctl deploy`
+6. 초기 설정 및 사용자 등록
+7. 도메인 연결 및 DNS 설정
+
+## 관리 및 유지보수
 
 ### 로그 확인
 

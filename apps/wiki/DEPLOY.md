@@ -21,7 +21,18 @@ brew install flyctl
 fly auth login
 ```
 
-## 2단계: 필요한 리소스 생성
+## 2단계: 앱 초기화 및 생성
+
+Fly.io에 앱을 먼저 초기화해야 볼륨 등의 리소스를 연결할 수 있습니다:
+
+```bash
+# 앱 초기화 (배포는 나중에 진행)
+flyctl launch --name tt-wiki --region nrt --no-deploy
+```
+
+이 명령어는 현재 디렉토리의 코드를 기반으로 Fly.io에 앱을 초기화하고 fly.toml 파일을 생성합니다.
+
+## 3단계: 필요한 리소스 생성
 
 프로젝트 폴더에 포함된 스크립트를 사용하여 필요한 모든 Fly.io 리소스를 생성합니다:
 
@@ -33,13 +44,15 @@ chmod +x setup-fly-resources.sh
 ./setup-fly-resources.sh
 ```
 
+> **중요**: 이 스크립트는 먼저 tt-wiki 앱이 생성되어 있는지 확인합니다. 앱이 존재하지 않으면 먼저 앱을 생성하라는 안내가 표시됩니다.
+
 이 스크립트는 다음 리소스를 생성합니다:
 - PostgreSQL 데이터베이스 (tt-wiki-db)
 - Redis 인스턴스 (tt-wiki-redis)
-- Outline 데이터용 볼륨 (outline_data)
+- Outline 데이터용 볼륨 (outline_data) - **이미 앱이 존재할 때만 생성 가능**
 - 랜덤 생성된 보안 키
 
-## 3단계: 환경 변수 설정
+## 4단계: 환경 변수 설정
 
 스크립트 실행 후 생성된 시크릿 키를 사용하여 Fly.io에 환경 변수를 설정합니다:
 
@@ -79,7 +92,7 @@ fly secrets set \
   AWS_S3_UPLOAD_BUCKET_NAME="your-bucket-name"
 ```
 
-## 4단계: 애플리케이션 배포
+## 5단계: 애플리케이션 배포
 
 모든 환경 변수가 설정되면 애플리케이션을 배포합니다:
 
@@ -94,7 +107,7 @@ fly deploy
 fly status
 ```
 
-## 5단계: 초기 설정 완료
+## 6단계: 초기 설정 완료
 
 배포된 애플리케이션에 접속하여 초기 설정을 완료합니다:
 

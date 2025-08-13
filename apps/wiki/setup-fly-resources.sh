@@ -21,6 +21,18 @@ if ! flyctl auth whoami &> /dev/null; then
 fi
 echo -e "${GREEN}로그인 확인 완료!${NC}"
 
+# 앱 존재 여부 확인
+echo -e "\n${YELLOW}tt-wiki 앱 존재 여부 확인 중...${NC}"
+if ! flyctl status -a tt-wiki &> /dev/null; then
+  echo -e "${RED}tt-wiki 앱이 존재하지 않습니다.${NC}"
+  echo -e "${YELLOW}발견 전 먼저 앱을 만들어야 합니다. 다음 명령어를 실행하세요:${NC}"
+  echo "flyctl launch --name tt-wiki --region nrt --no-deploy"
+  echo "또는 대시보드에서 앱을 먼저 생성하세요."
+  echo -e "${YELLOW}앱을 먼저 생성한 후, 이 스크립트를 다시 실행해주세요.${NC}"
+  exit 1
+fi
+echo -e "${GREEN}tt-wiki 앱 확인 완료!${NC}"
+
 # PostgreSQL 데이터베이스 생성
 echo -e "\n${YELLOW}PostgreSQL 데이터베이스 생성 중...${NC}"
 if flyctl postgres create --name tt-wiki-db --region nrt --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 1; then
@@ -32,7 +44,7 @@ fi
 
 # Redis 인스턴스 생성
 echo -e "\n${YELLOW}Redis 인스턴스 생성 중...${NC}"
-if flyctl redis create --name tt-wiki-redis --region nrt --vm-size micro; then
+if flyctl redis create --name tt-wiki-redis --region nrt; then
   echo -e "${GREEN}Redis 인스턴스 생성 완료!${NC}"
 else
   echo -e "${RED}Redis 인스턴스 생성 실패 또는 이미 존재합니다.${NC}"
@@ -41,7 +53,7 @@ fi
 
 # 볼륨 생성 (Outline 데이터 저장용)
 echo -e "\n${YELLOW}Outline 데이터 저장을 위한 볼륨 생성 중...${NC}"
-if flyctl volumes create outline_data --region nrt --size 1; then
+if flyctl volumes create outline_data --region nrt --size 1 -a tt-wiki; then
   echo -e "${GREEN}볼륨 생성 완료!${NC}"
 else
   echo -e "${RED}볼륨 생성 실패 또는 이미 존재합니다.${NC}"
@@ -69,4 +81,5 @@ echo "flyctl redis show tt-wiki-redis"
 
 echo -e "\n${GREEN}모든 리소스 설정이 완료되었습니다!${NC}"
 echo -e "${YELLOW}이제 env.example 파일을 참고하여 환경 변수를 설정하고 애플리케이션을 배포하세요.${NC}"
+echo "flyctl secrets set SECRET_KEY=\"$SECRET_KEY\" UTILS_SECRET=\"$UTILS_SECRET\" URL=\"https://wiki.ttsg.space\""
 echo "flyctl deploy"
