@@ -12,6 +12,9 @@ primary_region = 'nrt'
 [env]
   NODE_ENV = 'production'
   PORT = '8080'
+  URL = 'https://wiki.ttsg.space'
+  DATABASE_CONNECTION_POOL_MIN = '1'
+  DATABASE_CONNECTION_POOL_MAX = '5'
 
 [[mounts]]
   source = 'outline_data'
