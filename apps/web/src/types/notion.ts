@@ -1,7 +1,7 @@
 /**
  * 노션 페이지 데이터 타입
  */
-export interface NotionPageData {
+export interface NotionPage {
   id: string
   title: string
   url: string
@@ -13,7 +13,7 @@ export interface NotionPageData {
  */
 export interface NotionApiResponse {
   success: boolean
-  data: NotionPageData[]
+  data: NotionPage[]
   count: number
   message?: string
 }
