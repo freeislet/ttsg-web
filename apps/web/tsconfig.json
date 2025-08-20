@@ -5,6 +5,8 @@
   "compilerOptions": {
     "types": ["./worker-configuration.d.ts", "node"],
     "baseUrl": ".",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
     "paths": {
       "@/*": ["./src/*"]
     }
