@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { Icon } from '@iconify/react'
+import { OpenInNewIcon } from '@/components/icons'
 import type { NotionPage, NotionApiResponse } from '@/types'
 
 /**
@@ -58,13 +60,7 @@ export default function Wiki() {
       return (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <Icon icon="mdi:alert-circle" className="w-5 h-5 text-red-500 mr-2" />
             <span className="text-red-700 font-medium">문서 목록을 불러올 수 없습니다</span>
           </div>
           <p className="text-red-600 text-sm mt-2">
@@ -85,19 +81,7 @@ export default function Wiki() {
     if (pages.length === 0) {
       return (
         <div className="p-4 bg-gray-50 rounded-lg text-center">
-          <svg
-            className="w-12 h-12 text-gray-400 mx-auto mb-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
+          <Icon icon="mdi:file-document-outline" className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600">아직 문서가 없습니다.</p>
         </div>
       )
@@ -128,19 +112,7 @@ export default function Wiki() {
                   className={`hover:text-${color}-600 transition-colors flex items-center`}
                 >
                   {page.title}
-                  <svg
-                    className="w-4 h-4 ml-1 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
+                  <OpenInNewIcon className="w-4 h-4 ml-1 text-gray-400" />
                 </a>
               </h3>
               <span className="text-xs text-gray-500">최종 수정: {date}</span>
@@ -164,9 +136,7 @@ export default function Wiki() {
       {/* 노션 위키 링크 섹션 */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <svg className="w-6 h-6 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l8.893-.621c.285 0 .047-.28-.093-.311L14.199 3.28c-.28-.31-.93-.619-1.209-.619L4.553 3.043c-.528 0-.746.528-.094.93v.235zm.746 2.428c0 .31.155.528.528.528h14.478c.31 0 .528-.218.528-.528V5.668c0-.31-.218-.528-.528-.528H5.733c-.373 0-.528.218-.528.528v.968zm0 1.24v9.944c0 .746.373 1.117 1.026 1.117h11.636c.746 0 1.026-.466 1.026-1.117V7.876c0-.528-.28-.746-.746-.746H5.951c-.466 0-.746.218-.746.746z" />
-          </svg>
+          <Icon icon="mdi:book-open-variant" className="w-6 h-6 mr-2 text-blue-600" />
           노션 위키
         </h2>
         <p className="text-gray-600 mb-4">
@@ -178,37 +148,16 @@ export default function Wiki() {
           rel="noopener noreferrer"
           className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-blue-700"
         >
-          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l8.893-.621c.285 0 .047-.28-.093-.311L14.199 3.28c-.28-.31-.93-.619-1.209-.619L4.553 3.043c-.528 0-.746.528-.094.93v.235zm.746 2.428c0 .31.155.528.528.528h14.478c.31 0 .528-.218.528-.528V5.668c0-.31-.218-.528-.528-.528H5.733c-.373 0-.528.218-.528.528v.968zm0 1.24v9.944c0 .746.373 1.117 1.026 1.117h11.636c.746 0 1.026-.466 1.026-1.117V7.876c0-.528-.28-.746-.746-.746H5.951c-.466 0-.746.218-.746.746z" />
-          </svg>
+          <Icon icon="simple-icons:notion" className="w-5 h-5 mr-2" />
           TT Wiki 바로가기
-          <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-            />
-          </svg>
+          <OpenInNewIcon className="w-4 h-4 ml-2" />
         </a>
       </div>
 
       {/* 최근 문서 목록 섹션 */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <svg
-            className="w-6 h-6 mr-2 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
+          <Icon icon="mdi:file-document-multiple" className="w-6 h-6 mr-2 text-green-600" />
           최근 문서
         </h2>
         <p className="text-gray-600 mb-4">노션 위키의 최근 업데이트된 문서 목록입니다.</p>
