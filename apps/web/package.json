@@ -18,6 +18,7 @@
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
+    "@iconify-json/ic": "^1.2.4",
     "@iconify-json/mdi": "^1.2.3",
     "@iconify/react": "^6.0.0",
     "@types/node": "^24.1.0",
