@@ -127,21 +127,24 @@ export default function Wiki() {
     <>
       {/* 페이지 헤더 */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">TT Wiki</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center">
+          <Icon icon="mdi:book-open-variant" className="w-8 h-8 mr-3 text-blue-600" />
+          TT Wiki
+        </h1>
         <p className="text-lg text-gray-600 mb-6">
-          TTSG 프로젝트의 문서와 지식을 관리하는 위키 페이지입니다.
+          TTSG의 문서와 지식을 관리하는 위키 페이지입니다.
         </p>
       </div>
 
       {/* 노션 위키 링크 섹션 */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <Icon icon="mdi:book-open-variant" className="w-6 h-6 mr-2 text-blue-600" />
-          노션 위키
-        </h2>
-        <p className="text-gray-600 mb-4">
-          TTSG 프로젝트의 모든 문서와 가이드는 노션에서 관리됩니다.
-        </p>
+      <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-6 mb-8">
+        <div className="mb-4 flex items-start">
+          <Icon
+            icon="mdi:information"
+            className="w-5 h-5 mr-3 text-blue-500 mt-0.5 flex-shrink-0"
+          />
+          <p className="text-blue-800 font-medium">TT Wiki 문서는 노션에서 관리됩니다.</p>
+        </div>
         <a
           href="https://www.notion.so/TT-Wiki-24fffc6454ce806ebaeeee1a0497640d"
           target="_blank"
@@ -160,7 +163,7 @@ export default function Wiki() {
           <Icon icon="mdi:file-document-multiple" className="w-6 h-6 mr-2 text-green-600" />
           최근 문서
         </h2>
-        <p className="text-gray-600 mb-4">노션 위키의 최근 업데이트된 문서 목록입니다.</p>
+        <p className="text-gray-600 mb-4">최근 업데이트된 문서 목록입니다.</p>
 
         {renderPageList()}
       </div>
