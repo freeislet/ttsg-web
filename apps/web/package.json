@@ -12,9 +12,12 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.2",
+    "@astrojs/react": "^4.3.0",
     "@notionhq/client": "^4.0.2",
     "@tailwindcss/vite": "^4.1.11",
     "astro": "^5.12.8",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
@@ -22,6 +25,8 @@
     "@iconify-json/mdi": "^1.2.3",
     "@iconify/react": "^6.0.0",
     "@types/node": "^24.1.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
     "astro-icon": "^1.1.5",
     "wrangler": "^4.27.0"
   }

@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config'
 import cloudflare from '@astrojs/cloudflare'
+import react from '@astrojs/react'
 import tailwindcss from '@tailwindcss/vite'
 import icon from 'astro-icon'
 import path from 'path'
@@ -24,5 +25,5 @@ export default defineConfig({
     },
   },
 
-  integrations: [icon()],
+  integrations: [icon(), react()],
 })
