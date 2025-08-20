@@ -3,8 +3,14 @@
  */
 export interface NotionPage {
   id: string
-  title: string
   url: string
+  title: string
+  version?: string
+  language: 'ko' | 'en'
+  tags: string[]
+  author?: string
+  created: string
+  lastEditor?: string
   lastEdited: string
 }
 
