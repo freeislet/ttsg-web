@@ -104,7 +104,7 @@ export default function Wiki() {
               key={page.url}
               className={`border-l-4 border-${color}-500 pl-4 py-2 hover:bg-gray-50 transition-colors`}
             >
-              <h3 className="font-medium text-gray-900">
+              <h3 className="font-medium text-gray-900 flex items-center gap-2">
                 <a
                   href={page.url}
                   target="_blank"
@@ -114,6 +114,11 @@ export default function Wiki() {
                   {page.title}
                   <OpenInNewIcon className="w-4 h-4 ml-1 text-gray-400" />
                 </a>
+                {page.version && (
+                  <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+                    {page.version}
+                  </span>
+                )}
               </h3>
               <span className="text-xs text-gray-500">최종 수정: {date}</span>
             </div>
