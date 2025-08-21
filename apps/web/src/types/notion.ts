@@ -1,18 +1,4 @@
-/**
- * 노션 페이지 데이터 타입
- */
-export interface NotionPage {
-  id: string
-  url: string
-  title: string
-  version?: string
-  language: 'ko' | 'en'
-  tags: string[]
-  author?: string
-  created: string
-  lastEditor?: string
-  lastEdited: string
-}
+import type { NotionPage } from '@/lib/notion'
 
 /**
  * 노션 API 응답 타입

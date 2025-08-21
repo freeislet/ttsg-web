@@ -1,5 +1,26 @@
-import { Client, type PageObjectResponse } from '@notionhq/client'
-import type { NotionPage } from '@/types'
+import { Client, type PageObjectResponse, type BlockObjectRequest } from '@notionhq/client'
+import type { WikiContent } from './wiki'
+
+/**
+ * 언어 타입
+ */
+export type Language = 'ko' | 'en'
+
+/**
+ * 노션 페이지 데이터 타입
+ */
+export interface NotionPage {
+  id: string
+  url: string
+  title: string
+  version?: string
+  language: Language
+  tags: string[]
+  author?: string
+  created: string
+  lastEditor?: string
+  lastEdited: string
+}
 
 /**
  * 노션 클라이언트 인스턴스
@@ -64,7 +85,7 @@ function extractVersion(properties: PageObjectResponse['properties']): string | 
 /**
  * 노션 페이지 속성에서 언어를 안전하게 추출
  */
-function extractLanguage(properties: PageObjectResponse['properties']): 'ko' | 'en' {
+function extractLanguage(properties: PageObjectResponse['properties']): Language {
   const languageProperty = properties.Language
   if (languageProperty && 'select' in languageProperty && languageProperty.select) {
     const language = languageProperty.select.name
@@ -159,4 +180,162 @@ export async function getRecentPages(limit: number = 10): Promise<NotionPage[]> 
     console.error('노션 API 호출 실패:', error)
     return []
   }
+}
+
+/**
+ * 위키 콘텐츠를 노션 데이터베이스에 새 페이지로 생성합니다
+ * @param wikiContent 위키 콘텐츠
+ * @param version 모델 버전 (예: "Gemini Pro")
+ * @param language 언어 설정 (기본값: 'ko')
+ * @param tags 태그 목록 (기본값: [])
+ * @returns 생성된 노션 페이지 정보
+ */
+export async function createWikiPage(
+  wikiContent: WikiContent,
+  version: string,
+  language: Language = 'ko',
+  tags: string[] = []
+): Promise<{ pageId: string; url: string }> {
+  try {
+    // 마크다운 콘텐츠를 노션 블록으로 변환
+    const blocks = convertMarkdownToBlocks(wikiContent.content)
+
+    const response = await notion.pages.create({
+      parent: {
+        database_id: import.meta.env.NOTION_DATABASE_ID,
+      },
+      properties: {
+        Name: {
+          title: [
+            {
+              text: {
+                content: wikiContent.title,
+              },
+            },
+          ],
+        },
+        Version: {
+          rich_text: [
+            {
+              text: {
+                content: version,
+              },
+            },
+          ],
+        },
+        Language: {
+          select: {
+            name: language,
+          },
+        },
+        Tags: {
+          multi_select: tags.map((tag) => ({ name: tag })),
+        },
+      },
+      children: blocks,
+    })
+
+    // 노션 페이지 URL 생성 (페이지 ID를 사용하여 공유 링크 형태로)
+    const pageUrl = `https://www.notion.so/${response.id.replace(/-/g, '')}`
+
+    return {
+      pageId: response.id,
+      url: pageUrl,
+    }
+  } catch (error) {
+    console.error('노션 페이지 생성 실패:', error)
+    throw new Error(
+      `노션 페이지 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+    )
+  }
+}
+
+/**
+ * 마크다운 텍스트를 노션 블록으로 변환합니다
+ * @param markdown 마크다운 텍스트
+ * @returns 노션 블록 배열
+ */
+function convertMarkdownToBlocks(markdown: string): BlockObjectRequest[] {
+  const lines = markdown.split('\n')
+  const blocks: BlockObjectRequest[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+
+    if (!line) {
+      continue
+    }
+
+    // 헤딩 처리
+    if (line.startsWith('# ')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_1',
+        heading_1: {
+          rich_text: [
+            {
+              type: 'text',
+              text: { content: line.substring(2) },
+            },
+          ],
+        },
+      })
+    } else if (line.startsWith('## ')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [
+            {
+              type: 'text',
+              text: { content: line.substring(3) },
+            },
+          ],
+        },
+      })
+    } else if (line.startsWith('### ')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_3',
+        heading_3: {
+          rich_text: [
+            {
+              type: 'text',
+              text: { content: line.substring(4) },
+            },
+          ],
+        },
+      })
+    } else if (line.startsWith('- ')) {
+      // 불릿 리스트 처리
+      blocks.push({
+        object: 'block',
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [
+            {
+              type: 'text',
+              text: { content: line.substring(2) },
+            },
+          ],
+        },
+      })
+    } else {
+      // 일반 텍스트 처리
+      blocks.push({
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [
+            {
+              type: 'text',
+              text: { content: line },
+            },
+          ],
+        },
+      })
+    }
+  }
+
+  return blocks
 }

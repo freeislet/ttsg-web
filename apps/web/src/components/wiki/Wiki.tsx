@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
 import { OpenInNewIcon } from '@/components/icons'
-import type { NotionPage, NotionApiResponse } from '@/types'
+import type { NotionPage } from '@/lib/notion'
+import type { NotionApiResponse } from '@/types'
 
 /**
  * 위키 페이지의 메인 컨텐츠를 담당하는 React 컴포넌트
@@ -150,16 +151,25 @@ export default function Wiki() {
           />
           <p className="text-blue-800 font-medium">TT Wiki 문서는 노션에서 관리됩니다.</p>
         </div>
-        <a
-          href="https://www.notion.so/TT-Wiki-24fffc6454ce806ebaeeee1a0497640d"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-blue-700"
-        >
-          <Icon icon="simple-icons:notion" className="w-5 h-5 mr-2" />
-          TT Wiki 바로가기
-          <OpenInNewIcon className="w-4 h-4 ml-2" />
-        </a>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="https://www.notion.so/TT-Wiki-24fffc6454ce806ebaeeee1a0497640d"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-blue-700"
+          >
+            <Icon icon="simple-icons:notion" className="w-5 h-5 mr-2" />
+            TT Wiki 바로가기
+            <OpenInNewIcon className="w-4 h-4 ml-2" />
+          </a>
+          <a
+            href="/wiki/generate"
+            className="inline-flex items-center bg-purple-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-purple-700"
+          >
+            <Icon icon="mdi:auto-fix" className="w-5 h-5 mr-2" />
+            AI 위키 문서 만들기...
+          </a>
+        </div>
       </div>
 
       {/* 최근 문서 목록 섹션 */}
