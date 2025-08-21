@@ -1,13 +1,18 @@
 /**
+ * AI 타입
+ */
+export type AIType = 'ChatGPT' | 'Gemini'
+
+/**
  * AI 모델 타입
  */
-export type AIModelType = 'ChatGPT' | 'Gemini'
+export type AIModel = ChatGPTModel | GeminiModel
 
 /**
  * ChatGPT 모델 타입
  */
-// export type ChatGPTModel = 'gpt-5' | 'gpt-5-mini' | 'gpt-5-nano'
-export type { ChatModel as ChatGPTModel } from 'openai/resources'
+// export type { ChatModel as ChatGPTModel } from 'openai/resources'
+export type ChatGPTModel = 'gpt-5' | 'gpt-5-mini' | 'gpt-5-nano'
 
 /**
  * Gemini 모델 타입
