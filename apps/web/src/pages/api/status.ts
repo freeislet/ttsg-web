@@ -1,6 +1,6 @@
 /**
  * API 예제: 기본 정보 반환
- * 경로: /api
+ * 경로: /api/status
  */
 export async function GET() {
   return new Response(
