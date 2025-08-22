@@ -57,3 +57,29 @@ export const GEMINI_MODELS: AIModelMeta<GeminiModel>[] = [
 ]
 
 export const AI_MODELS: AIModelMeta[] = [...CHATGPT_MODELS, ...GEMINI_MODELS]
+
+/**
+ * 모델 메타 정보 조회
+ * @param model 모델명
+ * @param options 옵션
+ * @returns 모델 메타 정보
+ */
+export function getModelMeta(model: AIModel, options?: { useFallback?: boolean }): AIModelMeta {
+  const modelMeta = AI_MODELS.find((m) => m.model === model)
+  if (modelMeta) {
+    return modelMeta
+  }
+
+  // useFallback이 true인 경우 기본값 반환
+  if (options?.useFallback === true) {
+    return {
+      model,
+      name: model,
+      description: '알 수 없는 모델',
+      icon: 'mdi:auto-fix',
+      color: 'gray',
+    }
+  } else {
+    throw new Error(`지원하지 않는 모델입니다: ${model}`)
+  }
+}
