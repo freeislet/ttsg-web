@@ -1,7 +1,6 @@
 import { type AIModel, AI_MODELS, CHATGPT_MODELS, GEMINI_MODELS } from '@/lib/ai'
 import type { IWikiGenerator } from './types'
-import { ChatGPTGenerator } from './generators/ChatGPTGenerator'
-import { GeminiGenerator } from './generators/GeminiGenerator'
+import { ChatGPTGenerator, GeminiGenerator } from './generators'
 
 /**
  * 위키 생성기 팩토리 클래스
