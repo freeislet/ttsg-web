@@ -1,6 +1,6 @@
 import { Gemini, type GeminiModel } from '@/lib/ai'
 import type { WikiContent, Language } from '../types'
-import { getWikiPrompt, getWikiSystemMessage } from '../prompt'
+import { getWikiPrompt, getWikiSystemMessage } from '../prompts'
 import { WikiGeneratorBase } from './WikiGeneratorBase'
 
 /**
