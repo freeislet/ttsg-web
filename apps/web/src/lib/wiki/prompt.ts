@@ -6,54 +6,13 @@ import type { AIType } from '@/lib/ai'
 import type { Language } from '@/lib/notion'
 
 /**
- * 위키 프롬프트 옵션 인터페이스
- */
-export interface WikiPromptOptions {
-  aiType?: AIType
-  language?: Language
-  includeSystemPrompt?: boolean
-}
-
-/**
- * 위키 프롬프트를 생성합니다.
- * @param topic 위키 생성 주제
- * @param options 프롬프트 옵션
- * @returns 완성된 프롬프트
- */
-export function getWikiPrompt(topic: string, options: WikiPromptOptions = {}): string {
-  const { aiType, language = 'ko', includeSystemPrompt = false } = options
-
-  let prompt = ''
-
-  // 시스템 프롬프트 포함 (주로 Gemini용)
-  if (includeSystemPrompt) {
-    const systemPrompt = getWikiSystemPrompt(language)
-    prompt += systemPrompt + '\n\n'
-  }
-
-  // 기본 위키 프롬프트
-  const basePrompt = getWikiBasePrompt(topic, language)
-  prompt += basePrompt
-
-  // 모델별 최적화 메시지
-  if (aiType) {
-    const optimizationMessage = getModelOptimizationMessage(aiType, language)
-    if (optimizationMessage) {
-      prompt += '\n\n' + optimizationMessage
-    }
-  }
-
-  return prompt
-}
-
-/**
  * 기본 위키 생성 프롬프트 템플릿
  * @param topic 위키 생성 주제
  * @param language 언어 설정 (선택적, 기본값: 'ko')
  * @returns 구조화된 프롬프트
  */
-export function getWikiBasePrompt(topic: string, language?: Language): string {
-  const isKorean = (language ?? 'ko') === 'ko'
+export function getWikiPrompt(topic: string, language?: Language): string {
+  const isKorean = !language || language === 'ko'
 
   if (isKorean) {
     return `당신은 전문적인 위키 문서 작성자입니다. 주어진 주제에 대해 체계적이고 포괄적인 위키 문서를 한국어로 작성해주세요.
@@ -176,13 +135,28 @@ Start the wiki document:`
 
 /**
  * 위키 문서 생성을 위한 시스템 메시지를 생성합니다.
- * @param language 언어 설정
+ * @param language 언어 설정 (선택적, 기본값: 'ko')
+ * @param aiType AI 타입 (선택적, 있으면 최적화 메시지 추가)
  * @returns 시스템 메시지
  */
-export function getWikiSystemPrompt(language: Language = 'ko'): string {
-  return language === 'ko'
+export function getWikiSystemMessage(language?: Language, aiType?: AIType): string {
+  language ??= 'ko'
+
+  const isKorean = language === 'ko'
+
+  let systemMessage = isKorean
     ? '당신은 전문적인 위키 문서 작성자입니다. 정확하고 체계적인 한국어 위키 문서를 작성해주세요.'
     : 'You are a professional wiki document writer. Please write accurate and systematic wiki documents in English.'
+
+  // AI 타입별 최적화 메시지 추가
+  if (aiType) {
+    const optimizationMessage = getModelOptimizationMessage(aiType, language)
+    if (optimizationMessage) {
+      systemMessage += '\n' + optimizationMessage
+    }
+  }
+
+  return systemMessage
 }
 
 /**
@@ -191,7 +165,7 @@ export function getWikiSystemPrompt(language: Language = 'ko'): string {
  * @param language 언어 설정
  * @returns 최적화 메시지
  */
-export function getModelOptimizationMessage(aiType: AIType, language: Language = 'ko'): string {
+function getModelOptimizationMessage(aiType: AIType, language: Language): string {
   const isKorean = language === 'ko'
 
   switch (aiType) {
