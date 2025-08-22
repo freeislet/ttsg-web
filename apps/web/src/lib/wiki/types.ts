@@ -2,16 +2,6 @@ import type { Language } from '@/lib/notion'
 
 export type { Language }
 
-/**
- * 위키 생성 결과 타입
- */
-export interface WikiGenerationResult {
-  model: string
-  notionUrl: string
-  pageId: string
-  title: string
-  version: string
-}
 
 /**
  * 위키 콘텐츠 타입
