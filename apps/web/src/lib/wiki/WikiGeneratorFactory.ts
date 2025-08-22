@@ -10,7 +10,7 @@ export class WikiGeneratorFactory {
   /**
    * 지원하는 모든 모델명 목록
    */
-  static readonly supportedModels = AI_MODELS.map((m) => m.model)
+  static readonly supportedModels = AI_MODELS.map<string>((m) => m.model)
 
   /**
    * 모델명에 따른 위키 생성기 인스턴스를 생성합니다.
