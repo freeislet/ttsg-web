@@ -9,7 +9,8 @@ import type { PromptStrings } from './types'
  */
 export const englishPrompts: PromptStrings = {
   getPrompt: (
-    topic: string
+    topic: string,
+    instruction?: string
   ) => `You are a professional wiki document writer. Please write a systematic and comprehensive wiki document about the given topic in English.
 
 Topic: ${topic}
@@ -66,7 +67,14 @@ Writing Guidelines:
 - Write naturally in English.
 - Reflect the latest information, but do not include uncertain content.
 - Include actual implementation methods and code examples when possible.
-
+${
+  instruction
+    ? `
+Additional Instructions:
+${instruction}
+`
+    : ''
+}
 Start the wiki document:`,
   systemMessage:
     'You are a professional wiki document writer. Please write accurate and systematic wiki documents in English.',

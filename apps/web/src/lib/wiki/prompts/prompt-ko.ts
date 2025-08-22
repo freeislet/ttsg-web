@@ -9,7 +9,8 @@ import type { PromptStrings } from './types'
  */
 export const koreanPrompts: PromptStrings = {
   getPrompt: (
-    topic: string
+    topic: string,
+    instruction?: string
   ) => `당신은 전문적인 위키 문서 작성자입니다. 주어진 주제에 대해 체계적이고 포괄적인 위키 문서를 한국어로 작성해주세요.
 
 주제: ${topic}
@@ -66,7 +67,14 @@ export const koreanPrompts: PromptStrings = {
 - 한국어로 자연스럽게 작성하세요.
 - 최신 정보를 반영하되, 확실하지 않은 내용은 포함하지 마세요.
 - 가능하다면 실제 구현 방법 및 코드 예시를 포함하세요.
-
+${
+  instruction
+    ? `
+추가 지침:
+${instruction}
+`
+    : ''
+}
 위키 문서를 시작하세요:`,
   systemMessage:
     '당신은 전문적인 위키 문서 작성자입니다. 정확하고 체계적인 한국어 위키 문서를 작성해주세요.',

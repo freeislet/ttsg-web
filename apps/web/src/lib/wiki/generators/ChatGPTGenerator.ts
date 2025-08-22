@@ -24,12 +24,14 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
    * 주어진 주제로 위키 콘텐츠를 생성합니다.
    * @param topic 위키 생성 주제
    * @param language 언어 설정
+   * @param instruction 사용자 정의 지침 (선택적)
    * @returns 생성된 위키 콘텐츠
    */
-  async _generate(topic: string, language: Language): Promise<WikiContent> {
+  async _generate(topic: string, language: Language, instruction?: string): Promise<WikiContent> {
     const systemMessage = getWikiSystemMessage(language, 'ChatGPT')
-    const prompt = getWikiPrompt(topic, language)
+    const prompt = getWikiPrompt(topic, language, instruction)
 
+    console.log(`<${topic}> ChatGPT prompt:`, systemMessage, prompt)
     const content = await this.chatgpt.generate(
       [
         {

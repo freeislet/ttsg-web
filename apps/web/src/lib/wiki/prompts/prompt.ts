@@ -15,11 +15,12 @@ const promptsByLanguage = {
  * 기본 위키 생성 프롬프트 템플릿
  * @param topic 위키 생성 주제
  * @param language 언어 설정 (선택적, 기본값: 'ko')
+ * @param instruction 사용자 정의 지침 (선택적)
  * @returns 구조화된 프롬프트
  */
-export function getWikiPrompt(topic: string, language?: Language): string {
+export function getWikiPrompt(topic: string, language?: Language, instruction?: string): string {
   const prompts = promptsByLanguage[language ?? 'ko']
-  return prompts.getPrompt(topic)
+  return prompts.getPrompt(topic, instruction)
 }
 
 /**
