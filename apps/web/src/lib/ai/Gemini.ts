@@ -1,4 +1,5 @@
-import { GoogleGenerativeAI, type GenerativeModel } from '@google/generative-ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import type { GenerativeModel, GenerateContentRequest } from '@google/generative-ai'
 import type { GeminiModel } from './types'
 
 /**
@@ -22,19 +23,19 @@ export class Gemini {
   }
 
   /**
-   * 주어진 프롬프트로 텍스트를 생성합니다.
-   * @param prompt 생성할 텍스트의 프롬프트
+   * 주어진 텍스트 생성 요청 또는 프롬프트로 텍스트를 생성합니다.
+   * @param request 텍스트 생성 요청 또는 프롬프트
    * @returns 생성된 텍스트
    */
-  async generate(prompt: string): Promise<string> {
+  async generate(request: GenerateContentRequest | string): Promise<string> {
     try {
-      const result = await this.model.generateContent(prompt)
+      const result = await this.model.generateContent(request)
       return result.response.text()
     } catch (error) {
       console.error('Gemini 생성 실패:', error)
-      throw new Error(
-        `Gemini로 텍스트 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
-      )
+
+      const msg = error instanceof Error ? error.message : '알 수 없는 오류'
+      throw new Error(`Gemini로 텍스트 생성 중 오류가 발생했습니다: ${msg}`)
     }
   }
 }
