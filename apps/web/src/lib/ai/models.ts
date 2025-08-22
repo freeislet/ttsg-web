@@ -1,14 +1,14 @@
-import type { AIModel } from './types'
+import type { AIModel, ChatGPTModel, GeminiModel } from './types'
 
-export interface AIModelMeta {
-  model: AIModel
+export interface AIModelMeta<T = AIModel> {
+  model: T
   name: string
   description: string
   icon: string
   color: string
 }
 
-export const AI_MODELS: AIModelMeta[] = [
+export const CHATGPT_MODELS: AIModelMeta<ChatGPTModel>[] = [
   {
     model: 'gpt-5',
     name: 'GPT-5',
@@ -30,6 +30,9 @@ export const AI_MODELS: AIModelMeta[] = [
     icon: 'simple-icons:openai',
     color: 'red',
   },
+]
+
+export const GEMINI_MODELS: AIModelMeta<GeminiModel>[] = [
   {
     model: 'gemini-2.5-pro',
     name: 'Gemini 2.5 Pro',
@@ -52,3 +55,5 @@ export const AI_MODELS: AIModelMeta[] = [
     color: 'teal',
   },
 ]
+
+export const AI_MODELS: AIModelMeta[] = [...CHATGPT_MODELS, ...GEMINI_MODELS]
