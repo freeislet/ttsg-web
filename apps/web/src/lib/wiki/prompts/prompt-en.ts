@@ -65,6 +65,7 @@ Writing Guidelines:
 - Use markdown syntax correctly.
 - Write naturally in English.
 - Reflect the latest information, but do not include uncertain content.
+- Include actual implementation methods and code examples when possible.
 
 Start the wiki document:`,
   systemMessage:
