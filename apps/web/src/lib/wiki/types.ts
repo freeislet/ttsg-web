@@ -2,14 +2,13 @@ import type { Language } from '@/lib/notion'
 
 export type { Language }
 
-
 /**
  * 위키 콘텐츠 타입
  */
 export interface WikiContent {
   title: string
   content: string
-  summary?: string
+  // summary?: string
 }
 
 /**
