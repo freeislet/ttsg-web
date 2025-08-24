@@ -8,6 +8,7 @@ import path from 'path'
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'server',
   adapter: cloudflare({
     platformProxy: {
       enabled: true,
@@ -15,7 +16,7 @@ export default defineConfig({
 
     imageService: 'cloudflare',
   }),
-
+  integrations: [icon(), react()],
   vite: {
     plugins: [tailwindcss()],
     resolve: {
@@ -24,6 +25,4 @@ export default defineConfig({
       },
     },
   },
-
-  integrations: [icon(), react()],
 })
