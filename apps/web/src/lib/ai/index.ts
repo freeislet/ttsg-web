@@ -1,4 +1,5 @@
 export * from './types'
+export * from './colors'
 export * from './models'
 export * from './ChatGPT'
 export * from './Gemini'
