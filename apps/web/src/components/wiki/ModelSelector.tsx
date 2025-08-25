@@ -45,7 +45,7 @@ export default function ModelSelector({
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-gray-700">
           <Icon icon="mdi:robot" className="w-4 h-4 inline mr-1" />
-          AI 모델 선택
+          AI 모델
         </label>
         <button
           type="button"

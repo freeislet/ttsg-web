@@ -37,7 +37,7 @@ const TagSelector = forwardRef<HTMLDivElement, TagSelectorProps>(
       <div className="space-y-2" ref={ref} {...props}>
         <label className="flex items-center text-sm font-medium text-gray-700">
           <Icon icon="mdi:tag-multiple" className="w-4 h-4 mr-2 text-gray-500" />
-          태그 선택
+          태그 (선택사항)
         </label>
 
         {/* 태그 선택 드롭다운 */}
