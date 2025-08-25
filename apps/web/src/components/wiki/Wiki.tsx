@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
 import { OpenInNewIcon } from '@/components/icons'
 import type { NotionPage } from '@/lib/notion'
-import type { NotionApiResponse } from '@/types'
+import { getNotionWikiList } from '@/client/wiki'
 
 /**
  * 위키 페이지의 메인 컨텐츠를 담당하는 React 컴포넌트
@@ -21,14 +21,8 @@ export default function Wiki() {
     setError(null)
 
     try {
-      const response = await fetch('/api/notion-pages.json')
-      const result: NotionApiResponse = await response.json()
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'API 호출 실패')
-      }
-
-      setPages(result.data)
+      const pages = await getNotionWikiList()
+      setPages(pages)
     } catch (err) {
       console.error('노션 페이지 로딩 실패:', err)
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다')
