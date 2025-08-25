@@ -18,10 +18,10 @@ export interface WikiModelResult {
 }
 
 /**
- * 위키 생성 컨텍스트 전체 상태
+ * 위키 생성 과정에서 발생하는 컨텍스트 데이터
  */
 export interface WikiGenerationContext {
-  // 공통 파라미터
+  // 폼 데이터
   topic: string
   instruction?: string
   language: Language
@@ -32,6 +32,9 @@ export interface WikiGenerationContext {
   isCompleted: boolean
   progress: number
   hasErrors: boolean
+
+  // 전체 에러 상태
+  globalError?: string
 
   // 모델별 결과
   modelResults: WikiModelResult[]
@@ -49,6 +52,7 @@ export const $wikiGenerationContext = map<WikiGenerationContext>({
   isCompleted: false,
   progress: 0,
   hasErrors: false,
+  globalError: undefined,
   modelResults: [],
 })
 
@@ -65,6 +69,7 @@ export const resetWikiContext = () => {
     isCompleted: false,
     progress: 0,
     hasErrors: false,
+    globalError: undefined,
     modelResults: [],
   })
 }
@@ -197,16 +202,34 @@ export const updateProgress = (progress: number) => {
 }
 
 /**
+ * 전체 위키 생성 에러 설정
+ */
+export const setWikiGenerationError = (error: string) => {
+  const currentResults = $wikiGenerationContext.get().modelResults
+  const updatedResults = currentResults.map((result) => ({
+    ...result,
+    status: 'error' as const,
+  }))
+  
+  $wikiGenerationContext.setKey('globalError', error)
+  $wikiGenerationContext.setKey('modelResults', updatedResults)
+  $wikiGenerationContext.setKey('isGenerating', false)
+  $wikiGenerationContext.setKey('isCompleted', true)
+  $wikiGenerationContext.setKey('hasErrors', true)
+}
+
+/**
  * 위키 생성 액션 함수들을 그룹화한 객체
  */
 export const wikiGenerationActions = {
   reset: resetWikiContext,
   startGeneration: startWikiGeneration,
   restartGeneration: restartWikiGeneration,
-  setModelPrompt,
-  startModelGeneration,
+  // setModelPrompt,
+  // startModelGeneration,
   setModelSuccess,
   setModelError,
+  setError: setWikiGenerationError,
   updateProgress,
 } as const
 

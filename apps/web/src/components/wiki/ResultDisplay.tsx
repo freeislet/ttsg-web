@@ -33,6 +33,17 @@ export default function ResultDisplay() {
         <h2 className="text-xl font-semibold text-gray-800">생성 완료</h2>
       </div>
 
+      {/* 전체 에러 표시 */}
+      {wikiGeneration.globalError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center mb-2">
+            <Icon icon="mdi:alert-circle" className="w-5 h-5 text-red-600 mr-2" />
+            <span className="text-red-800 font-medium">전체 생성 실패</span>
+          </div>
+          <p className="text-red-700 text-sm">{wikiGeneration.globalError}</p>
+        </div>
+      )}
+
       {/* 성공 결과 */}
       {hasAnySuccess && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">

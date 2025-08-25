@@ -57,13 +57,10 @@ export default function WikiGenerate() {
       })
     } catch (err) {
       console.error('위키 생성 실패:', err)
-      // 모든 모델에 대해 에러 처리
-      data.models.forEach((model) => {
-        actions.setModelError(
-          model,
-          `API 요청 실패: ${err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'}`
-        )
-      })
+      // 전체 API 요청 실패 처리
+      actions.setError(
+        `API 요청 실패: ${err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'}`
+      )
     }
   }
 
