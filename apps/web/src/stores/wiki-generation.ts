@@ -106,7 +106,7 @@ export const setModelSuccess = (model: AIModel, content: string, notionUrl: stri
   const currentResults = wikiContextStore.get().modelResults
   const updatedResults = currentResults.map(result => 
     result.model === model 
-      ? { ...result, status: 'success' as const, content, notionUrl, notionPageId }
+      ? { ...result, status: 'success' as const, content, notionUrl, notionPageId, error: undefined }
       : result
   )
   wikiContextStore.setKey('modelResults', updatedResults)
@@ -132,7 +132,7 @@ export const setModelError = (model: AIModel, error: string) => {
   const currentResults = wikiContextStore.get().modelResults
   const updatedResults = currentResults.map(result => 
     result.model === model 
-      ? { ...result, status: 'error' as const, error }
+      ? { ...result, status: 'error' as const, error, content: undefined, notionUrl: undefined, notionPageId: undefined }
       : result
   )
   wikiContextStore.setKey('modelResults', updatedResults)

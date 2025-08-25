@@ -71,9 +71,18 @@ export default function WikiGenerate() {
         throw new Error(result.message || '위키 생성에 실패했습니다.')
       }
 
-      // 성공한 결과들을 스토어에 저장
+      // 결과들을 스토어에 저장 (성공/실패 모두)
       result.results.forEach((result) => {
-        setModelSuccess(result.model, '', result.notionUrl, result.notionPageId)
+        if (result.error) {
+          setModelError(result.model, result.error)
+        } else {
+          setModelSuccess(
+            result.model, 
+            result.content || '', 
+            result.notionUrl || '', 
+            result.notionPageId || ''
+          )
+        }
       })
     } catch (err) {
       console.error('위키 생성 실패:', err)
