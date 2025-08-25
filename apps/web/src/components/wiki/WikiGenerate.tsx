@@ -1,7 +1,6 @@
-import { Controller } from 'react-hook-form'
 import { Icon } from '@iconify/react'
 import type { WikiGenerationResponse } from '@/types/wiki'
-import { useWikiGenerationForm, type WikiFormData, defaultFormValues } from '@/types/wiki-form'
+import { useWikiGenerationForm, Controller, type WikiFormData } from '@/types/wiki-form'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
 import { useAutoScroll } from '@/hooks/useAutoScroll'
 import TopicInput from './TopicInput'
@@ -38,7 +37,6 @@ export default function WikiGenerate() {
    */
   const onSubmit = async (data: WikiFormData) => {
     // 스토어 초기화 및 생성 시작
-    actions.reset()
     actions.startGeneration(data)
 
     try {
@@ -92,8 +90,7 @@ export default function WikiGenerate() {
    */
   const handleReset = () => {
     reset()
-    actions.reset()
-    actions.startGeneration(defaultFormValues)
+    actions.restartGeneration()
   }
 
   return (

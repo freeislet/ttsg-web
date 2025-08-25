@@ -2,7 +2,7 @@ import { map } from 'nanostores'
 import { useStore } from '@nanostores/react'
 import type { AIModel } from '@/lib/ai'
 import type { Language } from '@/lib/notion'
-import type { WikiFormData } from '@/types/wiki-form'
+import { type WikiFormData, defaultFormValues } from '@/types/wiki-form'
 
 /**
  * 위키 생성 과정에서 발생하는 모델별 결과 데이터
@@ -55,9 +55,30 @@ export const $wikiGenerationContext = map<WikiGenerationContext>({
 })
 
 /**
+ * 위키 생성 컨텍스트 초기화
+ */
+export const resetWikiContext = () => {
+  $wikiGenerationContext.set({
+    topic: '',
+    instruction: '',
+    language: 'ko',
+    tags: [],
+    isGenerating: false,
+    progress: 0,
+    modelResults: [],
+    isCompleted: false,
+    hasErrors: false,
+  })
+}
+
+/**
  * 위키 생성 시작 액션
  */
-export const startWikiGeneration = (formData: WikiFormData) => {
+export const startWikiGeneration = (formData: WikiFormData, reset = true) => {
+  if (reset) {
+    resetWikiContext()
+  }
+
   const modelResults: WikiModelResult[] = formData.models.map((model) => ({
     model,
     status: 'pending',
@@ -72,6 +93,10 @@ export const startWikiGeneration = (formData: WikiFormData) => {
   $wikiGenerationContext.setKey('modelResults', modelResults)
   $wikiGenerationContext.setKey('isCompleted', false)
   $wikiGenerationContext.setKey('hasErrors', false)
+}
+
+export const restartWikiGeneration = () => {
+  startWikiGeneration(defaultFormValues)
 }
 
 /**
@@ -174,33 +199,17 @@ export const updateProgress = (progress: number) => {
 }
 
 /**
- * 위키 생성 컨텍스트 초기화
- */
-export const resetWikiContext = () => {
-  $wikiGenerationContext.set({
-    topic: '',
-    instruction: '',
-    language: 'ko',
-    tags: [],
-    isGenerating: false,
-    progress: 0,
-    modelResults: [],
-    isCompleted: false,
-    hasErrors: false,
-  })
-}
-
-/**
  * 위키 생성 액션 함수들을 그룹화한 객체
  */
 export const wikiGenerationActions = {
+  reset: resetWikiContext,
   startGeneration: startWikiGeneration,
+  restartGeneration: restartWikiGeneration,
   setModelPrompt,
   startModelGeneration,
   setModelSuccess,
   setModelError,
   updateProgress,
-  reset: resetWikiContext,
 } as const
 
 /**

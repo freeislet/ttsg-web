@@ -1,8 +1,10 @@
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { type AIModel, AI_MODELS } from '@/lib/ai'
 import type { Language } from '@/lib/notion'
+
+export { Controller }
 
 /**
  * 위키 생성 폼 데이터 타입
