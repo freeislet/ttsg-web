@@ -30,28 +30,41 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
   async _generate(topic: string, language: Language, instruction?: string): Promise<WikiContent> {
     const systemMessage = getWikiSystemMessage(language, 'ChatGPT')
     const prompt = getWikiPrompt(topic, language, instruction)
+    const combinedPrompt = systemMessage + '\n\n' + prompt
 
-    console.log(`<${topic}> ChatGPT prompt:`, systemMessage, prompt)
-    const content = await this.chatgpt.generate(
-      [
+    try {
+      // console.log(`[${topic}] ChatGPT prompt:`, systemMessage, prompt)
+      const content = await this.chatgpt.generate(
+        [
+          {
+            role: 'system',
+            content: systemMessage,
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
         {
-          role: 'system',
-          content: systemMessage,
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      {
-        maxTokens: 4000,
-        temperature: 0.7,
+          maxTokens: 4000,
+          temperature: 0.7,
+        }
+      )
+
+      return {
+        title: topic,
+        prompt: combinedPrompt,
+        content: content.trim(),
       }
-    )
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+      console.error(`[${topic}] ChatGPT 위키 생성 실패:`, errorMessage)
 
-    return {
-      title: topic,
-      content: content.trim(),
+      return {
+        title: topic,
+        prompt: combinedPrompt,
+        error: errorMessage,
+      }
     }
   }
 }

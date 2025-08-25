@@ -7,7 +7,9 @@ export type { Language }
  */
 export interface WikiContent {
   title: string
-  content: string
+  prompt: string // System Message + Prompt
+  content?: string
+  error?: string
   // summary?: string
 }
 

@@ -38,14 +38,14 @@ export abstract class WikiGeneratorBase implements IWikiGenerator {
    * @returns 생성된 위키 콘텐츠
    */
   async generate(topic: string, language?: Language, instruction?: string): Promise<WikiContent> {
-    try {
-      return await this._generate(topic, language ?? 'ko', instruction)
-    } catch (error) {
-      console.error(`${this.aiType} ${this.name} 위키 생성 실패:`, error)
+    // try {
+    return await this._generate(topic, language ?? 'ko', instruction)
+    // } catch (error) {
+    //   console.error(`${this.aiType} ${this.name} 위키 생성 실패:`, error)
 
-      const msg = error instanceof Error ? error.message : '알 수 없는 오류'
-      throw new Error(`${this.aiType} ${this.name}로 위키 생성 중 오류가 발생했습니다: ${msg}`)
-    }
+    //   const msg = error instanceof Error ? error.message : '알 수 없는 오류'
+    //   throw new Error(`${this.aiType} ${this.name}로 위키 생성 중 오류가 발생했습니다: ${msg}`)
+    // }
   }
 
   /**

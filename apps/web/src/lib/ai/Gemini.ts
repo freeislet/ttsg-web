@@ -28,14 +28,12 @@ export class Gemini {
    * @returns 생성된 텍스트
    */
   async generate(request: GenerateContentRequest | string): Promise<string> {
-    try {
-      const result = await this.model.generateContent(request)
-      return result.response.text()
-    } catch (error) {
-      console.error('Gemini 생성 실패:', error)
-
-      const msg = error instanceof Error ? error.message : '알 수 없는 오류'
-      throw new Error(`Gemini로 텍스트 생성 중 오류가 발생했습니다: ${msg}`)
-    }
+    // try {
+    const result = await this.model.generateContent(request)
+    return result.response.text()
+    // } catch (error) {
+    //   console.error('Gemini 텍스트 생성 실패:', error)
+    //   throw error
+    // }
   }
 }

@@ -32,12 +32,24 @@ export class GeminiGenerator extends WikiGeneratorBase {
     const prompt = getWikiPrompt(topic, language, instruction)
     const combinedPrompt = systemMessage + '\n\n' + prompt
 
-    console.log(`<${topic}> Gemini prompt:`, combinedPrompt)
-    const content = await this.gemini.generate(combinedPrompt)
+    try {
+      // console.log(`[${topic}] Gemini prompt:`, combinedPrompt)
+      const content = await this.gemini.generate(combinedPrompt)
 
-    return {
-      title: topic,
-      content: content.trim(),
+      return {
+        title: topic,
+        prompt: combinedPrompt,
+        content: content.trim(),
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+      console.error(`[${topic}] Gemini 위키 생성 실패:`, errorMessage)
+
+      return {
+        title: topic,
+        prompt: combinedPrompt,
+        error: errorMessage,
+      }
     }
   }
 }
