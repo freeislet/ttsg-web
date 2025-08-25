@@ -1,8 +1,7 @@
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { Controller } from 'react-hook-form'
 import { Icon } from '@iconify/react'
 import type { WikiGenerationResponse } from '@/types/wiki'
-import { type WikiFormData, wikiFormSchema, defaultFormValues } from '@/types/wiki-form'
+import { useWikiGenerationForm, type WikiFormData, defaultFormValues } from '@/types/wiki-form'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
 import { useAutoScroll } from '@/hooks/useAutoScroll'
 import TopicInput from './TopicInput'
@@ -18,6 +17,7 @@ import ResultDisplay from './ResultDisplay'
  * 주제 입력, AI 모델 선택, 생성 진행 상태, 결과 표시를 관리합니다.
  */
 export default function WikiGenerate() {
+  // 위키 생성 스토어 사용
   const wikiGeneration = useWikiGenerationStore()
   const { isGenerating, isCompleted, actions } = wikiGeneration
 
@@ -25,16 +25,13 @@ export default function WikiGenerate() {
   const progressRef = useAutoScroll<HTMLDivElement>(isGenerating)
   const resultsRef = useAutoScroll<HTMLDivElement>(isCompleted)
 
+  // 폼 훅 사용
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm<WikiFormData>({
-    resolver: zodResolver(wikiFormSchema),
-    defaultValues: defaultFormValues,
-    mode: 'onChange',
-  })
+  } = useWikiGenerationForm()
 
   /**
    * 위키 생성 요청을 처리하는 함수

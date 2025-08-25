@@ -1,3 +1,5 @@
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { type AIModel, AI_MODELS } from '@/lib/ai'
 import type { Language } from '@/lib/notion'
@@ -66,4 +68,16 @@ export const defaultFormValues: WikiFormData = {
   instruction: '',
   language: 'ko',
   tags: [],
+}
+
+/**
+ * 위키 생성 폼을 위한 커스텀 hook
+ * react-hook-form과 zod validation을 함께 제공합니다.
+ */
+export const useWikiGenerationForm = () => {
+  return useForm<WikiFormData>({
+    resolver: zodResolver(wikiFormSchema),
+    defaultValues: defaultFormValues,
+    mode: 'onChange',
+  })
 }
