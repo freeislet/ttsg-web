@@ -1,17 +1,10 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useStore } from '@nanostores/react'
 import { Icon } from '@iconify/react'
-import { useAutoScroll } from '@/hooks/useAutoScroll'
 import type { WikiGenerationResponse } from '@/types/wiki'
 import { type WikiFormData, wikiFormSchema, defaultFormValues } from '@/types/wiki-form'
-import {
-  wikiContextStore,
-  startWikiGeneration,
-  setModelSuccess,
-  setModelError,
-  resetWikiContext,
-} from '@/stores/wiki-generation'
+import { useWikiGenerationStore } from '@/stores/wiki-generation'
+import { useAutoScroll } from '@/hooks/useAutoScroll'
 import TopicInput from './TopicInput'
 import InstructionInput from './InstructionInput'
 import LanguageSelector from './LanguageSelector'
@@ -25,11 +18,12 @@ import ResultDisplay from './ResultDisplay'
  * 주제 입력, AI 모델 선택, 생성 진행 상태, 결과 표시를 관리합니다.
  */
 export default function WikiGenerate() {
-  const wikiContext = useStore(wikiContextStore)
-  
+  const wikiGeneration = useWikiGenerationStore()
+  const { isGenerating, isCompleted, actions } = wikiGeneration
+
   // 자동 스크롤 훅 사용
-  const progressRef = useAutoScroll<HTMLDivElement>(wikiContext.isGenerating)
-  const resultsRef = useAutoScroll<HTMLDivElement>(wikiContext.isCompleted)
+  const progressRef = useAutoScroll<HTMLDivElement>(isGenerating)
+  const resultsRef = useAutoScroll<HTMLDivElement>(isCompleted)
 
   const {
     control,
@@ -47,8 +41,8 @@ export default function WikiGenerate() {
    */
   const onSubmit = async (data: WikiFormData) => {
     // 스토어 초기화 및 생성 시작
-    resetWikiContext()
-    startWikiGeneration(data)
+    actions.reset()
+    actions.startGeneration(data)
 
     try {
       const response = await fetch('/api/wiki/generate', {
@@ -74,12 +68,12 @@ export default function WikiGenerate() {
       // 결과들을 스토어에 저장 (성공/실패 모두)
       result.results.forEach((result) => {
         if (result.error) {
-          setModelError(result.model, result.error)
+          actions.setModelError(result.model, result.error)
         } else {
-          setModelSuccess(
-            result.model, 
-            result.content || '', 
-            result.notionUrl || '', 
+          actions.setModelSuccess(
+            result.model,
+            result.content || '',
+            result.notionUrl || '',
             result.notionPageId || ''
           )
         }
@@ -88,7 +82,10 @@ export default function WikiGenerate() {
       console.error('위키 생성 실패:', err)
       // 모든 모델에 대해 에러 처리
       data.models.forEach((model) => {
-        setModelError(model, err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.')
+        actions.setModelError(
+          model,
+          `API 요청 실패: ${err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'}`
+        )
       })
     }
   }
@@ -97,8 +94,9 @@ export default function WikiGenerate() {
    * 새로운 생성을 위한 초기화 함수
    */
   const handleReset = () => {
-    reset(defaultFormValues)
-    resetWikiContext()
+    reset()
+    actions.reset()
+    actions.startGeneration(defaultFormValues)
   }
 
   return (
@@ -128,7 +126,7 @@ export default function WikiGenerate() {
               value={field.value}
               onChange={field.onChange}
               error={errors.topic?.message}
-              disabled={wikiContext.isGenerating}
+              disabled={wikiGeneration.isGenerating}
             />
           )}
         />
@@ -142,7 +140,7 @@ export default function WikiGenerate() {
               value={field.value || ''}
               onChange={field.onChange}
               error={errors.instruction?.message}
-              disabled={wikiContext.isGenerating}
+              disabled={wikiGeneration.isGenerating}
             />
           )}
         />
@@ -156,7 +154,7 @@ export default function WikiGenerate() {
               value={field.value}
               onChange={field.onChange}
               error={errors.language?.message}
-              disabled={wikiContext.isGenerating}
+              disabled={wikiGeneration.isGenerating}
             />
           )}
         />
@@ -170,7 +168,7 @@ export default function WikiGenerate() {
               value={field.value}
               onChange={field.onChange}
               error={errors.tags?.message}
-              disabled={wikiContext.isGenerating}
+              disabled={wikiGeneration.isGenerating}
             />
           )}
         />
@@ -184,7 +182,7 @@ export default function WikiGenerate() {
               selectedModels={field.value}
               onChange={field.onChange}
               error={errors.models?.message}
-              disabled={wikiContext.isGenerating}
+              disabled={wikiGeneration.isGenerating}
             />
           )}
         />
@@ -193,10 +191,10 @@ export default function WikiGenerate() {
         <div className="flex gap-4">
           <button
             type="submit"
-            disabled={wikiContext.isGenerating || !isValid}
+            disabled={wikiGeneration.isGenerating || !isValid}
             className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            {wikiContext.isGenerating ? (
+            {wikiGeneration.isGenerating ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 생성 중...
@@ -213,7 +211,7 @@ export default function WikiGenerate() {
             <button
               type="button"
               onClick={handleReset}
-              disabled={wikiContext.isGenerating}
+              disabled={wikiGeneration.isGenerating}
               className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               초기화
@@ -223,17 +221,24 @@ export default function WikiGenerate() {
       </form>
 
       {/* 진행 상태 표시 */}
-      {wikiContext.isGenerating && (
+      {wikiGeneration.isGenerating && (
         <div ref={progressRef}>
           <GenerationProgress
-            progress={wikiContext.progress}
-            selectedModels={wikiContext.modelResults.map((result) => result.model)}
+            progress={wikiGeneration.progress}
+            selectedModels={wikiGeneration.modelResults.map((result) => result.model)}
           />
         </div>
       )}
 
       {/* 결과 표시 */}
-      {wikiContext.isCompleted && (
+      {wikiGeneration.modelResults.some((result) => result.status !== 'pending') && (
+        <div ref={resultsRef}>
+          <ResultDisplay />
+        </div>
+      )}
+
+      {/* 완료 후 새로운 생성 버튼 */}
+      {wikiGeneration.isCompleted && (
         <div ref={resultsRef}>
           <ResultDisplay />
         </div>

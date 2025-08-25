@@ -1,16 +1,15 @@
 import { useState } from 'react'
-import { useStore } from '@nanostores/react'
 import { Icon } from '@iconify/react'
 import { getModelMeta } from '@/lib/ai'
 import { OpenInNewIcon } from '@/components/icons'
-import { wikiContextStore } from '@/stores/wiki-generation'
+import { useWikiGenerationStore } from '@/stores/wiki-generation'
 
 /**
  * 위키 생성 결과 표시 컴포넌트
  * 스토어에서 위키 생성 컨텍스트를 가져와 결과를 표시합니다.
  */
 export default function ResultDisplay() {
-  const wikiContext = useStore(wikiContextStore)
+  const wikiGeneration = useWikiGenerationStore()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
   const toggleSection = (sectionId: string) => {
@@ -20,20 +19,19 @@ export default function ResultDisplay() {
     }))
   }
 
-  const successResults = wikiContext.modelResults.filter((result) => result.status === 'success')
-  const errorResults = wikiContext.modelResults.filter((result) => result.status === 'error')
+  const successResults = wikiGeneration.modelResults.filter((result) => result.status === 'success')
+  const errorResults = wikiGeneration.modelResults.filter((result) => result.status === 'error')
   const hasAnySuccess = successResults.length > 0
   return (
     <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
       {/* 헤더 */}
       <div className="flex items-center">
         <Icon
-          icon={wikiContext.hasErrors ? 'mdi:alert-circle' : 'mdi:check-circle'}
-          className={`w-6 h-6 mr-2 ${wikiContext.hasErrors ? 'text-orange-600' : 'text-green-600'}`}
+          icon={wikiGeneration.hasErrors ? 'mdi:alert-circle' : 'mdi:check-circle'}
+          className={`w-6 h-6 mr-2 ${wikiGeneration.hasErrors ? 'text-orange-600' : 'text-green-600'}`}
         />
         <h2 className="text-xl font-semibold text-gray-800">생성 완료</h2>
       </div>
-
 
       {/* 성공 결과 */}
       {hasAnySuccess && (
@@ -52,7 +50,7 @@ export default function ResultDisplay() {
 
       {/* 모델별 결과 */}
       <div className="space-y-4">
-        {wikiContext.modelResults.map((result) => {
+        {wikiGeneration.modelResults.map((result) => {
           const modelMeta = getModelMeta(result.model, { useFallback: true })
           const { name: modelName, colors, icon } = modelMeta
           const sectionId = `model-${result.model}`
@@ -71,8 +69,8 @@ export default function ResultDisplay() {
                       result.status === 'success'
                         ? `${colors.bg} ${colors.text}`
                         : result.status === 'error'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-gray-100 text-gray-700'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-700'
                     }`}
                   >
                     {result.status === 'success'
