@@ -1,7 +1,7 @@
 import { Icon } from '@iconify/react'
-import type { WikiGenerationResponse } from '@/types/wiki'
 import { useWikiGenerationForm, Controller, type WikiFormData } from '@/types/wiki-form'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
+import { generateWiki } from '@/client/wiki'
 import { useAutoScroll } from '@/hooks/useAutoScroll'
 import TopicInput from './TopicInput'
 import InstructionInput from './InstructionInput'
@@ -40,28 +40,10 @@ export default function WikiGenerate() {
     actions.startGeneration(data)
 
     try {
-      const response = await fetch('/api/wiki/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic: data.topic.trim(),
-          models: data.models,
-          language: data.language,
-          tags: data.tags,
-          instruction: data.instruction || undefined,
-        }),
-      })
-
-      const result: WikiGenerationResponse = await response.json()
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || '위키 생성에 실패했습니다.')
-      }
+      const response = await generateWiki(data)
 
       // 결과들을 스토어에 저장 (성공/실패 모두)
-      result.results.forEach((result) => {
+      response.results.forEach((result) => {
         if (result.error) {
           actions.setModelError(result.model, result.error)
         } else {
