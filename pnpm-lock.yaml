@@ -84,6 +84,9 @@ importers:
       '@iconify-json/simple-icons':
         specifier: ^1.2.48
         version: 1.2.48
+      '@illuxiza/nanostores-immer':
+        specifier: ^0.1.0
+        version: 0.1.0(immer@10.1.1)(nanostores@1.0.1)
       '@nanostores/react':
         specifier: ^1.0.0
         version: 1.0.0(nanostores@1.0.1)(react@19.1.1)
@@ -1254,6 +1257,13 @@ packages:
 
   '@iconify/utils@2.3.0':
     resolution: {integrity: sha512-GmQ78prtwYW6EtzXRU1rY+KwOKfz32PD7iJh6Iyqw68GiKuoZ2A6pRtzWONz5VQJbp50mEjXh/7NkumtrAgRKA==}
+
+  '@illuxiza/nanostores-immer@0.1.0':
+    resolution: {integrity: sha512-2eLg0RJoZ4pqTepxOw3I4vgldtyi6zrXmnCNGmstE8s2R/xQdWZ0QdASC9G4XgAUCukX9piURINDE9kBsZjWLA==}
+    engines: {node: ^20.0.0 || >=22.0.0}
+    peerDependencies:
+      immer: ^10.0.0
+      nanostores: ^1.0.0
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -2724,6 +2734,9 @@ packages:
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
+
+  immer@10.1.1:
+    resolution: {integrity: sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw==}
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -5301,6 +5314,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@illuxiza/nanostores-immer@0.1.0(immer@10.1.1)(nanostores@1.0.1)':
+    dependencies:
+      immer: 10.1.1
+      nanostores: 1.0.1
+
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
       '@img/sharp-libvips-darwin-arm64': 1.0.4
@@ -7123,6 +7141,8 @@ snapshots:
       safer-buffer: 2.1.2
 
   ignore@5.3.2: {}
+
+  immer@10.1.1: {}
 
   import-fresh@3.3.1:
     dependencies:

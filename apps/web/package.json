@@ -16,6 +16,7 @@
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.1",
     "@iconify-json/simple-icons": "^1.2.48",
+    "@illuxiza/nanostores-immer": "^0.1.0",
     "@nanostores/react": "^1.0.0",
     "@notionhq/client": "^4.0.2",
     "@tailwindcss/vite": "^4.1.11",
