@@ -27,16 +27,14 @@ export interface WikiGenerationContext {
   language: Language
   tags: string[]
 
-  // 생성 상태
+  // 생성 및 완료 상태
   isGenerating: boolean
+  isCompleted: boolean
   progress: number
+  hasErrors: boolean
 
   // 모델별 결과
   modelResults: WikiModelResult[]
-
-  // 전체 완료 상태
-  isCompleted: boolean
-  hasErrors: boolean
 }
 
 /**
@@ -48,10 +46,10 @@ export const $wikiGenerationContext = map<WikiGenerationContext>({
   language: 'ko',
   tags: [],
   isGenerating: false,
-  progress: 0,
-  modelResults: [],
   isCompleted: false,
+  progress: 0,
   hasErrors: false,
+  modelResults: [],
 })
 
 /**
@@ -64,10 +62,10 @@ export const resetWikiContext = () => {
     language: 'ko',
     tags: [],
     isGenerating: false,
-    progress: 0,
-    modelResults: [],
     isCompleted: false,
+    progress: 0,
     hasErrors: false,
+    modelResults: [],
   })
 }
 
@@ -89,10 +87,10 @@ export const startWikiGeneration = (formData: WikiFormData, reset = true) => {
   $wikiGenerationContext.setKey('language', formData.language)
   $wikiGenerationContext.setKey('tags', formData.tags)
   $wikiGenerationContext.setKey('isGenerating', true)
-  $wikiGenerationContext.setKey('progress', 0)
-  $wikiGenerationContext.setKey('modelResults', modelResults)
   $wikiGenerationContext.setKey('isCompleted', false)
+  $wikiGenerationContext.setKey('progress', 0)
   $wikiGenerationContext.setKey('hasErrors', false)
+  $wikiGenerationContext.setKey('modelResults', modelResults)
 }
 
 export const restartWikiGeneration = () => {
@@ -154,8 +152,8 @@ export const setModelSuccess = (
     const hasErrors = updatedResults.some((result) => result.status === 'error')
     $wikiGenerationContext.setKey('isCompleted', true)
     $wikiGenerationContext.setKey('isGenerating', false)
-    $wikiGenerationContext.setKey('hasErrors', hasErrors)
     $wikiGenerationContext.setKey('progress', 100)
+    $wikiGenerationContext.setKey('hasErrors', hasErrors)
   }
 }
 
@@ -186,8 +184,8 @@ export const setModelError = (model: AIModel, error: string) => {
   if (allCompleted) {
     $wikiGenerationContext.setKey('isCompleted', true)
     $wikiGenerationContext.setKey('isGenerating', false)
-    $wikiGenerationContext.setKey('hasErrors', true)
     $wikiGenerationContext.setKey('progress', 100)
+    $wikiGenerationContext.setKey('hasErrors', true)
   }
 }
 
