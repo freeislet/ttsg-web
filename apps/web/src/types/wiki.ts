@@ -32,6 +32,9 @@ export interface WikiGenerationResult {
   model: AIModel
   title: string
   version: string
-  notionUrl: string
-  notionPageId: string
+  prompt?: string
+  content?: string
+  notionUrl?: string
+  notionPageId?: string
+  error?: string
 }

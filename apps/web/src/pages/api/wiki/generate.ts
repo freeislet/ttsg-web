@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { responseSuccess, responseError, responseServerError } from '@/lib/api'
-import { WikiGeneratorFactory } from '@/lib/wiki'
+import { WikiGeneratorFactory, type AIModel, type Language } from '@/lib/wiki'
 import { createWikiPage } from '@/lib/notion'
 import type { WikiGenerationRequest, WikiGenerationResponse, WikiGenerationResult } from '@/types'
 
@@ -31,61 +31,90 @@ export const POST: APIRoute = async ({ request }) => {
       return responseError(`지원하지 않는 모델입니다: ${unsupportedModels.join(', ')}`)
     }
 
-    const results: WikiGenerationResult[] = []
-    const errors: string[] = []
-
     // 각 모델별로 위키 생성 및 노션 저장
-    for (const model of models) {
-      try {
-        console.log(
-          `${model} 모델로 위키 생성 시작: ${topic}${instruction ? ` (지침: ${instruction})` : ''}`
-        )
+    const results = await Promise.all(
+      models.map((model) => generateWikiForModel(model, topic, instruction, language, tags))
+    )
 
-        // AI 모델로 위키 콘텐츠 생성
-        const generator = WikiGeneratorFactory.create(model)
-        const version = generator.getName()
-        const wikiContent = await generator.generate(topic, language, instruction)
-        console.log(`${model} 위키 생성 완료, 노션에 저장 중...`)
-
-        // 노션에 페이지 생성
-        const notionPage = await createWikiPage(wikiContent, version, language, tags)
-        console.log(`${model} 노션 저장 완료: ${notionPage.url}`)
-
-        results.push({
-          model,
-          title: wikiContent.title,
-          version,
-          notionUrl: notionPage.url,
-          notionPageId: notionPage.pageId,
-        })
-      } catch (error) {
-        console.error(`${model} 위키 생성 실패:`, error)
-        const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
-        errors.push(`${model}: ${errorMessage}`)
-      }
-    }
-
-    // 결과 반환
-    if (results.length === 0) {
-      return responseError(
-        `모든 모델에서 위키 생성에 실패했습니다. 오류: ${errors.join('; ')}`,
-        500
-      )
-    }
-
-    // 부분적 성공의 경우 경고 메시지 포함
+    // 결과 반환 (성공/실패 모두 포함)
     let message: string | undefined
-    if (errors.length > 0) {
-      message = `일부 모델에서 오류가 발생했습니다: ${errors.join('; ')}`
+    const successCount = results.filter((r) => !r.error).length
+    const errorCount = results.filter((r) => r.error).length
+
+    if (successCount === 0) {
+      message = `모든 모델에서 위키 생성에 실패했습니다.`
+    } else if (errorCount > 0) {
+      message = `${successCount}개 모델 성공, ${errorCount}개 모델 실패`
     }
 
     return responseSuccess<WikiGenerationResponse>({
-      success: true,
+      success: successCount > 0,
       results,
       message,
     })
   } catch (error) {
     console.error('위키 생성 API 오류:', error)
     return responseServerError(error)
+  }
+}
+
+/**
+ * 단일 모델로 위키 생성 및 노션 저장
+ * @param model AI 모델
+ * @param topic 주제
+ * @param instruction 추가 지침
+ * @param language 언어
+ * @param tags 태그 목록
+ * @returns 위키 생성 결과
+ */
+async function generateWikiForModel(
+  model: AIModel,
+  topic: string,
+  instruction?: string,
+  language?: Language,
+  tags?: string[]
+): Promise<WikiGenerationResult> {
+  try {
+    // AI 모델로 위키 콘텐츠 생성
+    const generator = WikiGeneratorFactory.create(model)
+    const version = generator.getName()
+    const wikiContent = await generator.generate(topic, language, instruction)
+    const { title, prompt, content, error } = wikiContent
+
+    // 위키 생성 실패 시
+    if (!content) {
+      return { model, title, version, prompt, error: error ?? '알 수 없는 오류' }
+    }
+
+    const result = { model, title, version, prompt, content }
+
+    // 노션에 페이지 생성
+    try {
+      const notionPage = await createWikiPage(wikiContent, version, language, tags)
+
+      return {
+        ...result,
+        notionUrl: notionPage.url,
+        notionPageId: notionPage.pageId,
+      }
+    } catch (error) {
+      console.error(`[${topic}] ${model} 노션 저장 실패:`, error)
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+
+      return {
+        ...result,
+        error: `노션 저장 실패: ${errorMessage}`,
+      }
+    }
+  } catch (error) {
+    console.error(`[${topic}] ${model} 예상치 못한 오류:`, error)
+    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+
+    return {
+      model,
+      title: topic,
+      version: model,
+      error: errorMessage,
+    }
   }
 }
