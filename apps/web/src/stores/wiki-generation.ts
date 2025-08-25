@@ -1,4 +1,4 @@
-import { map } from 'nanostores'
+import { atom } from '@illuxiza/nanostores-immer'
 import { useStore } from '@nanostores/react'
 import type { AIModel } from '@/lib/ai'
 import type { Language } from '@/lib/notion'
@@ -43,7 +43,7 @@ export interface WikiGenerationContext {
 /**
  * 위키 생성 컨텍스트 스토어
  */
-export const $wikiGenerationContext = map<WikiGenerationContext>({
+export const $wikiGenerationContext = atom<WikiGenerationContext>({
   topic: '',
   instruction: '',
   language: 'ko',
@@ -87,41 +87,68 @@ export const startWikiGeneration = (formData: WikiFormData, reset = true) => {
     status: 'pending',
   }))
 
-  $wikiGenerationContext.setKey('topic', formData.topic)
-  $wikiGenerationContext.setKey('instruction', formData.instruction)
-  $wikiGenerationContext.setKey('language', formData.language)
-  $wikiGenerationContext.setKey('tags', formData.tags)
-  $wikiGenerationContext.setKey('isGenerating', true)
-  $wikiGenerationContext.setKey('isCompleted', false)
-  $wikiGenerationContext.setKey('progress', 0)
-  $wikiGenerationContext.setKey('hasErrors', false)
-  $wikiGenerationContext.setKey('modelResults', modelResults)
+  $wikiGenerationContext.mut((draft) => {
+    draft.topic = formData.topic
+    draft.instruction = formData.instruction
+    draft.language = formData.language
+    draft.tags = formData.tags
+    draft.isGenerating = true
+    draft.isCompleted = false
+    draft.progress = 0
+    draft.hasErrors = false
+    draft.modelResults = modelResults
+  })
 }
 
+/**
+ * 위키 생성 재시작 액션
+ */
 export const restartWikiGeneration = () => {
   startWikiGeneration(defaultFormValues)
+}
+
+/**
+ * 전체 위키 생성 에러 설정
+ */
+export const setWikiGenerationError = (error: string) => {
+  $wikiGenerationContext.mut((draft) => {
+    // 전역 에러 설정
+    draft.globalError = error
+
+    // 모든 모델 결과를 에러 상태로 변경
+    draft.modelResults.forEach((result) => {
+      result.status = 'error'
+    })
+
+    // 생성 상태 업데이트
+    draft.isGenerating = false
+    draft.isCompleted = true
+    draft.hasErrors = true
+  })
 }
 
 /**
  * 모델별 프롬프트 설정
  */
 export const setModelPrompt = (model: AIModel, prompt: string) => {
-  const currentResults = $wikiGenerationContext.get().modelResults
-  const updatedResults = currentResults.map((result) =>
-    result.model === model ? { ...result, prompt } : result
-  )
-  $wikiGenerationContext.setKey('modelResults', updatedResults)
+  $wikiGenerationContext.mut((draft) => {
+    const result = draft.modelResults.find((r) => r.model === model)
+    if (result) {
+      result.prompt = prompt
+    }
+  })
 }
 
 /**
  * 모델별 생성 시작
  */
 export const startModelGeneration = (model: AIModel) => {
-  const currentResults = $wikiGenerationContext.get().modelResults
-  const updatedResults = currentResults.map((result) =>
-    result.model === model ? { ...result, status: 'generating' as const } : result
-  )
-  $wikiGenerationContext.setKey('modelResults', updatedResults)
+  $wikiGenerationContext.mut((draft) => {
+    const result = draft.modelResults.find((r) => r.model === model)
+    if (result) {
+      result.status = 'generating'
+    }
+  })
 }
 
 /**
@@ -133,89 +160,68 @@ export const setModelSuccess = (
   notionUrl: string,
   notionPageId: string
 ) => {
-  const currentResults = $wikiGenerationContext.get().modelResults
-  const updatedResults = currentResults.map((result) =>
-    result.model === model
-      ? {
-          ...result,
-          status: 'success' as const,
-          content,
-          notionUrl,
-          notionPageId,
-          error: undefined,
-        }
-      : result
-  )
-  $wikiGenerationContext.setKey('modelResults', updatedResults)
+  $wikiGenerationContext.mut((draft) => {
+    // 해당 모델의 결과 업데이트
+    const result = draft.modelResults.find((r) => r.model === model)
+    if (result) {
+      result.status = 'success'
+      result.content = content
+      result.notionUrl = notionUrl
+      result.notionPageId = notionPageId
+      result.error = undefined
+    }
 
-  // 모든 모델이 완료되었는지 확인
-  const allCompleted = updatedResults.every(
-    (result) => result.status === 'success' || result.status === 'error'
-  )
+    // 모든 모델이 완료되었는지 확인
+    const allCompleted = draft.modelResults.every(
+      (r) => r.status === 'success' || r.status === 'error'
+    )
 
-  if (allCompleted) {
-    const hasErrors = updatedResults.some((result) => result.status === 'error')
-    $wikiGenerationContext.setKey('isCompleted', true)
-    $wikiGenerationContext.setKey('isGenerating', false)
-    $wikiGenerationContext.setKey('progress', 100)
-    $wikiGenerationContext.setKey('hasErrors', hasErrors)
-  }
+    if (allCompleted) {
+      const hasErrors = draft.modelResults.some((r) => r.status === 'error')
+      draft.isCompleted = true
+      draft.isGenerating = false
+      draft.progress = 100
+      draft.hasErrors = hasErrors
+    }
+  })
 }
 
 /**
  * 모델별 생성 실패
  */
 export const setModelError = (model: AIModel, error: string) => {
-  const currentResults = $wikiGenerationContext.get().modelResults
-  const updatedResults = currentResults.map((result) =>
-    result.model === model
-      ? {
-          ...result,
-          status: 'error' as const,
-          error,
-          content: undefined,
-          notionUrl: undefined,
-          notionPageId: undefined,
-        }
-      : result
-  )
-  $wikiGenerationContext.setKey('modelResults', updatedResults)
+  $wikiGenerationContext.mut((draft) => {
+    // 해당 모델의 결과 업데이트
+    const result = draft.modelResults.find((r) => r.model === model)
+    if (result) {
+      result.status = 'error'
+      result.error = error
+      result.content = undefined
+      result.notionUrl = undefined
+      result.notionPageId = undefined
+    }
 
-  // 모든 모델이 완료되었는지 확인
-  const allCompleted = updatedResults.every(
-    (result) => result.status === 'success' || result.status === 'error'
-  )
+    // 모든 모델이 완료되었는지 확인
+    const allCompleted = draft.modelResults.every(
+      (r) => r.status === 'success' || r.status === 'error'
+    )
 
-  if (allCompleted) {
-    $wikiGenerationContext.setKey('isCompleted', true)
-    $wikiGenerationContext.setKey('isGenerating', false)
-    $wikiGenerationContext.setKey('progress', 100)
-    $wikiGenerationContext.setKey('hasErrors', true)
-  }
+    if (allCompleted) {
+      draft.isCompleted = true
+      draft.isGenerating = false
+      draft.progress = 100
+      draft.hasErrors = true
+    }
+  })
 }
 
 /**
  * 진행률 업데이트
  */
 export const updateProgress = (progress: number) => {
-  $wikiGenerationContext.setKey('progress', progress)
-}
-
-/**
- * 전체 위키 생성 에러 설정
- */
-export const setWikiGenerationError = (error: string) => {
-  const currentResults = $wikiGenerationContext.get().modelResults
-  const updatedResults = currentResults.map((result) => ({
-    ...result,
-    status: 'error' as const,
-  }))
-  
-  $wikiGenerationContext.setKey('globalError', error)
-  $wikiGenerationContext.setKey('modelResults', updatedResults)
-  $wikiGenerationContext.setKey('isGenerating', false)
-  $wikiGenerationContext.setKey('isCompleted', true)
-  $wikiGenerationContext.setKey('hasErrors', true)
+  $wikiGenerationContext.mut((draft) => {
+    draft.progress = progress
+  })
 }
 
 /**
@@ -225,11 +231,11 @@ export const wikiGenerationActions = {
   reset: resetWikiContext,
   startGeneration: startWikiGeneration,
   restartGeneration: restartWikiGeneration,
+  setError: setWikiGenerationError,
   // setModelPrompt,
   // startModelGeneration,
   setModelSuccess,
   setModelError,
-  setError: setWikiGenerationError,
   updateProgress,
 } as const
 
