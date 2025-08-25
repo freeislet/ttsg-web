@@ -33,7 +33,7 @@ const InstructionInput = forwardRef<HTMLTextAreaElement, InstructionInputProps>(
             disabled={disabled}
             placeholder="AI에게 전달할 추가 지침을 입력하세요. 예: '전문적인 톤으로 작성해주세요', '초보자도 이해할 수 있게 설명해주세요' 등"
             className={`
-              w-full px-4 py-3 border rounded-lg resize-none transition-colors
+              w-full px-4 py-3 align-bottom border rounded-lg resize-none transition-colors
               placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
               ${error ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'}
               ${disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}

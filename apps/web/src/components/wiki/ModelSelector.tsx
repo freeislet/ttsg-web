@@ -40,9 +40,8 @@ export default function ModelSelector({
     }
   }
 
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-gray-700">
           <Icon icon="mdi:robot" className="w-4 h-4 inline mr-1" />
@@ -103,9 +102,10 @@ export default function ModelSelector({
         </div>
       )}
 
-      <p className="text-sm text-gray-500">
+      <div className="text-xs text-gray-500">
+        <Icon icon="mdi:information-outline" className="w-3 h-3 inline mr-1" />
         선택된 각 모델별로 개별 위키 문서가 생성됩니다. ({selectedModels.length}개 선택됨)
-      </p>
+      </div>
     </div>
   )
 }

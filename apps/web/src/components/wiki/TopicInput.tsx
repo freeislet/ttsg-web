@@ -35,9 +35,10 @@ export default function TopicInput({ value, onChange, error, disabled = false }:
           {error}
         </div>
       )}
-      <p className="text-sm text-gray-500">
+      <div className="text-xs text-gray-500">
+        <Icon icon="mdi:information-outline" className="w-3 h-3 inline mr-1" />
         구체적이고 명확한 주제를 입력하면 더 좋은 결과를 얻을 수 있습니다.
-      </p>
+      </div>
     </div>
   )
 }
