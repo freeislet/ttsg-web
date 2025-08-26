@@ -4,13 +4,14 @@ import { type AIModel, getModelMeta } from '@/lib/ai'
 interface GenerationProgressProps {
   progress: number
   selectedModels: AIModel[]
+  isGenerating?: boolean
 }
 
 /**
  * 위키 생성 진행 상태 표시 컴포넌트
  * 선택된 모델별 생성 진행률과 상태를 표시합니다.
  */
-export default function GenerationProgress({ progress, selectedModels }: GenerationProgressProps) {
+export default function GenerationProgress({ progress, selectedModels, isGenerating = false }: GenerationProgressProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center mb-4">
@@ -39,13 +40,15 @@ export default function GenerationProgress({ progress, selectedModels }: Generat
           const modelProgress = Math.min(100, (progress / selectedModels.length) * (index + 1))
           const isCompleted = modelProgress >= 100
           const isInProgress = modelProgress > 0 && modelProgress < 100
+          // 생성이 시작되었지만 아직 첫 번째 모델 결과가 없는 경우 모든 모델을 "생성 중"으로 표시
+          const isWaitingButGenerating = isGenerating && progress === 0
 
           return (
             <div key={model} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="flex-shrink-0">
                 {isCompleted ? (
                   <Icon icon="mdi:check-circle" className="w-5 h-5 text-green-500" />
-                ) : isInProgress ? (
+                ) : isInProgress || isWaitingButGenerating ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
                 ) : (
                   <Icon icon="mdi:clock-outline" className="w-5 h-5 text-gray-400" />
@@ -57,7 +60,7 @@ export default function GenerationProgress({ progress, selectedModels }: Generat
                     {getModelMeta(model, { useFallback: true }).name}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {isCompleted ? '완료' : isInProgress ? '생성 중' : '대기 중'}
+                    {isCompleted ? '완료' : (isInProgress || isWaitingButGenerating) ? '생성 중' : '대기 중'}
                   </span>
                 </div>
               </div>

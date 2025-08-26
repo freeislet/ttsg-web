@@ -242,6 +242,7 @@ export default function WikiGenerate() {
           <GenerationProgress
             progress={wikiGeneration.progress}
             selectedModels={wikiGeneration.modelResults.map((result) => result.model)}
+            isGenerating={wikiGeneration.isGenerating}
           />
         </div>
       )}
