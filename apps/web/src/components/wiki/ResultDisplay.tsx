@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Icon } from '@iconify/react'
 import { getModelMeta } from '@/lib/ai'
-import { OpenInNewIcon } from '@/components/icons'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
+import { OpenInNewIcon } from '@/components/icons'
 
 /**
  * 위키 생성 결과 표시 컴포넌트
@@ -91,17 +91,6 @@ export default function ResultDisplay() {
                         : '대기중'}
                   </span>
                 </div>
-                {(result.prompt || (result.status === 'success' && result.content)) && (
-                  <button
-                    onClick={() => toggleSection(sectionId)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <Icon
-                      icon={expandedSections[sectionId] ? 'mdi:chevron-up' : 'mdi:chevron-down'}
-                      className="w-5 h-5"
-                    />
-                  </button>
-                )}
               </div>
 
               {/* 에러 시 에러 메시지 - 항상 표시 */}
@@ -138,28 +127,59 @@ export default function ResultDisplay() {
                 </div>
               )}
 
-              {/* 접을 수 있는 상세 내용 */}
-              {expandedSections[sectionId] && (
-                <div className="space-y-3 border-t pt-3">
-                  {/* 프롬프트 */}
-                  {result.prompt && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">프롬프트</h4>
-                      <div className="bg-white p-3 rounded border text-xs text-gray-600 max-h-32 overflow-y-auto">
+              {/* 프롬프트 섹션 */}
+              {result.prompt && (
+                <div className="border-t pt-3">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg">
+                    <button
+                      onClick={() => toggleSection(`${sectionId}-prompt`)}
+                      className="flex items-center w-full text-left hover:bg-gray-100 p-3 rounded-lg transition-colors"
+                    >
+                      <h4 className="text-sm font-medium text-gray-700 mr-2">프롬프트</h4>
+                      <Icon
+                        icon={
+                          expandedSections[`${sectionId}-prompt`]
+                            ? 'mdi:chevron-up'
+                            : 'mdi:chevron-down'
+                        }
+                        className="w-4 h-4 text-gray-500"
+                      />
+                    </button>
+                    {expandedSections[`${sectionId}-prompt`] && (
+                      <div className="m-3 mt-0 bg-white p-3 rounded border text-xs text-gray-600 max-h-32 overflow-y-auto">
                         <pre className="whitespace-pre-wrap">{result.prompt}</pre>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                </div>
+              )}
 
-                  {/* 성공 시 컨텐츠 */}
-                  {result.status === 'success' && result.content && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">생성된 컨텐츠</h4>
-                      <div className="bg-white p-3 rounded border text-xs text-gray-600 max-h-40 overflow-y-auto">
+              {/* 컨텐츠 섹션 */}
+              {result.content && (
+                <div className="border-t pt-3">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg">
+                    <button
+                      onClick={() => toggleSection(`${sectionId}-content`)}
+                      className="flex items-center w-full text-left hover:bg-gray-100 p-3 rounded-lg transition-colors"
+                    >
+                      <h4 className="text-sm font-medium text-gray-700 mr-2">
+                        {result.status === 'success' ? '생성된 컨텐츠' : '부분 생성된 컨텐츠'}
+                      </h4>
+                      <Icon
+                        icon={
+                          expandedSections[`${sectionId}-content`]
+                            ? 'mdi:chevron-up'
+                            : 'mdi:chevron-down'
+                        }
+                        className="w-4 h-4 text-gray-500"
+                      />
+                    </button>
+                    {expandedSections[`${sectionId}-content`] && (
+                      <div className="m-3 mt-0 bg-white p-3 rounded border text-xs text-gray-600 max-h-40 overflow-y-auto">
                         <pre className="whitespace-pre-wrap">{result.content}</pre>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
             </div>
