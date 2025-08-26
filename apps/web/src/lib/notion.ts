@@ -1,5 +1,4 @@
 import { Client, type PageObjectResponse, type BlockObjectRequest } from '@notionhq/client'
-import type { WikiContent } from './wiki'
 
 /**
  * 언어 타입
@@ -184,21 +183,23 @@ export async function getRecentPages(limit: number = 10): Promise<NotionPage[]> 
 
 /**
  * 위키 콘텐츠를 노션 데이터베이스에 새 페이지로 생성합니다
- * @param wikiContent 위키 콘텐츠
+ * @param title 위키 제목
+ * @param content 위키 콘텐츠 (마크다운)
  * @param version 모델 버전 (예: "Gemini Pro")
  * @param language 언어 설정 (기본값: 'ko')
  * @param tags 태그 목록 (기본값: [])
  * @returns 생성된 노션 페이지 정보
  */
 export async function createWikiPage(
-  wikiContent: WikiContent,
+  title: string,
+  content: string,
   version: string,
   language: Language = 'ko',
   tags: string[] = []
 ): Promise<{ pageId: string; url: string }> {
   try {
     // 마크다운 콘텐츠를 노션 블록으로 변환
-    const blocks = convertMarkdownToBlocks(wikiContent.content)
+    const blocks = convertMarkdownToBlocks(content)
 
     const response = await notion.pages.create({
       parent: {
@@ -209,7 +210,7 @@ export async function createWikiPage(
           title: [
             {
               text: {
-                content: wikiContent.title,
+                content: title,
               },
             },
           ],

@@ -90,7 +90,7 @@ async function generateWikiForModel(
 
     // 노션에 페이지 생성
     try {
-      const notionPage = await createWikiPage(wikiContent, version, language, tags)
+      const notionPage = await createWikiPage(title, content, version, language, tags)
 
       return {
         ...result,
