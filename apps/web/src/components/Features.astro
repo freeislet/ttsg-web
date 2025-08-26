@@ -1,7 +1,7 @@
 ---
 // Features.astro - 주요 기능 소개 컴포넌트
 
-import { Icon } from 'astro-icon/components'
+import { Icon } from '@iconify/react'
 import DetailLink from './ui/DetailLink.astro'
 ---
 
@@ -16,7 +16,7 @@ import DetailLink from './ui/DetailLink.astro'
         <div
           class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
         >
-          <Icon name="mdi:blog-outline" class="text-blue-600 size-8" />
+          <Icon client:load icon="mdi:blog-outline" className="text-blue-600 size-8" />
         </div>
         <h3 class="text-2xl font-bold text-gray-800 mb-4">블로그</h3>
         <p class="text-gray-600 mb-6 leading-relaxed">
@@ -32,7 +32,7 @@ import DetailLink from './ui/DetailLink.astro'
         <div
           class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
         >
-          <Icon name="mdi:wikipedia" class="text-blue-600 size-8" />
+          <Icon client:load icon="mdi:wikipedia" className="text-blue-600 size-8" />
         </div>
         <h3 class="text-2xl font-bold text-gray-800 mb-4">위키</h3>
         <p class="text-gray-600 mb-6 leading-relaxed">
@@ -47,7 +47,7 @@ import DetailLink from './ui/DetailLink.astro'
         <div
           class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 mb-6"
         >
-          <Icon name="mdi:monitor-dashboard" class="text-blue-600 size-8" />
+          <Icon client:load icon="mdi:monitor-dashboard" className="text-blue-600 size-8" />
         </div>
         <h3 class="text-2xl font-bold text-gray-800 mb-4">데모 앱</h3>
         <p class="text-gray-600 mb-6 leading-relaxed">

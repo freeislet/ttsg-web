@@ -1,7 +1,7 @@
 ---
 // Footer.astro - 사이트 하단 푸터 컴포넌트
 
-import { Icon } from 'astro-icon/components'
+import { Icon } from '@iconify/react'
 ---
 
 <footer class="bg-gray-800 text-white px-6 py-4 mt-20">
@@ -30,7 +30,7 @@ import { Icon } from 'astro-icon/components'
               href="mailto:contact@ttsg.space"
               class="hover:text-white transition-colors flex items-center"
             >
-              <Icon name="mdi:email-outline" class="size-6 mr-2" />
+              <Icon client:load icon="mdi:email-outline" className="size-6 mr-2" />
                Contact
             </a>
           </li>
@@ -41,7 +41,7 @@ import { Icon } from 'astro-icon/components'
               rel="noopener"
               class="hover:text-white transition-colors flex items-center"
             >
-              <Icon name="ic:baseline-discord" class="size-6 mr-2" />
+              <Icon client:load icon="ic:baseline-discord" className="size-6 mr-2" />
                Discord
             </a>
           </li>
@@ -52,7 +52,7 @@ import { Icon } from 'astro-icon/components'
               rel="noopener"
               class="hover:text-white transition-colors flex items-center"
             >
-              <Icon name="mdi:github" class="size-6 mr-2" />
+              <Icon client:load icon="mdi:github" className="size-6 mr-2" />
                GitHub
             </a>
           </li>
