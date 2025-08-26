@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 import { responseSuccess, responseError, responseServerError } from '@/lib/api'
-import { WikiGeneratorFactory, type AIModel, type Language } from '@/lib/wiki'
 import { createWikiPage } from '@/lib/notion'
+import { WikiGeneratorFactory, type AIModel, type Language } from '@/lib/wiki'
 import type { WikiGenerationRequest, WikiGenerationResponse, WikiGenerationResult } from '@/types'
 
 /**
@@ -12,24 +12,14 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     // 요청 데이터 파싱
     const requestData: WikiGenerationRequest = await request.json()
+
+    // 요청 데이터 검증
+    const validationResult = validateWikiGenerationRequest(requestData)
+    if (validationResult) {
+      return validationResult
+    }
+
     const { models, topic, instruction, language, tags } = requestData
-
-    // 입력 검증
-    if (!topic || !topic.trim()) {
-      return responseError('주제를 입력해주세요.')
-    }
-
-    if (!models || models.length === 0) {
-      return responseError('최소 하나의 AI 모델을 선택해주세요.')
-    }
-
-    // 지원하는 모델인지 확인
-    const unsupportedModels = models.filter(
-      (model) => !WikiGeneratorFactory.supportedModels.includes(model)
-    )
-    if (unsupportedModels.length > 0) {
-      return responseError(`지원하지 않는 모델입니다: ${unsupportedModels.join(', ')}`)
-    }
 
     // 각 모델별로 위키 생성 및 노션 저장
     const results = await Promise.all(
@@ -56,6 +46,37 @@ export const POST: APIRoute = async ({ request }) => {
     console.error('위키 생성 API 오류:', error)
     return responseServerError(error)
   }
+}
+
+/**
+ * 위키 생성 요청 검증 함수
+ * @param requestData 파싱된 요청 데이터
+ * @returns 검증 실패 시 Error Response, 성공 시 undefined
+ */
+export function validateWikiGenerationRequest(
+  requestData: WikiGenerationRequest
+): Response | undefined {
+  const { models, topic } = requestData
+
+  // 입력 검증
+  if (!topic || !topic.trim()) {
+    return responseError('주제를 입력해주세요.')
+  }
+
+  if (!models || models.length === 0) {
+    return responseError('최소 하나의 AI 모델을 선택해주세요.')
+  }
+
+  // 지원하는 모델인지 확인
+  const unsupportedModels = models.filter(
+    (model) => !WikiGeneratorFactory.supportedModels.includes(model)
+  )
+  if (unsupportedModels.length > 0) {
+    return responseError(`지원하지 않는 모델입니다: ${unsupportedModels.join(', ')}`)
+  }
+
+  // 검증 통과
+  return undefined
 }
 
 /**
