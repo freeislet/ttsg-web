@@ -22,12 +22,12 @@
     "@tailwindcss/vite": "^4.1.11",
     "astro": "^5.12.8",
     "nanostores": "^1.0.1",
-    "openai": "^5.13.1",
+    "openai": "^5.15.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.62.0",
     "tailwindcss": "^4.1.11",
-    "zod": "^4.0.17"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@iconify-json/ic": "^1.2.4",

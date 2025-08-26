@@ -69,8 +69,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       openai:
-        specifier: ^5.13.1
-        version: 5.13.1(ws@8.18.0)(zod@4.0.17)
+        specifier: ^5.15.0
+        version: 5.15.0(ws@8.18.0)(zod@3.25.76)
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -84,8 +84,8 @@ importers:
         specifier: ^4.1.11
         version: 4.1.12
       zod:
-        specifier: ^4.0.17
-        version: 4.0.17
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       '@iconify-json/ic':
         specifier: ^1.2.4
@@ -2943,8 +2943,8 @@ packages:
   oniguruma-to-es@4.3.3:
     resolution: {integrity: sha512-rPiZhzC3wXwE59YQMRDodUwwT9FZ9nNBwQQfsd1wfdtlKEyCdRV0avrTcSZ5xlIvGRVPd/cx6ZN45ECmS39xvg==}
 
-  openai@5.13.1:
-    resolution: {integrity: sha512-Jty97Apw40znKSlXZL2YDap1U2eN9NfXbqm/Rj1rExeOLEnhwezpKQ+v43kIqojavUgm30SR3iuvGlNEBR+AFg==}
+  openai@5.15.0:
+    resolution: {integrity: sha512-kcUdws8K/A8m02I+IqFBwO51gS+87GP89yWEufGbzEi8anBz4FB/bti2QxaJdGwwY4mwJGzx85XO7TuL/Tpu1w==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -3899,9 +3899,6 @@ packages:
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
-  zod@4.0.17:
-    resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6961,10 +6958,10 @@ snapshots:
       regex: 6.0.1
       regex-recursion: 6.0.2
 
-  openai@5.13.1(ws@8.18.0)(zod@4.0.17):
+  openai@5.15.0(ws@8.18.0)(zod@3.25.76):
     optionalDependencies:
       ws: 8.18.0
-      zod: 4.0.17
+      zod: 3.25.76
 
   optionator@0.9.4:
     dependencies:
@@ -7978,7 +7975,5 @@ snapshots:
   zod@3.22.3: {}
 
   zod@3.25.76: {}
-
-  zod@4.0.17: {}
 
   zwitch@2.0.4: {}
