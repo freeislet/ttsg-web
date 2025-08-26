@@ -156,7 +156,7 @@ export default function ResultDisplay() {
 
               {/* 컨텐츠 섹션 */}
               {result.content && (
-                <div className="border-t pt-3">
+                <div className="pt-3">
                   <div className="bg-gray-50 border border-gray-200 rounded-lg">
                     <button
                       onClick={() => toggleSection(`${sectionId}-content`)}
