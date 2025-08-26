@@ -88,7 +88,7 @@ export function validateWikiGenerationRequest(
  * @param tags 태그 목록
  * @returns 위키 생성 결과
  */
-async function generateWikiForModel(
+export async function generateWikiForModel(
   model: AIModel,
   topic: string,
   instruction?: string,

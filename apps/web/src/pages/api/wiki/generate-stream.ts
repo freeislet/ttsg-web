@@ -1,9 +1,8 @@
 import type { APIRoute } from 'astro'
 import { responseServerError } from '@/lib/api'
-import { createWikiPage } from '@/lib/notion'
-import { WikiGeneratorFactory, type AIModel, type Language } from '@/lib/wiki'
-import type { WikiGenerationRequest, WikiGenerationResult } from '@/types'
-import { validateWikiGenerationRequest } from './generate'
+import type { AIModel, Language } from '@/lib/wiki'
+import type { WikiGenerationRequest } from '@/types'
+import { validateWikiGenerationRequest, generateWikiForModel } from './generate'
 
 /**
  * 위키 자동 생성 SSE 스트리밍 API 엔드포인트
@@ -118,65 +117,4 @@ async function sendSSEEvent(
 ): Promise<void> {
   const eventData = `data: ${JSON.stringify(data)}\n\n`
   await writer.write(encoder.encode(eventData))
-}
-
-/**
- * 단일 모델로 위키 생성 및 노션 저장
- * @param model AI 모델
- * @param topic 주제
- * @param instruction 추가 지침
- * @param language 언어
- * @param tags 태그 목록
- * @returns 위키 생성 결과
- */
-async function generateWikiForModel(
-  model: AIModel,
-  topic: string,
-  instruction?: string,
-  language?: Language,
-  tags?: string[]
-): Promise<WikiGenerationResult> {
-  try {
-    // AI 모델로 위키 콘텐츠 생성
-    const generator = WikiGeneratorFactory.create(model)
-    const version = generator.getName()
-    const wikiContent = await generator.generate(topic, language, instruction)
-    const { title, prompt, content, error } = wikiContent
-
-    // 위키 생성 실패 시
-    if (!content) {
-      return { model, title, version, prompt, error: error ?? '알 수 없는 오류' }
-    }
-
-    const result = { model, title, version, prompt, content }
-
-    // 노션에 페이지 생성
-    try {
-      const notionPage = await createWikiPage(title, content, version, language, tags)
-
-      return {
-        ...result,
-        notionUrl: notionPage.url,
-        notionPageId: notionPage.pageId,
-      }
-    } catch (error) {
-      console.error(`${model} 노션 저장 실패 [${topic}]:`, error)
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
-
-      return {
-        ...result,
-        error: `노션 저장 실패: ${errorMessage}`,
-      }
-    }
-  } catch (error) {
-    console.error(`${model} 예상치 못한 오류 [${topic}]:`, error)
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
-
-    return {
-      model,
-      title: topic,
-      version: model,
-      error: errorMessage,
-    }
-  }
 }
