@@ -2,6 +2,7 @@ import { atom } from '@illuxiza/nanostores-immer'
 import { useStore } from '@nanostores/react'
 import type { AIModel } from '@/lib/ai'
 import type { Language } from '@/lib/notion'
+import type { WikiGenerationResult } from '@/types/wiki'
 import { type WikiFormData, defaultFormValues } from '@/types/wiki-form'
 
 /**
@@ -128,18 +129,6 @@ export const setWikiGenerationError = (error: string) => {
 }
 
 /**
- * 모델별 프롬프트 설정
- */
-export const setModelPrompt = (model: AIModel, prompt: string) => {
-  $wikiGenerationContext.mut((draft) => {
-    const result = draft.modelResults.find((r) => r.model === model)
-    if (result) {
-      result.prompt = prompt
-    }
-  })
-}
-
-/**
  * 모델별 생성 시작
  */
 export const startModelGeneration = (model: AIModel) => {
@@ -152,23 +141,25 @@ export const startModelGeneration = (model: AIModel) => {
 }
 
 /**
- * 모델별 생성 성공
+ * 모델별 결과 설정
  */
-export const setModelSuccess = (
+export const setModelResult = (
   model: AIModel,
-  content: string,
-  notionUrl: string,
-  notionPageId: string
+  result: Omit<WikiGenerationResult, 'model' | 'title' | 'version'>
 ) => {
   $wikiGenerationContext.mut((draft) => {
     // 해당 모델의 결과 업데이트
-    const result = draft.modelResults.find((r) => r.model === model)
-    if (result) {
-      result.status = 'success'
-      result.content = content
-      result.notionUrl = notionUrl
-      result.notionPageId = notionPageId
-      result.error = undefined
+    const modelResult = draft.modelResults.find((r) => r.model === model)
+    if (modelResult) {
+      // 상태 결정: 에러가 있으면 error, 없으면 success
+      modelResult.status = result.error ? 'error' : 'success'
+
+      // 모든 필드 업데이트 (오류가 있어도 prompt, content는 보존)
+      if (result.prompt !== undefined) modelResult.prompt = result.prompt
+      if (result.content !== undefined) modelResult.content = result.content
+      if (result.error !== undefined) modelResult.error = result.error
+      if (result.notionUrl !== undefined) modelResult.notionUrl = result.notionUrl
+      if (result.notionPageId !== undefined) modelResult.notionPageId = result.notionPageId
     }
 
     // 모든 모델이 완료되었는지 확인
@@ -182,35 +173,6 @@ export const setModelSuccess = (
       draft.isGenerating = false
       draft.progress = 100
       draft.hasErrors = hasErrors
-    }
-  })
-}
-
-/**
- * 모델별 생성 실패
- */
-export const setModelError = (model: AIModel, error: string) => {
-  $wikiGenerationContext.mut((draft) => {
-    // 해당 모델의 결과 업데이트
-    const result = draft.modelResults.find((r) => r.model === model)
-    if (result) {
-      result.status = 'error'
-      result.error = error
-      result.content = undefined
-      result.notionUrl = undefined
-      result.notionPageId = undefined
-    }
-
-    // 모든 모델이 완료되었는지 확인
-    const allCompleted = draft.modelResults.every(
-      (r) => r.status === 'success' || r.status === 'error'
-    )
-
-    if (allCompleted) {
-      draft.isCompleted = true
-      draft.isGenerating = false
-      draft.progress = 100
-      draft.hasErrors = true
     }
   })
 }
@@ -232,10 +194,8 @@ export const wikiGenerationActions = {
   startGeneration: startWikiGeneration,
   restartGeneration: restartWikiGeneration,
   setError: setWikiGenerationError,
-  // setModelPrompt,
-  // startModelGeneration,
-  setModelSuccess,
-  setModelError,
+  startModelGeneration,
+  setModelResult,
   updateProgress,
 } as const
 

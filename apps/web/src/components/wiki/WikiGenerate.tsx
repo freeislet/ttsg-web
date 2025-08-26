@@ -44,16 +44,7 @@ export default function WikiGenerate() {
 
       // 결과들을 스토어에 저장 (성공/실패 모두)
       response.results.forEach((result) => {
-        if (result.error) {
-          actions.setModelError(result.model, result.error)
-        } else {
-          actions.setModelSuccess(
-            result.model,
-            result.content || '',
-            result.notionUrl || '',
-            result.notionPageId || ''
-          )
-        }
+        actions.setModelResult(result.model, result)
       })
     } catch (err) {
       console.error('위키 생성 실패:', err)
