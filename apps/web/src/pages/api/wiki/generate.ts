@@ -98,7 +98,7 @@ async function generateWikiForModel(
         notionPageId: notionPage.pageId,
       }
     } catch (error) {
-      console.error(`[${topic}] ${model} 노션 저장 실패:`, error)
+      console.error(`${model} 노션 저장 실패 [${topic}]:`, error)
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
 
       return {
@@ -107,7 +107,7 @@ async function generateWikiForModel(
       }
     }
   } catch (error) {
-    console.error(`[${topic}] ${model} 예상치 못한 오류:`, error)
+    console.error(`${model} 예상치 못한 오류 [${topic}]:`, error)
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
 
     return {

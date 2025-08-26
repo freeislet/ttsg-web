@@ -33,7 +33,7 @@ export class GeminiGenerator extends WikiGeneratorBase {
     const combinedPrompt = systemMessage + '\n\n' + prompt
 
     try {
-      // console.log(`[${topic}] Gemini prompt:`, combinedPrompt)
+      console.log('Gemini 위키 생성 시작', topic, language, instruction)
       const content = await this.gemini.generate(combinedPrompt)
 
       return {
@@ -43,7 +43,7 @@ export class GeminiGenerator extends WikiGeneratorBase {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
-      console.error(`[${topic}] Gemini 위키 생성 실패:`, errorMessage)
+      console.error(`Gemini 위키 생성 실패 [${topic}]:`, errorMessage)
 
       return {
         title: topic,

@@ -33,7 +33,7 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
     const combinedPrompt = systemMessage + '\n\n' + prompt
 
     try {
-      // console.log(`[${topic}] ChatGPT prompt:`, systemMessage, prompt)
+      console.log('ChatGPT 위키 생성 시작', topic, language, instruction)
       const content = await this.chatgpt.generate(
         [
           {
@@ -58,7 +58,7 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
-      console.error(`[${topic}] ChatGPT 위키 생성 실패:`, errorMessage)
+      console.error(`ChatGPT 위키 생성 실패 [${topic}]:`, errorMessage)
 
       return {
         title: topic,
