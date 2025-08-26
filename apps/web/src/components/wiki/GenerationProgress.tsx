@@ -11,7 +11,11 @@ interface GenerationProgressProps {
  * 위키 생성 진행 상태 표시 컴포넌트
  * 선택된 모델별 생성 진행률과 상태를 표시합니다.
  */
-export default function GenerationProgress({ progress, selectedModels, isGenerating = false }: GenerationProgressProps) {
+export default function GenerationProgress({
+  progress,
+  selectedModels,
+  isGenerating = false,
+}: GenerationProgressProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center mb-4">
@@ -60,7 +64,11 @@ export default function GenerationProgress({ progress, selectedModels, isGenerat
                     {getModelMeta(model, { useFallback: true }).name}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {isCompleted ? '완료' : (isInProgress || isWaitingButGenerating) ? '생성 중' : '대기 중'}
+                    {isCompleted
+                      ? '완료'
+                      : isInProgress || isWaitingButGenerating
+                        ? '생성 중'
+                        : '대기 중'}
                   </span>
                 </div>
               </div>

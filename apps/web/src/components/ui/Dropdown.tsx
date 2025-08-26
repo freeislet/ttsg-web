@@ -12,7 +12,11 @@ interface DropdownProps {
   selectedCount?: number
   children: ReactNode
   className?: string
-  renderTrigger?: (params: { isOpen: boolean; selectedCount: number; placeholder: string }) => ReactNode
+  renderTrigger?: (params: {
+    isOpen: boolean
+    selectedCount: number
+    placeholder: string
+  }) => ReactNode
 }
 
 /**
@@ -20,19 +24,22 @@ interface DropdownProps {
  * 태그 선택, 옵션 선택 등에 사용할 수 있습니다.
  */
 const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
-  ({ 
-    isOpen, 
-    onToggle, 
-    onClose, 
-    disabled = false, 
-    error, 
-    placeholder = '선택하세요',
-    selectedCount = 0,
-    children,
-    className = '',
-    renderTrigger,
-    ...props 
-  }, _ref) => {
+  (
+    {
+      isOpen,
+      onToggle,
+      onClose,
+      disabled = false,
+      error,
+      placeholder = '선택하세요',
+      selectedCount = 0,
+      children,
+      className = '',
+      renderTrigger,
+      ...props
+    },
+    _ref
+  ) => {
     const dropdownRef = useClickOutside<HTMLDivElement>(onClose, isOpen)
 
     const getDisplayText = () => {
@@ -60,12 +67,10 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
               ${disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400'}
             `}
           >
-            <span className="text-gray-500">
-              {getDisplayText()}
-            </span>
-            <Icon 
-              icon={isOpen ? "mdi:chevron-up" : "mdi:chevron-down"} 
-              className="w-5 h-5 text-gray-400" 
+            <span className="text-gray-500">{getDisplayText()}</span>
+            <Icon
+              icon={isOpen ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+              className="w-5 h-5 text-gray-400"
             />
           </button>
         )}
@@ -73,9 +78,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
         {/* 드롭다운 메뉴 */}
         {isOpen && !disabled && (
           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            <div className="p-2">
-              {children}
-            </div>
+            <div className="p-2">{children}</div>
           </div>
         )}
       </div>

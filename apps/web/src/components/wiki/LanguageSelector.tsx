@@ -25,7 +25,7 @@ const LanguageSelector = forwardRef<HTMLSelectElement, LanguageSelectorProps>(
           <Icon icon="mdi:translate" className="w-4 h-4 mr-2 text-gray-500" />
           생성 언어
         </label>
-        
+
         <div className="relative">
           <select
             ref={ref}
@@ -46,11 +46,11 @@ const LanguageSelector = forwardRef<HTMLSelectElement, LanguageSelectorProps>(
               </option>
             ))}
           </select>
-          
+
           {/* 드롭다운 아이콘 */}
-          <Icon 
-            icon="mdi:chevron-down" 
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" 
+          <Icon
+            icon="mdi:chevron-down"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
           />
         </div>
 

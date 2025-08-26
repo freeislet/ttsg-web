@@ -44,11 +44,11 @@ export default function WikiGenerate() {
       await generateWikiStream(data, handleSSEEvent)
     } catch (err) {
       console.error('스트리밍 위키 생성 실패, 일반 방식으로 재시도:', err)
-      
+
       try {
         // 스트리밍 실패 시 일반 방식으로 폴백
         const response = await generateWiki(data)
-        
+
         // 결과들을 스토어에 저장 (성공/실패 모두)
         response.results.forEach((result) => {
           actions.setModelResult(result.model, result)

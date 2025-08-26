@@ -18,17 +18,12 @@ const DropdownOption = ({ value, isSelected, onClick, className = '' }: Dropdown
       onClick={onClick}
       className={`
         w-full px-3 py-2 text-left rounded-md transition-colors flex items-center justify-between
-        ${isSelected 
-          ? 'bg-purple-100 text-purple-800' 
-          : 'hover:bg-gray-100 text-gray-700'
-        }
+        ${isSelected ? 'bg-purple-100 text-purple-800' : 'hover:bg-gray-100 text-gray-700'}
         ${className}
       `}
     >
       <span>{value}</span>
-      {isSelected && (
-        <Icon icon="mdi:check" className="w-4 h-4 text-purple-600" />
-      )}
+      {isSelected && <Icon icon="mdi:check" className="w-4 h-4 text-purple-600" />}
     </button>
   )
 }
