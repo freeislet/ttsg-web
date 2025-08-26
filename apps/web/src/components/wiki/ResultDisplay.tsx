@@ -30,7 +30,7 @@ export default function ResultDisplay() {
           icon={wikiGeneration.hasErrors ? 'mdi:alert-circle' : 'mdi:check-circle'}
           className={`w-6 h-6 mr-2 ${wikiGeneration.hasErrors ? 'text-orange-600' : 'text-green-600'}`}
         />
-        <h2 className="text-xl font-semibold text-gray-800">생성 완료</h2>
+        <h2 className="text-xl font-semibold text-gray-800">생성 결과</h2>
       </div>
 
       {/* 전체 에러 표시 */}
@@ -162,9 +162,7 @@ export default function ResultDisplay() {
                       onClick={() => toggleSection(`${sectionId}-content`)}
                       className="flex items-center w-full text-left hover:bg-gray-100 p-3 rounded-lg transition-colors"
                     >
-                      <h4 className="text-sm font-medium text-gray-700 mr-2">
-                        {result.status === 'success' ? '생성된 컨텐츠' : '부분 생성된 컨텐츠'}
-                      </h4>
+                      <h4 className="text-sm font-medium text-gray-700 mr-2">생성된 컨텐츠</h4>
                       <Icon
                         icon={
                           expandedSections[`${sectionId}-content`]
