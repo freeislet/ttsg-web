@@ -200,13 +200,6 @@ export default function WikiGenerate() {
           <ResultDisplay />
         </div>
       )}
-
-      {/* 완료 후 새로운 생성 버튼 */}
-      {wikiGeneration.isCompleted && (
-        <div ref={resultsRef}>
-          <ResultDisplay />
-        </div>
-      )}
     </div>
   )
 }
