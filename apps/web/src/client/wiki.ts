@@ -40,7 +40,7 @@ export const generateWiki = async (data: WikiFormData): Promise<WikiGenerationRe
 
   const result: WikiGenerationResponse = await response.json()
 
-  if (!response.ok || !result.success) {
+  if (!response.ok) {
     throw new Error(result.message || '위키 생성에 실패했습니다.')
   }
 
