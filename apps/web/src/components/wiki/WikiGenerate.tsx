@@ -1,8 +1,8 @@
 import { Icon } from '@iconify/react'
 import { useWikiGenerationForm, Controller, type WikiFormData } from '@/types/wiki-form'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
-import { generateWiki } from '@/client/wiki'
 import { useAutoScroll } from '@/hooks/useAutoScroll'
+import { generateWiki, generateWikiStream, type SSEEvent } from '@/client/wiki'
 import TopicInput from './TopicInput'
 import InstructionInput from './InstructionInput'
 import LanguageSelector from './LanguageSelector'
@@ -33,25 +33,77 @@ export default function WikiGenerate() {
   } = useWikiGenerationForm()
 
   /**
-   * 위키 생성 요청을 처리하는 함수
+   * 위키 생성 요청을 처리하는 함수 (기본: 스트리밍, 필요시 일반 방식)
    */
   const onSubmit = async (data: WikiFormData) => {
     // 스토어 초기화 및 생성 시작
     actions.startGeneration(data)
 
     try {
-      const response = await generateWiki(data)
-
-      // 결과들을 스토어에 저장 (성공/실패 모두)
-      response.results.forEach((result) => {
-        actions.setModelResult(result.model, result)
-      })
+      // 스트리밍 방식으로 위키 생성
+      await generateWikiStream(data, handleSSEEvent)
     } catch (err) {
-      console.error('위키 생성 실패:', err)
-      // 전체 API 요청 실패 처리
-      actions.setError(
-        `API 요청 실패: ${err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'}`
-      )
+      console.error('스트리밍 위키 생성 실패, 일반 방식으로 재시도:', err)
+      
+      try {
+        // 스트리밍 실패 시 일반 방식으로 폴백
+        const response = await generateWiki(data)
+        
+        // 결과들을 스토어에 저장 (성공/실패 모두)
+        response.results.forEach((result) => {
+          actions.setModelResult(result.model, result)
+        })
+      } catch (fallbackErr) {
+        console.error('일반 위키 생성도 실패:', fallbackErr)
+        actions.setError(
+          `위키 생성 실패: ${fallbackErr instanceof Error ? fallbackErr.message : '알 수 없는 오류가 발생했습니다.'}`
+        )
+      }
+    }
+  }
+
+  /**
+   * SSE 이벤트를 처리하는 함수
+   */
+  const handleSSEEvent = (event: SSEEvent) => {
+    switch (event.type) {
+      case 'generation_start':
+        console.log('위키 생성 시작:', event.totalModels, '개 모델')
+        break
+
+      case 'model_start':
+        console.log('모델 생성 시작:', event.model)
+        if (event.model) {
+          actions.startModelGeneration(event.model)
+        }
+        if (event.progress !== undefined) {
+          actions.updateProgress(event.progress)
+        }
+        break
+
+      case 'model_complete':
+        console.log('모델 생성 완료:', event.model)
+        if (event.model && event.result) {
+          actions.setModelResult(event.model, event.result)
+        }
+        if (event.progress !== undefined) {
+          actions.updateProgress(event.progress)
+        }
+        break
+
+      case 'generation_complete':
+        console.log('전체 위키 생성 완료')
+        break
+
+      case 'error':
+        console.error('위키 생성 오류:', event.error)
+        if (event.error) {
+          actions.setError(event.error)
+        }
+        break
+
+      default:
+        console.warn('알 수 없는 SSE 이벤트:', event)
     }
   }
 
