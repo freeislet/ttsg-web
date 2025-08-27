@@ -1,4 +1,5 @@
-import { Client, type PageObjectResponse, type BlockObjectRequest } from '@notionhq/client'
+import { Client } from '@notionhq/client'
+import type { PageObjectResponse, BlockObjectRequest } from '@notionhq/client'
 
 /**
  * 언어 타입
@@ -213,8 +214,10 @@ export async function createWikiPage(
 ): Promise<{ pageId: string; url: string }> {
   try {
     // 마크다운 콘텐츠를 노션 블록으로 변환
-    const blocks = convertMarkdownToBlocks(content)
+    const allBlocks = convertMarkdownToBlocks(content)
     const notion = createNotionClient()
+
+    // 1. 빈 페이지 생성
     const response = await notion.pages.create({
       parent: {
         database_id: getEnv('NOTION_DATABASE_ID'),
@@ -247,14 +250,27 @@ export async function createWikiPage(
           multi_select: tags.map((tag) => ({ name: tag })),
         },
       },
-      children: blocks,
+      // 빈 children으로 초기화
+      children: [],
     })
 
+    const pageId = response.id
+
+    // 2. 블록을 100개 단위로 나누어 추가
+    const BATCH_SIZE = 100
+    for (let i = 0; i < allBlocks.length; i += BATCH_SIZE) {
+      const batch = allBlocks.slice(i, i + BATCH_SIZE)
+      await notion.blocks.children.append({
+        block_id: pageId,
+        children: batch as any, // 타입 호환성을 위해 any로 캐스팅
+      })
+    }
+
     // 노션 페이지 URL 생성 (페이지 ID를 사용하여 공유 링크 형태로)
-    const pageUrl = `https://www.notion.so/${response.id.replace(/-/g, '')}`
+    const pageUrl = `https://www.notion.so/${pageId.replace(/-/g, '')}`
 
     return {
-      pageId: response.id,
+      pageId,
       url: pageUrl,
     }
   } catch (error) {
