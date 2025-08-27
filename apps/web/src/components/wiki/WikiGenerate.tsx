@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react'
-import { useWikiGenerationForm, Controller, type WikiFormData } from '@/types/wiki-form'
+import { useWikiGenerationForm, type WikiFormData, Controller } from '@/types/wiki-form'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
 import { useAutoScroll } from '@/hooks/useAutoScroll'
 import { generateWiki, generateWikiStream, type SSEEvent } from '@/client/wiki'
@@ -52,7 +52,8 @@ export default function WikiGenerate() {
 
         // 결과들을 스토어에 저장 (성공/실패 모두)
         response.results.forEach((result) => {
-          actions.setModelResult(result.model, result)
+          const { model, title: _title, version: _version, ...rest } = result
+          actions.setModelResult(model, rest)
         })
       } catch (fallbackErr) {
         console.error('일반 위키 생성도 실패:', fallbackErr)
@@ -250,8 +251,8 @@ export default function WikiGenerate() {
       )}
 
       {/* 결과 표시 - 생성 완료 또는 에러가 발생한 모델이 있을 때만 표시 */}
-      {wikiGeneration.modelResults.some((result) => 
-        result.status === 'success' || result.status === 'error'
+      {wikiGeneration.modelResults.some(
+        (result) => result.status === 'success' || result.status === 'error'
       ) && (
         <div ref={resultsRef}>
           <ResultDisplay />

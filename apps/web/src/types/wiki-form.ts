@@ -56,7 +56,7 @@ export const wikiFormSchema = z.object({
   // .max(10, '최대 10개의 태그까지 선택 가능합니다'),
 
   models: z
-    .array(z.enum(AI_MODELS.map<AIModel>((model) => model.model)))
+    .array(z.enum(AI_MODELS.map((model) => model.model) as [AIModel, ...AIModel[]]))
     .min(1, '최소 하나의 AI 모델을 선택해주세요')
     .max(AI_MODELS.length, `최대 ${AI_MODELS.length}개의 모델까지 선택 가능합니다`),
 })
@@ -66,10 +66,10 @@ export const wikiFormSchema = z.object({
  */
 export const defaultFormValues: WikiFormData = {
   topic: '',
-  models: ['gpt-5-mini', 'gemini-2.5-flash'],
   instruction: '',
   language: 'ko',
   tags: [],
+  models: ['gpt-5-mini', 'gemini-2.5-flash'],
 }
 
 /**
