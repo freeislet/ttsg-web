@@ -27,7 +27,18 @@ export interface NotionPage {
 function createNotionClient() {
   // 워커/로컬 모두에서 동작하도록 전역 캐시 유틸을 사용
   const apiKey = getEnv('NOTION_API_KEY')
-  return new Client({ auth: apiKey })
+
+  // Cloudflare Workers 환경에서 this 컨텍스트 문제를 해결하기 위한 fetch 래퍼
+  // (https://blog.pixelastic.com/2025/01/21/fetch-this-illegal-invocation/ 참고)
+  // const fetchWrapper = async (url: RequestInfo | URL, init?: RequestInit) => {
+  //   return fetch(url, init)
+  // }
+  const fetchWrapper = fetch.bind(globalThis)
+
+  return new Client({
+    auth: apiKey,
+    fetch: fetchWrapper,
+  })
 }
 
 /**
