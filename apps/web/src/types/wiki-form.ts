@@ -66,7 +66,7 @@ export const wikiFormSchema = z.object({
  */
 export const defaultFormValues: WikiFormData = {
   topic: '',
-  models: ['gpt-5', 'gemini-2.5-pro'],
+  models: ['gpt-5-mini', 'gemini-2.5-flash'],
   instruction: '',
   language: 'ko',
   tags: [],
