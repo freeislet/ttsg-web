@@ -249,8 +249,10 @@ export default function WikiGenerate() {
         </div>
       )}
 
-      {/* 결과 표시 */}
-      {wikiGeneration.modelResults.some((result) => result.status !== 'pending') && (
+      {/* 결과 표시 - 생성 완료 또는 에러가 발생한 모델이 있을 때만 표시 */}
+      {wikiGeneration.modelResults.some((result) => 
+        result.status === 'success' || result.status === 'error'
+      ) && (
         <div ref={resultsRef}>
           <ResultDisplay />
         </div>
