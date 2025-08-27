@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '@iconify/react'
+import toast from 'react-hot-toast'
 import { getModelMeta } from '@/lib/ai'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
 import { OpenInNewIcon } from '@/components/icons'
@@ -118,7 +119,10 @@ export default function ResultDisplay() {
                   </a>
 
                   <button
-                    onClick={() => navigator.clipboard.writeText(result.notionUrl!)}
+                    onClick={() => {
+                      navigator.clipboard.writeText(result.notionUrl!)
+                      toast.success('링크가 클립보드에 복사되었습니다')
+                    }}
                     className="inline-flex items-center text-gray-600 hover:text-gray-800 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-sm"
                   >
                     <Icon icon="mdi:content-copy" className="w-4 h-4 mr-1" />

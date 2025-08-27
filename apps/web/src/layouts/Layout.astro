@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css'
+import { Toaster } from 'react-hot-toast'
 ---
 
 <!DOCTYPE html>
@@ -13,5 +14,6 @@ import '../styles/global.css'
   </head>
   <body class="min-h-screen w-full font-sans antialiased">
     <slot />
+    <Toaster client:load position="top-center" />
   </body>
 </html>
