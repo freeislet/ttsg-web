@@ -22,11 +22,13 @@ export interface NotionPage {
 }
 
 /**
- * 노션 클라이언트 인스턴스
+ * 노션 클라이언트 생성 함수
  */
-const notion = new Client({
-  auth: import.meta.env.NOTION_API_KEY,
-})
+function createNotionClient() {
+  // 워커/로컬 모두에서 동작하도록 전역 캐시 유틸을 사용
+  const apiKey = getEnv('NOTION_API_KEY')
+  return new Client({ auth: apiKey })
+}
 
 /**
  * 타입 가드: PageObjectResponse인지 확인
@@ -152,8 +154,9 @@ function extractLastEditor(properties: PageObjectResponse['properties']): string
  */
 export async function getRecentPages(limit: number = 10): Promise<NotionPage[]> {
   try {
+    const notion = createNotionClient()
     const response = await notion.databases.query({
-      database_id: import.meta.env.NOTION_DATABASE_ID,
+      database_id: getEnv('NOTION_DATABASE_ID'),
       sorts: [
         {
           property: 'Last Updated',
@@ -200,10 +203,10 @@ export async function createWikiPage(
   try {
     // 마크다운 콘텐츠를 노션 블록으로 변환
     const blocks = convertMarkdownToBlocks(content)
-
+    const notion = createNotionClient()
     const response = await notion.pages.create({
       parent: {
-        database_id: import.meta.env.NOTION_DATABASE_ID,
+        database_id: getEnv('NOTION_DATABASE_ID'),
       },
       properties: {
         Name: {
