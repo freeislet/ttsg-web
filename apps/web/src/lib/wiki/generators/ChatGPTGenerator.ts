@@ -50,6 +50,8 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
         }
       )
 
+      if (!content) throw new Error('콘텐츠 생성 실패')
+
       return {
         title: topic,
         prompt: combinedPrompt,

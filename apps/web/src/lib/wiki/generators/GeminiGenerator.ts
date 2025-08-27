@@ -36,6 +36,8 @@ export class GeminiGenerator extends WikiGeneratorBase {
       console.log('Gemini 위키 생성 시작', topic, language, instruction)
       const content = await this.gemini.generate(combinedPrompt)
 
+      if (!content) throw new Error('콘텐츠 생성 실패')
+
       return {
         title: topic,
         prompt: combinedPrompt,
