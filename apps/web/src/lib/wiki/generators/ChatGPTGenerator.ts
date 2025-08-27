@@ -12,7 +12,7 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
   constructor(model: ChatGPTModel, name?: string) {
     super(name ?? model, 'ChatGPT')
 
-    const apiKey = import.meta.env.OPENAI_API_KEY
+    const apiKey = getEnv('OPENAI_API_KEY')
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY 환경변수가 설정되지 않았습니다.')
     }
