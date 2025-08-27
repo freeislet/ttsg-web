@@ -220,7 +220,7 @@ export async function createWikiPage(
         database_id: getEnv('NOTION_DATABASE_ID'),
       },
       properties: {
-        Name: {
+        Title: {
           title: [
             {
               text: {
