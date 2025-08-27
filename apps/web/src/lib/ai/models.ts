@@ -28,7 +28,7 @@ export const CHATGPT_MODELS: AIModelMeta<ChatGPTModel>[] = [
     name: 'GPT-5 Mini',
     description: 'OpenAI의 경량화된 GPT-5 모델',
     icon: 'simple-icons:openai',
-    colors: COLOR_CLASSES.cyan,
+    colors: COLOR_CLASSES.pink,
   },
   {
     model: 'gpt-5-nano',
@@ -55,14 +55,14 @@ export const GEMINI_MODELS: AIModelMeta<GeminiModel>[] = [
     name: 'Gemini 2.5 Flash',
     description: 'Google의 빠른 응답 모델',
     icon: 'simple-icons:googlegemini',
-    colors: COLOR_CLASSES.green,
+    colors: COLOR_CLASSES.cyan,
   },
   {
     model: 'gemini-2.5-flash-lite',
     name: 'Gemini 2.5 Flash Lite',
     description: 'Google의 경량화된 빠른 모델',
     icon: 'simple-icons:googlegemini',
-    colors: COLOR_CLASSES.yellow,
+    colors: COLOR_CLASSES.green,
   },
 ]
 
