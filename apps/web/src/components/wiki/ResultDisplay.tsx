@@ -146,7 +146,7 @@ export default function ResultDisplay() {
                       />
                     </button>
                     {expandedSections[`${sectionId}-prompt`] && (
-                      <div className="m-3 mt-0 bg-white p-3 rounded border text-xs text-gray-600 max-h-32 overflow-y-auto">
+                      <div className="m-3 mt-0 bg-white p-3 rounded border text-xs text-gray-600 h-40 resize-y overflow-y-auto">
                         <pre className="whitespace-pre-wrap">{result.prompt}</pre>
                       </div>
                     )}
@@ -173,7 +173,7 @@ export default function ResultDisplay() {
                       />
                     </button>
                     {expandedSections[`${sectionId}-content`] && (
-                      <div className="m-3 mt-0 bg-white p-3 rounded border text-xs text-gray-600 max-h-40 overflow-y-auto">
+                      <div className="m-3 mt-0 bg-white p-3 rounded border text-xs text-gray-600 h-40 resize-y overflow-y-auto">
                         <pre className="whitespace-pre-wrap">{result.content}</pre>
                       </div>
                     )}
