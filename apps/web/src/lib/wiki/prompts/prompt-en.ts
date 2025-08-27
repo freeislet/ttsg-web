@@ -77,7 +77,7 @@ ${instruction}
 }
 Start the wiki document:`,
   systemMessage:
-    'You are a professional wiki document writer. Please write accurate and systematic wiki documents in English.',
+    'You are a professional wiki document writer. Please write accurate and systematic wiki documents in English. Output only the article without any additional explanations or notes.',
   optimizationMessages: {
     ChatGPT:
       'Utilize the characteristics of OpenAI GPT model to write a creative and comprehensive document.',
