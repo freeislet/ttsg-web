@@ -45,14 +45,14 @@ export default function GenerationProgress({
         <h3 className="text-sm font-medium text-gray-700 mb-2">선택된 모델</h3>
         {selectedModels.map((model, index) => {
           const modelResult = modelResults.find(r => r.model === model)
-          const modelProgress = Math.min(100, (progress / selectedModels.length) * (index + 1))
+          const _modelProgress = Math.min(100, (progress / selectedModels.length) * (index + 1))
           
           // 모델 결과에 따라 상태 결정
           const isCompleted = modelResult?.status === 'success'
           const isError = modelResult?.status === 'error'
           const isInProgress = modelResult?.status === 'generating' || 
                              (isGenerating && !modelResult && index === 0) // 첫 번째 모델인 경우
-          const isPending = !modelResult || modelResult.status === 'pending'
+          const _isPending = !modelResult || modelResult.status === 'pending'
           
           // 상태에 따른 아이콘과 텍스트
           let statusIcon = 'mdi:clock-outline'

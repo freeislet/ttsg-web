@@ -1,5 +1,6 @@
 import { Client } from '@notionhq/client'
 import type { PageObjectResponse, BlockObjectRequest } from '@notionhq/client'
+import { markdownToBlocks } from '@tryfabric/martian'
 
 /**
  * 언어 타입
@@ -259,10 +260,10 @@ export async function createWikiPage(
     // 2. 블록을 100개 단위로 나누어 추가
     const BATCH_SIZE = 100
     for (let i = 0; i < allBlocks.length; i += BATCH_SIZE) {
-      const batch = allBlocks.slice(i, i + BATCH_SIZE)
+      const batch = allBlocks.slice(i, i + BATCH_SIZE) as BlockObjectRequest[]
       await notion.blocks.children.append({
         block_id: pageId,
-        children: batch as any, // 타입 호환성을 위해 any로 캐스팅
+        children: batch,
       })
     }
 
@@ -287,86 +288,12 @@ export async function createWikiPage(
  * @returns 노션 블록 배열
  */
 function convertMarkdownToBlocks(markdown: string): BlockObjectRequest[] {
-  const lines = markdown.split('\n')
-  const blocks: BlockObjectRequest[] = []
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-
-    if (!line) {
-      continue
-    }
-
-    // 헤딩 처리
-    if (line.startsWith('# ')) {
-      blocks.push({
-        object: 'block',
-        type: 'heading_1',
-        heading_1: {
-          rich_text: [
-            {
-              type: 'text',
-              text: { content: line.substring(2) },
-            },
-          ],
-        },
-      })
-    } else if (line.startsWith('## ')) {
-      blocks.push({
-        object: 'block',
-        type: 'heading_2',
-        heading_2: {
-          rich_text: [
-            {
-              type: 'text',
-              text: { content: line.substring(3) },
-            },
-          ],
-        },
-      })
-    } else if (line.startsWith('### ')) {
-      blocks.push({
-        object: 'block',
-        type: 'heading_3',
-        heading_3: {
-          rich_text: [
-            {
-              type: 'text',
-              text: { content: line.substring(4) },
-            },
-          ],
-        },
-      })
-    } else if (line.startsWith('- ')) {
-      // 불릿 리스트 처리
-      blocks.push({
-        object: 'block',
-        type: 'bulleted_list_item',
-        bulleted_list_item: {
-          rich_text: [
-            {
-              type: 'text',
-              text: { content: line.substring(2) },
-            },
-          ],
-        },
-      })
-    } else {
-      // 일반 텍스트 처리
-      blocks.push({
-        object: 'block',
-        type: 'paragraph',
-        paragraph: {
-          rich_text: [
-            {
-              type: 'text',
-              text: { content: line },
-            },
-          ],
-        },
-      })
-    }
+  try {
+    // @tryfabric/martian을 사용하여 마크다운을 노션 블록으로 변환
+    return markdownToBlocks(markdown) as BlockObjectRequest[]
+  } catch (error) {
+    console.error('마크다운 변환 중 오류 발생:', error)
+    // 변환 실패 시 빈 배열 반환
+    return []
   }
-
-  return blocks
 }
