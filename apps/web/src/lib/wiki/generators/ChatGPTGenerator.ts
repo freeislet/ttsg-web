@@ -47,7 +47,6 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
         ],
         {
           maxTokens: 4000,
-          temperature: 0.7,
         }
       )
 

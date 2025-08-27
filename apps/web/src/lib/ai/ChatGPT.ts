@@ -41,15 +41,13 @@ export class ChatGPT {
     messages: ChatGPTMessage[],
     options?: {
       maxTokens?: number
-      temperature?: number
     }
   ): Promise<string> {
     // try {
     const completion = await this.openai.chat.completions.create({
       model: this.model,
       messages,
-      max_tokens: options?.maxTokens ?? 4000,
-      temperature: options?.temperature ?? 0.7,
+      max_completion_tokens: options?.maxTokens ?? 4000,
     })
 
     return completion.choices[0]?.message?.content || ''
