@@ -153,7 +153,7 @@ export default function Wiki() {
             className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-blue-700"
           >
             <Icon icon="simple-icons:notion" className="w-5 h-5 mr-2" />
-            TT Wiki 바로가기
+            TT Wiki 노션 바로가기
             <OpenInNewIcon className="w-4 h-4 ml-2" />
           </a>
           <a
