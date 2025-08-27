@@ -18,7 +18,7 @@ import ResultDisplay from './ResultDisplay'
 export default function WikiGenerate() {
   // 위키 생성 스토어 사용
   const wikiGeneration = useWikiGenerationStore()
-  const { isGenerating, isCompleted, actions } = wikiGeneration
+  const { isGenerating, isCompleted, modelResults, actions } = wikiGeneration
 
   // 자동 스크롤 훅 사용
   const progressRef = useAutoScroll<HTMLDivElement>(isGenerating)
@@ -29,6 +29,7 @@ export default function WikiGenerate() {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isValid },
   } = useWikiGenerationForm()
 
@@ -241,8 +242,9 @@ export default function WikiGenerate() {
         <div ref={progressRef}>
           <GenerationProgress
             progress={wikiGeneration.progress}
-            selectedModels={wikiGeneration.modelResults.map((result) => result.model)}
-            isGenerating={wikiGeneration.isGenerating}
+            selectedModels={watch('models')}
+            isGenerating={isGenerating}
+            modelResults={modelResults}
           />
         </div>
       )}

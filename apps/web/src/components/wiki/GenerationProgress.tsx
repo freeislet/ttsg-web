@@ -1,10 +1,12 @@
 import { Icon } from '@iconify/react'
 import { type AIModel, getModelMeta } from '@/lib/ai'
+import type { WikiModelResult } from '@/stores/wiki-generation'
 
 interface GenerationProgressProps {
   progress: number
   selectedModels: AIModel[]
   isGenerating?: boolean
+  modelResults?: WikiModelResult[]
 }
 
 /**
@@ -15,6 +17,7 @@ export default function GenerationProgress({
   progress,
   selectedModels,
   isGenerating = false,
+  modelResults = [],
 }: GenerationProgressProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -41,36 +44,57 @@ export default function GenerationProgress({
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-gray-700 mb-2">선택된 모델</h3>
         {selectedModels.map((model, index) => {
+          const modelResult = modelResults.find(r => r.model === model)
           const modelProgress = Math.min(100, (progress / selectedModels.length) * (index + 1))
-          const isCompleted = modelProgress >= 100
-          const isInProgress = modelProgress > 0 && modelProgress < 100
-          // 생성이 시작되었지만 아직 첫 번째 모델 결과가 없는 경우 모든 모델을 "생성 중"으로 표시
-          const isWaitingButGenerating = isGenerating && progress === 0
+          
+          // 모델 결과에 따라 상태 결정
+          const isCompleted = modelResult?.status === 'success'
+          const isError = modelResult?.status === 'error'
+          const isInProgress = modelResult?.status === 'generating' || 
+                             (isGenerating && !modelResult && index === 0) // 첫 번째 모델인 경우
+          const isPending = !modelResult || modelResult.status === 'pending'
+          
+          // 상태에 따른 아이콘과 텍스트
+          let statusIcon = 'mdi:clock-outline'
+          let statusText = '대기 중'
+          let iconClass = 'text-gray-400'
+          
+          if (isCompleted) {
+            statusIcon = 'mdi:check-circle'
+            statusText = '완료'
+            iconClass = 'text-green-500'
+          } else if (isError) {
+            statusIcon = 'mdi:alert-circle'
+            statusText = '실패'
+            iconClass = 'text-red-500'
+          } else if (isInProgress) {
+            statusIcon = 'mdi:loading'
+            statusText = '생성 중'
+            iconClass = 'text-blue-500 animate-spin'
+          }
 
           return (
             <div key={model} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="flex-shrink-0">
-                {isCompleted ? (
-                  <Icon icon="mdi:check-circle" className="w-5 h-5 text-green-500" />
-                ) : isInProgress || isWaitingButGenerating ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                ) : (
-                  <Icon icon="mdi:clock-outline" className="w-5 h-5 text-gray-400" />
-                )}
+                <Icon 
+                  icon={statusIcon} 
+                  className={`w-5 h-5 ${iconClass} ${statusIcon === 'mdi:loading' ? 'animate-spin' : ''}`} 
+                />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900">
                     {getModelMeta(model, { useFallback: true }).name}
                   </span>
-                  <span className="text-xs text-gray-500">
-                    {isCompleted
-                      ? '완료'
-                      : isInProgress || isWaitingButGenerating
-                        ? '생성 중'
-                        : '대기 중'}
+                  <span className={`text-xs ${isError ? 'text-red-600' : 'text-gray-500'}`}>
+                    {statusText}
                   </span>
                 </div>
+                {isError && modelResult?.error && (
+                  <div className="mt-1 text-xs text-red-500">
+                    {modelResult.error}
+                  </div>
+                )}
               </div>
             </div>
           )
