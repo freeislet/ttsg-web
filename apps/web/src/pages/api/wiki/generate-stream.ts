@@ -61,6 +61,8 @@ async function processWikiGeneration(
   language?: Language,
   tags?: string[]
 ): Promise<void> {
+  console.log(`[SSE] 위키 생성 프로세스 시작 - 주제: ${topic}, 모델: ${models.join(', ')}`)
+
   try {
     // 생성 시작 이벤트
     await sendSSEEvent(writer, encoder, {
@@ -93,11 +95,12 @@ async function processWikiGeneration(
     }
 
     // 전체 완료 이벤트
+    console.log(`[SSE] 위키 생성 프로세스 완료`)
     await sendSSEEvent(writer, encoder, {
       type: 'generation_complete',
     })
   } catch (error) {
-    console.error('위키 생성 처리 중 오류:', error)
+    console.error('[SSE] 위키 생성 중 오류:', error)
     await sendSSEEvent(writer, encoder, {
       type: 'error',
       error: error instanceof Error ? error.message : '알 수 없는 오류',

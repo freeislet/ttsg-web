@@ -104,7 +104,8 @@ export async function generateWikiForModel(
 
     // 위키 생성 실패 시
     if (!content) {
-      return { model, title, version, prompt, error: error ?? '알 수 없는 오류' }
+      console.error(`[${model}] 위키 생성 실패:`, error || '콘텐츠가 생성되지 않았습니다.')
+      return { model, title, version, prompt, error: error ?? '콘텐츠 생성에 실패했습니다.' }
     }
 
     const result = { model, title, version, prompt, content }
