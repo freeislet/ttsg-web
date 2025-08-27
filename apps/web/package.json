@@ -20,6 +20,7 @@
     "@nanostores/react": "^1.0.0",
     "@notionhq/client": "^4.0.2",
     "@tailwindcss/vite": "^4.1.11",
+    "@tryfabric/martian": "^1.2.4",
     "astro": "^5.12.8",
     "nanostores": "^1.0.1",
     "openai": "^5.15.0",
