@@ -44,7 +44,7 @@ export class GeminiGenerator extends WikiGeneratorBase {
         content: content.trim(),
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+      const errorMessage = AppError.getMessage(error)
       console.error(`Gemini 위키 생성 실패 [${topic}]:`, errorMessage)
 
       return {

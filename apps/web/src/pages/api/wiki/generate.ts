@@ -121,7 +121,7 @@ export async function generateWikiForModel(
       }
     } catch (error) {
       console.error(`${model} 노션 저장 실패 [${topic}]:`, error)
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+      const errorMessage = AppError.getMessage(error)
 
       return {
         ...result,
@@ -130,7 +130,7 @@ export async function generateWikiForModel(
     }
   } catch (error) {
     console.error(`${model} 예상치 못한 오류 [${topic}]:`, error)
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+    const errorMessage = AppError.getMessage(error)
 
     return {
       model,

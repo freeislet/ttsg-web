@@ -103,7 +103,7 @@ async function processWikiGeneration(
     console.error('[SSE] 위키 생성 중 오류:', error)
     await sendSSEEvent(writer, encoder, {
       type: 'error',
-      error: error instanceof Error ? error.message : '알 수 없는 오류',
+      error: AppError.getMessage(error),
     })
   } finally {
     await writer.close()
