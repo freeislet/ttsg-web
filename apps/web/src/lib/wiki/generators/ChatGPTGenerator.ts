@@ -46,7 +46,7 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
           },
         ],
         {
-          maxTokens: 4000,
+          maxTokens: 3500,
         }
       )
 
