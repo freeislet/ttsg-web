@@ -54,10 +54,8 @@ export class AppError extends Error {
 
     const message = this.getMessage(error, defaultMessage)
 
-    if (error instanceof Error) {
-      return new AppError(message, {
-        cause: error,
-      })
-    } else return new AppError(message)
+    return new AppError(message, {
+      cause: error instanceof Error ? error : undefined,
+    })
   }
 }
