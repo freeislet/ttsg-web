@@ -33,8 +33,18 @@ export class GeminiGenerator extends WikiGeneratorBase {
     const combinedPrompt = systemMessage + '\n\n' + prompt
 
     try {
-      console.log('Gemini 위키 생성 시작', topic, language, instruction)
-      const content = await this.gemini.generate(combinedPrompt)
+      console.log('Gemini 위키 생성 시작 (스트리밍)', topic, language, instruction)
+
+      // let chunkCount = 0
+      const content = await this.gemini.generateStream(combinedPrompt, (chunk, fullText) => {
+        // chunkCount++
+        // console.log(
+        //   `[Gemini 스트림 ${chunkCount}] 새 청크 (${chunk.length} / ${fullText.length}자):`,
+        //   chunk.substring(0, 50) + (chunk.length > 50 ? '...' : '')
+        // )
+      })
+
+      // console.log('Gemini 위키 생성 완료. 총 청크 수:', chunkCount, '최종 길이:', content.length)
 
       if (!content) throw new Error('콘텐츠 생성 실패')
 
