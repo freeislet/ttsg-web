@@ -21,14 +21,14 @@ export function useAutoScroll<T extends HTMLElement>(
       // 요소의 위치 계산
       const element = ref.current
       const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-      
+
       // 헤더 높이만큼 offset 적용
       const offsetPosition = elementPosition - HEADER_HEIGHT
 
       // 스크롤 적용
       window.scrollTo({
         top: offsetPosition,
-        behavior: options.behavior as ScrollBehavior
+        behavior: options.behavior as ScrollBehavior,
       })
     }
   }, [condition, options.behavior])
