@@ -1,0 +1,238 @@
+---
+import Layout from './Layout.astro'
+import Header from '@/components/Header.astro'
+import Footer from '@/components/Footer.astro'
+
+export interface Props {
+  title: string
+  description: string
+  pubDate?: Date
+  updatedDate?: Date
+  heroImage?: string
+  category?: string
+  tags?: string[]
+  author?: string
+}
+
+const {
+  title,
+  description,
+  pubDate,
+  updatedDate,
+  heroImage,
+  category,
+  tags = [],
+  author = 'TTSG',
+} = Astro.props
+
+// SEO를 위한 메타 정보 구성
+const seoTitle = `${title} | TTSG Blog`
+const seoDescription = description
+---
+
+<Layout title={seoTitle} description={seoDescription}>
+  <Header />
+
+  <main class="min-h-screen bg-gray-50">
+    <article class="max-w-4xl mx-auto px-4 py-8">
+      <!-- 블로그 헤더 -->
+      <header class="mb-8">
+        {
+          heroImage && (
+            <div class="mb-6">
+              <img
+                src={heroImage}
+                alt={title}
+                class="w-full h-64 md:h-80 object-cover rounded-lg shadow-lg"
+              />
+            </div>
+          )
+        }
+
+        <div class="space-y-4">
+          <!-- 카테고리 배지 -->
+          {
+            category && (
+              <div class="flex items-center gap-2">
+                <span
+                  class={`
+                inline-block px-3 py-1 text-sm font-medium rounded-full
+                ${category === 'tech' ? 'bg-blue-100 text-blue-800' : ''}
+                ${category === 'news' ? 'bg-green-100 text-green-800' : ''}
+                ${category === 'intro' ? 'bg-purple-100 text-purple-800' : ''}
+              `}
+                >
+                  {category === 'tech' ? '기술' : category === 'news' ? '뉴스' : '소개'}
+                </span>
+              </div>
+            )
+          }
+
+          <!-- 제목 -->
+          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+            {title}
+          </h1>
+
+          <!-- 메타 정보 -->
+          <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <span class="flex items-center gap-1">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                <path
+                  fill-rule="evenodd"
+                  d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              {author}
+            </span>
+
+            {
+              pubDate && (
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  {pubDate.toLocaleDateString('ko-KR')}
+                </span>
+              )
+            }
+
+            {
+              updatedDate && (
+                <span class="flex items-center gap-1 text-orange-600">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  수정: {updatedDate.toLocaleDateString('ko-KR')}
+                </span>
+              )
+            }
+          </div>
+
+          <!-- 태그 -->
+          {
+            tags.length > 0 && (
+              <div class="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-md">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )
+          }
+
+          <!-- 설명 -->
+          <p class="text-lg text-gray-600 leading-relaxed">
+            {description}
+          </p>
+        </div>
+      </header>
+
+      <!-- 블로그 내용 -->
+      <div class="prose prose-lg max-w-none">
+        <div class="bg-white rounded-lg shadow-sm p-6 md:p-8">
+          <slot />
+        </div>
+      </div>
+
+      <!-- 블로그 푸터 -->
+      <footer class="mt-12 pt-8 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-gray-500">
+            이 글이 도움이 되셨나요? TTSG에서 더 많은 정보를 확인하세요.
+          </div>
+
+          <!-- 소셜 공유 버튼 (향후 추가 예정) -->
+          <div class="flex gap-2">
+            <!-- 공유 버튼들이 들어갈 자리 -->
+          </div>
+        </div>
+      </footer>
+    </article>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  /* 프로즈 스타일 커스터마이징 */
+  .prose {
+    @apply text-gray-800;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    @apply text-gray-900 font-bold;
+  }
+
+  .prose h2 {
+    @apply text-2xl mt-8 mb-4;
+  }
+
+  .prose h3 {
+    @apply text-xl mt-6 mb-3;
+  }
+
+  .prose p {
+    @apply mb-4 leading-relaxed;
+  }
+
+  .prose a {
+    @apply text-blue-600 hover:text-blue-800 no-underline hover:underline;
+  }
+
+  .prose code {
+    @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+  }
+
+  .prose pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-blue-500 pl-4 italic text-gray-700;
+  }
+
+  .prose ul,
+  .prose ol {
+    @apply mb-4;
+  }
+
+  .prose li {
+    @apply mb-2;
+  }
+
+  .prose img {
+    @apply rounded-lg shadow-md;
+  }
+
+  .prose table {
+    @apply w-full border-collapse;
+  }
+
+  .prose th,
+  .prose td {
+    @apply border border-gray-300 px-4 py-2;
+  }
+
+  .prose th {
+    @apply bg-gray-50 font-semibold;
+  }
+</style>
