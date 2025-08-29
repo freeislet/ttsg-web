@@ -33,8 +33,10 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
     const combinedPrompt = systemMessage + '\n\n' + prompt
 
     try {
-      console.log('ChatGPT 위키 생성 시작', topic, language, instruction)
-      const content = await this.chatgpt.generate(
+      console.log('ChatGPT 위키 생성 시작 (스트리밍)', topic, language, instruction)
+
+      // let chunkCount = 0
+      const content = await this.chatgpt.generateStream(
         [
           {
             role: 'system',
@@ -45,10 +47,19 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
             content: prompt,
           },
         ],
+        (chunk, fullText) => {
+          // chunkCount++
+          // console.log(
+          //   `[ChatGPT 스트림 ${chunkCount}] 새 청크 (${chunk.length} / ${fullText.length}자):`,
+          //   chunk.substring(0, 50) + (chunk.length > 50 ? '...' : '')
+          // )
+        },
         {
-          maxTokens: 3500,
+          maxTokens: 4000, // 스트리밍에서는 더 높은 토큰 수 사용 가능
         }
       )
+
+      // console.log('ChatGPT 위키 생성 완료. 총 청크 수:', chunkCount, '최종 길이:', content.length)
 
       if (!content) throw new Error('콘텐츠 생성 실패')
 
