@@ -49,9 +49,9 @@ export class Gemini {
   ): Promise<string> {
     try {
       const result = await this.model.generateContentStream(request)
-      
+
       let fullText = ''
-      
+
       for await (const chunk of result.stream) {
         const chunkText = chunk.text()
         if (chunkText) {

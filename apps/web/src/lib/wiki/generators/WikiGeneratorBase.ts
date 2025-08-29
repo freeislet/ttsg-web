@@ -53,7 +53,13 @@ export abstract class WikiGeneratorBase implements IWikiGenerator {
    * @param topic 위키 생성 주제
    * @param language 언어 설정
    * @param instruction 사용자 정의 지침 (선택적)
+   * @param onChunk 스트리밍 중 각 청크를 처리하는 콜백 함수 (선택적)
    * @returns 생성된 위키 콘텐츠
    */
-  abstract _generate(topic: string, language: Language, instruction?: string): Promise<WikiContent>
+  abstract _generate(
+    topic: string,
+    language: Language,
+    instruction?: string,
+    onChunk?: (chunk: string, fullText: string) => void
+  ): Promise<WikiContent>
 }

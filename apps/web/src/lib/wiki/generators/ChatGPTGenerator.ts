@@ -25,9 +25,15 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
    * @param topic 위키 생성 주제
    * @param language 언어 설정
    * @param instruction 사용자 정의 지침 (선택적)
+   * @param onChunk 스트리밍 중 각 청크를 처리하는 콜백 함수 (선택적)
    * @returns 생성된 위키 콘텐츠
    */
-  async _generate(topic: string, language: Language, instruction?: string): Promise<WikiContent> {
+  async _generate(
+    topic: string,
+    language: Language,
+    instruction?: string,
+    onChunk?: (chunk: string, fullText: string) => void
+  ): Promise<WikiContent> {
     const systemMessage = getWikiSystemMessage(language, 'ChatGPT')
     const prompt = getWikiPrompt(topic, language, instruction)
     const combinedPrompt = systemMessage + '\n\n' + prompt
@@ -35,7 +41,6 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
     try {
       console.log('ChatGPT 위키 생성 시작 (스트리밍)', topic, language, instruction)
 
-      // let chunkCount = 0
       const content = await this.chatgpt.generateStream(
         [
           {
@@ -47,19 +52,11 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
             content: prompt,
           },
         ],
-        (chunk, fullText) => {
-          // chunkCount++
-          // console.log(
-          //   `[ChatGPT 스트림 ${chunkCount}] 새 청크 (${chunk.length} / ${fullText.length}자):`,
-          //   chunk.substring(0, 50) + (chunk.length > 50 ? '...' : '')
-          // )
-        },
+        onChunk || (() => {}),
         {
           maxTokens: 4000, // 스트리밍에서는 더 높은 토큰 수 사용 가능
         }
       )
-
-      // console.log('ChatGPT 위키 생성 완료. 총 청크 수:', chunkCount, '최종 길이:', content.length)
 
       if (!content) throw new Error('콘텐츠 생성 실패')
 

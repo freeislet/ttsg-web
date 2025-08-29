@@ -44,21 +44,21 @@ export default function GenerationProgress({
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-gray-700 mb-2">선택된 모델</h3>
         {selectedModels.map((model, index) => {
-          const modelResult = modelResults.find(r => r.model === model)
+          const modelResult = modelResults.find((r) => r.model === model)
           const _modelProgress = Math.min(100, (progress / selectedModels.length) * (index + 1))
-          
+
           // 모델 결과에 따라 상태 결정
           const isCompleted = modelResult?.status === 'success'
           const isError = modelResult?.status === 'error'
-          const isInProgress = modelResult?.status === 'generating' || 
-                             (isGenerating && !modelResult && index === 0) // 첫 번째 모델인 경우
+          const isInProgress =
+            modelResult?.status === 'generating' || (isGenerating && !modelResult && index === 0) // 첫 번째 모델인 경우
           const _isPending = !modelResult || modelResult.status === 'pending'
-          
+
           // 상태에 따른 아이콘과 텍스트
           let statusIcon = 'mdi:clock-outline'
           let statusText = '대기 중'
           let iconClass = 'text-gray-400'
-          
+
           if (isCompleted) {
             statusIcon = 'mdi:check-circle'
             statusText = '완료'
@@ -76,9 +76,9 @@ export default function GenerationProgress({
           return (
             <div key={model} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="flex-shrink-0">
-                <Icon 
-                  icon={statusIcon} 
-                  className={`w-5 h-5 ${iconClass} ${statusIcon === 'mdi:loading' ? 'animate-spin' : ''}`} 
+                <Icon
+                  icon={statusIcon}
+                  className={`w-5 h-5 ${iconClass} ${statusIcon === 'mdi:loading' ? 'animate-spin' : ''}`}
                 />
               </div>
               <div className="flex-1">
@@ -91,9 +91,7 @@ export default function GenerationProgress({
                   </span>
                 </div>
                 {isError && modelResult?.error && (
-                  <div className="mt-1 text-xs text-red-500">
-                    {modelResult.error}
-                  </div>
+                  <div className="mt-1 text-xs text-red-500">{modelResult.error}</div>
                 )}
               </div>
             </div>
