@@ -2,6 +2,8 @@
 import { getCollection } from 'astro:content'
 import BlogLayout from '@/layouts/BlogLayout.astro'
 
+export const prerender = true
+
 export async function getStaticPaths() {
   const blogPosts = await getCollection('blog')
 
@@ -15,6 +17,12 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props
+
+// post가 존재하는지 확인
+if (!post) {
+  throw new Error('Post not found')
+}
+
 const { Content } = await post.render()
 ---
 
