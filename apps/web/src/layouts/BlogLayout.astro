@@ -138,7 +138,7 @@ const seoDescription = description
       </header>
 
       <!-- 블로그 내용 -->
-      <div class="prose prose-lg max-w-none">
+      <div class="prose prose-lg prose-gray max-w-none mx-auto">
         <div class="bg-white rounded-lg shadow-sm p-6 md:p-8">
           <slot />
         </div>
@@ -163,76 +163,3 @@ const seoDescription = description
   <Footer />
 </Layout>
 
-<style>
-  /* 프로즈 스타일 커스터마이징 */
-  .prose {
-    @apply text-gray-800;
-  }
-
-  .prose h1,
-  .prose h2,
-  .prose h3,
-  .prose h4,
-  .prose h5,
-  .prose h6 {
-    @apply text-gray-900 font-bold;
-  }
-
-  .prose h2 {
-    @apply text-2xl mt-8 mb-4;
-  }
-
-  .prose h3 {
-    @apply text-xl mt-6 mb-3;
-  }
-
-  .prose p {
-    @apply mb-4 leading-relaxed;
-  }
-
-  .prose a {
-    @apply text-blue-600 hover:text-blue-800 no-underline hover:underline;
-  }
-
-  .prose code {
-    @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
-  }
-
-  .prose pre {
-    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
-  }
-
-  .prose pre code {
-    @apply bg-transparent p-0;
-  }
-
-  .prose blockquote {
-    @apply border-l-4 border-blue-500 pl-4 italic text-gray-700;
-  }
-
-  .prose ul,
-  .prose ol {
-    @apply mb-4;
-  }
-
-  .prose li {
-    @apply mb-2;
-  }
-
-  .prose img {
-    @apply rounded-lg shadow-md;
-  }
-
-  .prose table {
-    @apply w-full border-collapse;
-  }
-
-  .prose th,
-  .prose td {
-    @apply border border-gray-300 px-4 py-2;
-  }
-
-  .prose th {
-    @apply bg-gray-50 font-semibold;
-  }
-</style>

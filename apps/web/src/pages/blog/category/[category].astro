@@ -4,6 +4,8 @@ import Layout from '@/layouts/Layout.astro'
 import Header from '@/components/Header.astro'
 import Footer from '@/components/Footer.astro'
 import BlogList from '@/components/blog/BlogList.astro'
+import type { Category } from '@/types/blog'
+import { categoryNamesDetailed } from '@/types/blog'
 
 export async function getStaticPaths() {
   const blogPosts = await getCollection('blog')
@@ -23,20 +25,14 @@ export async function getStaticPaths() {
 
 const { posts, category } = Astro.props
 
-const categoryNames = {
-  tech: '기술 문서',
-  news: '뉴스',
-  intro: '소개글',
-}
-
-const categoryDescriptions = {
+const categoryDescriptions: Record<Category, string> = {
   tech: '개발 관련 기술 문서, 튜토리얼, 그리고 실무 경험을 공유합니다.',
   news: '최신 업계 동향, 제품 소식, 그리고 중요한 발표 내용을 전해드립니다.',
   intro: 'TTSG의 제품, 서비스, 그리고 팀에 대한 소개글을 확인하세요.',
 }
 
-const seoTitle = `${categoryNames[category]} | TTSG 블로그`
-const seoDescription = `TTSG 블로그의 ${categoryNames[category]} 카테고리입니다. ${categoryDescriptions[category]}`
+const seoTitle = `${categoryNamesDetailed[category as Category]} | TTSG 블로그`
+const seoDescription = `TTSG 블로그의 ${categoryNamesDetailed[category as Category]} 카테고리입니다. ${categoryDescriptions[category as Category]}`
 ---
 
 <Layout title={seoTitle} description={seoDescription}>
@@ -73,16 +69,16 @@ const seoDescription = `TTSG 블로그의 ${categoryNames[category]} 카테고�
                 </svg>
               </li>
               <li class="text-gray-900 font-medium">
-                {categoryNames[category]}
+                {categoryNamesDetailed[category as Category]}
               </li>
             </ol>
           </nav>
 
           <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            {categoryNames[category]}
+            {categoryNamesDetailed[category as Category]}
           </h1>
           <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            {categoryDescriptions[category]}
+            {categoryDescriptions[category as Category]}
           </p>
 
           <!-- 포스트 수 표시 -->
@@ -110,7 +106,7 @@ const seoDescription = `TTSG 블로그의 ${categoryNames[category]} 카테고�
         <h2 class="text-xl font-bold text-gray-900 mb-6 text-center">다른 카테고리도 둘러보세요</h2>
         <div class="flex flex-wrap justify-center gap-4">
           {
-            Object.entries(categoryNames).map(
+            Object.entries(categoryNamesDetailed).map(
               ([cat, name]) =>
                 cat !== category && (
                   <a
