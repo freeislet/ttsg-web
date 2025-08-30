@@ -2,6 +2,7 @@
 import Layout from './Layout.astro'
 import Header from '@/components/Header.astro'
 import Footer from '@/components/Footer.astro'
+import '../styles/blog.css'
 
 export interface Props {
   title: string
@@ -138,7 +139,7 @@ const seoDescription = description
       </header>
 
       <!-- 블로그 내용 -->
-      <div class="prose prose-lg prose-gray max-w-none mx-auto">
+      <div class="prose prose-lg prose-gray max-w-none mx-auto blog-content">
         <div class="bg-white rounded-lg shadow-sm p-6 md:p-8">
           <slot />
         </div>
