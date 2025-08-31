@@ -1,11 +1,10 @@
 ---
 import { getCollection } from 'astro:content'
+import { categories, categoryData, type Category } from '@/types/blog'
 import Layout from '@/layouts/Layout.astro'
 import Header from '@/components/Header.astro'
 import Footer from '@/components/Footer.astro'
 import BlogList from '@/components/blog/BlogList.astro'
-import type { Category } from '@/types/blog'
-import { categoryNames } from '@/types/blog'
 
 // 모든 블로그 포스트 가져오기
 const allPosts = await getCollection('blog')
@@ -40,7 +39,7 @@ const categoryStats = publishedPosts.reduce(
         <div class="text-center">
           <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">TTSG 블로그</h1>
           <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            개발 기술, 업계 동향, 그리고 TTSG의 이야기를 전해드립니다.
+            IT 지식 공유 블로그입니다. 개발 기술과 소식을 전해드립니다.
           </p>
 
           <!-- 카테고리 네비게이션 -->
@@ -52,14 +51,16 @@ const categoryStats = publishedPosts.reduce(
               전체 ({publishedPosts.length})
             </a>
             {
-              Object.entries(categoryStats).map(([category, count]) => (
-                <a
-                  href={`/blog/category/${category}`}
-                  class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
-                >
-                  {categoryNames[category as Category]} ({count})
-                </a>
-              ))
+              categories
+                .filter((category: Category) => categoryStats[category] > 0)
+                .map((category: Category) => (
+                  <a
+                    href={`/blog/category/${category}`}
+                    class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
+                  >
+                    {categoryData[category].name} ({categoryStats[category]})
+                  </a>
+                ))
             }
           </div>
         </div>
@@ -83,67 +84,65 @@ const categoryStats = publishedPosts.reduce(
 
       <!-- 카테고리별 미리보기 -->
       {
-        (Object.keys(categoryStats) as Category[]).map((category) => {
-          const categoryPosts = publishedPosts.filter((post) => post.data.category === category)
-          return (
-            categoryPosts.length > 0 && (
-              <section class="mt-16">
-                <div class="flex items-center justify-between mb-6">
-                  <h2 class="text-2xl font-bold text-gray-900">{categoryNames[category]} 포스트</h2>
-                  <a
-                    href={`/blog/category/${category}`}
-                    class="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                  >
-                    전체 보기 →
-                  </a>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {categoryPosts.slice(0, 3).map((post) => (
-                    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-                      <div class="p-6">
-                        <div class="flex items-center justify-between mb-3">
-                          <span
-                            class={`inline-block px-2 py-1 text-xs font-medium rounded-full
-                        ${category === 'tech' ? 'bg-blue-100 text-blue-800' : ''}
-                        ${category === 'news' ? 'bg-green-100 text-green-800' : ''}
-                        ${category === 'intro' ? 'bg-purple-100 text-purple-800' : ''}
-                      `}
-                          >
-                            {categoryNames[category as Category]}
-                          </span>
-                          <time class="text-sm text-gray-500">
-                            {post.data.pubDate.toLocaleDateString('ko-KR')}
-                          </time>
-                        </div>
-
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                          <a
-                            href={`/blog/${post.slug}`}
-                            class="hover:text-blue-600 transition-colors duration-200"
-                          >
-                            {post.data.title}
-                          </a>
-                        </h3>
-
-                        <p class="text-gray-600 text-sm line-clamp-2 mb-3">
-                          {post.data.description}
-                        </p>
-
-                        <div class="flex flex-wrap gap-1">
-                          {post.data.tags.slice(0, 2).map((tag) => (
-                            <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
-                              #{tag}
+        categories
+          .filter((category: Category) => categoryStats[category] > 0)
+          .map((category: Category) => {
+            const categoryPosts = publishedPosts.filter((post) => post.data.category === category)
+            return (
+              categoryPosts.length > 0 && (
+                <section class="mt-16">
+                  <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">{categoryData[category].name}</h2>
+                    <a
+                      href={`/blog/category/${category}`}
+                      class="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                    >
+                      전체 보기 →
+                    </a>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {categoryPosts.slice(0, 3).map((post) => (
+                      <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                        <div class="p-6">
+                          <div class="flex items-center justify-between mb-3">
+                            <span
+                              class={`inline-block px-2 py-1 text-xs font-medium rounded-full ${categoryData[post.data.category as Category].style}`}
+                            >
+                              {categoryData[post.data.category as Category].name}
                             </span>
-                          ))}
+                            <time class="text-sm text-gray-500">
+                              {post.data.pubDate.toLocaleDateString('ko-KR')}
+                            </time>
+                          </div>
+
+                          <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                            <a
+                              href={`/blog/${post.slug}`}
+                              class="hover:text-blue-600 transition-colors duration-200"
+                            >
+                              {post.data.title}
+                            </a>
+                          </h3>
+
+                          <p class="text-gray-600 text-sm line-clamp-2 mb-3">
+                            {post.data.description}
+                          </p>
+
+                          <div class="flex flex-wrap gap-1">
+                            {post.data.tags.slice(0, 2).map((tag) => (
+                              <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+                    ))}
+                  </div>
+                </section>
+              )
             )
-          )
-        })
+          })
       }
     </div>
   </main>

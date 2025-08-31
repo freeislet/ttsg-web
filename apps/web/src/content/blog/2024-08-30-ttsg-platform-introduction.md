@@ -2,7 +2,7 @@
 title: 'TTSG 플랫폼 소개: AI 기반 지식 관리의 새로운 패러다임'
 description: 'TTSG 플랫폼의 핵심 기능과 비전을 소개합니다. AI 기술로 더 스마트한 지식 관리를 경험해보세요.'
 pubDate: 2024-08-30
-category: 'intro'
+category: 'misc'
 tags: ['ttsg', 'platform', 'ai', 'knowledge-management']
 author: 'TTSG'
 draft: false
