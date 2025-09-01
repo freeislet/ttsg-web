@@ -1,13 +1,13 @@
 ---
 title: 'Astro Content Collections로 블로그 만들기'
 description: 'Astro Content Collections를 활용하여 타입 안전한 블로그를 구축하는 방법을 단계별로 알아보세요.'
-pubDate: 2024-08-30
+pubDate: 2025-09-01
 category: 'tech'
 tags: ['astro', 'typescript', 'blog', 'content-collections']
 author: 'TTSG'
 draft: false
-featured: true
-heroImage: '/images/blog/astro-content-collections.jpg'
+featured: false
+heroImage: '/assets/images/blog/astro-logo-dark.svg'
 ---
 
 # Astro Content Collections로 블로그 만들기
