@@ -63,7 +63,7 @@
   
   <g transform="translate(620, 200)">
     <rect x="0" y="0" width="90" height="30" rx="15" fill="#059669" opacity="0.8"/>
-    <text x="45" y="20" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle">엣지 AI</text>
+    <text x="45" y="20" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle">RAG</text>
   </g>
   
   <!-- 하단 로고/브랜딩 -->
