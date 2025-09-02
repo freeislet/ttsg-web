@@ -35,21 +35,13 @@ Please write in markdown format following this structure:
 - Various categories or types
 - Features and differences of each
 
-## Applications and Uses
-- Real-world use cases
-- Applications in various fields
-
 ## Advantages and Disadvantages
 - Positive aspects
 - Limitations or problems
 
-## Current Trends
-- Latest developments
-- Current research or development status
-
-## Future Prospects
-- Expected development directions
-- Potential impacts and changes
+## Applications and Uses
+- Real-world use cases
+- Applications in various fields
 
 ## Related Terms
 - Key technical term explanations
@@ -62,11 +54,11 @@ Please write in markdown format following this structure:
 Writing Guidelines:
 - Provide accurate and objective information.
 - Explain professionally yet understandably.
-- Compose each section with sufficient content.
 - Use markdown syntax correctly.
 - Write naturally in English.
 - Reflect the latest information, but do not include uncertain content.
 - Include actual implementation methods and code examples when possible.
+- If there are external images that would help with the explanation, insert them at appropriate locations.
 ${
   instruction
     ? `
