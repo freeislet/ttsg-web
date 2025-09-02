@@ -39,7 +39,6 @@ filteredPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
             '블로그 포스트'}
         </h2>
         {category && <p class="text-gray-600">{categoryData[category as Category].description}</p>}
-        {showFeatured && <p class="text-gray-600">추천 포스트를 모아서 보여드립니다.</p>}
       </div>
     )
   }
