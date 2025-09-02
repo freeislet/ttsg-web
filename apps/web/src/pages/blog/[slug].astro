@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content'
 import BlogLayout from '@/layouts/BlogLayout.astro'
+import { processWikiLinksInMarkdown } from '@/lib/markdown-utils'
 
 export const prerender = true
 
@@ -23,6 +24,7 @@ if (!post) {
   throw new Error('Post not found')
 }
 
+// 원본 마크다운으로 렌더링
 const { Content } = await post.render()
 ---
 
@@ -38,3 +40,38 @@ const { Content } = await post.render()
 >
   <Content />
 </BlogLayout>
+
+<!-- 위키 링크 클라이언트 사이드 스크립트 -->
+<script>
+  import { enhanceWikiLinksInHTML } from '@/lib/markdown-utils'
+
+  // 페이지 로드 시 위키 링크 강화
+  function initializeWikiLinks() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', enhanceWikiLinksInHTML)
+    } else {
+      enhanceWikiLinksInHTML()
+    }
+  }
+
+  // 스크립트 실행
+  initializeWikiLinks()
+
+  // 동적 콘텐츠 로드 시에도 위키 링크 처리
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        setTimeout(enhanceWikiLinksInHTML, 0)
+      }
+    })
+  })
+
+  // 블로그 콘텐츠 영역 관찰
+  const blogContent = document.querySelector('.blog-content')
+  if (blogContent) {
+    observer.observe(blogContent, {
+      childList: true,
+      subtree: true,
+    })
+  }
+</script>

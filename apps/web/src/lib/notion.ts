@@ -283,6 +283,160 @@ export async function createWikiPage(
 }
 
 /**
+ * 위키 제목으로 노션 페이지를 검색합니다
+ * @param title 검색할 위키 제목
+ * @returns 찾은 노션 페이지 정보 또는 null
+ */
+export async function searchWikiPage(title: string): Promise<NotionPage | null> {
+  try {
+    const notion = createNotionClient()
+    
+    // 먼저 정확한 제목 매칭 시도
+    const exactResponse = await notion.databases.query({
+      database_id: getEnv('NOTION_DATABASE_ID'),
+      filter: {
+        property: 'Title',
+        title: {
+          equals: title,
+        },
+      },
+      page_size: 1,
+    })
+
+    // 정확한 매칭이 있으면 우선 반환
+    if (exactResponse.results.length > 0) {
+      const page = exactResponse.results[0]
+      if (isPageObjectResponse(page)) {
+        return {
+          id: page.id,
+          url: page.url,
+          title: extractTitle(page.properties),
+          version: extractVersion(page.properties),
+          language: extractLanguage(page.properties),
+          tags: extractTags(page.properties),
+          author: extractAuthor(page.properties),
+          created: extractCreated(page.properties),
+          lastEditor: extractLastEditor(page.properties),
+          lastEdited: page.last_edited_time,
+        }
+      }
+    }
+
+    // 정확한 매칭이 없으면 부분 매칭 시도
+    const partialResponse = await notion.databases.query({
+      database_id: getEnv('NOTION_DATABASE_ID'),
+      filter: {
+        property: 'Title',
+        title: {
+          contains: title,
+        },
+      },
+      page_size: 10, // 여러 결과를 가져와서 정렬
+    })
+
+    if (partialResponse.results.length === 0) {
+      return null
+    }
+
+    // 결과를 제목 유사도로 정렬 (정확한 매칭 우선, 그 다음 시작하는 것, 마지막으로 포함하는 것)
+    const sortedResults = partialResponse.results
+      .filter(isPageObjectResponse)
+      .map(page => ({
+        page,
+        title: extractTitle(page.properties),
+      }))
+      .sort((a, b) => {
+        const aTitle = a.title.toLowerCase()
+        const bTitle = b.title.toLowerCase()
+        const searchTitle = title.toLowerCase()
+
+        // 정확한 매칭
+        if (aTitle === searchTitle && bTitle !== searchTitle) return -1
+        if (bTitle === searchTitle && aTitle !== searchTitle) return 1
+
+        // 시작하는 매칭
+        if (aTitle.startsWith(searchTitle) && !bTitle.startsWith(searchTitle)) return -1
+        if (bTitle.startsWith(searchTitle) && !aTitle.startsWith(searchTitle)) return 1
+
+        // 길이가 짧은 것 우선 (더 정확한 매칭일 가능성)
+        return aTitle.length - bTitle.length
+      })
+
+    const bestMatch = sortedResults[0]
+    if (!bestMatch) {
+      return null
+    }
+
+    return {
+      id: bestMatch.page.id,
+      url: bestMatch.page.url,
+      title: bestMatch.title,
+      version: extractVersion(bestMatch.page.properties),
+      language: extractLanguage(bestMatch.page.properties),
+      tags: extractTags(bestMatch.page.properties),
+      author: extractAuthor(bestMatch.page.properties),
+      created: extractCreated(bestMatch.page.properties),
+      lastEditor: extractLastEditor(bestMatch.page.properties),
+      lastEdited: bestMatch.page.last_edited_time,
+    }
+  } catch (error) {
+    console.error('위키 페이지 검색 실패:', error)
+    return null
+  }
+}
+
+/**
+ * 노션 페이지의 프리뷰 내용을 가져옵니다 (처음 3개 블록)
+ * @param pageId 노션 페이지 ID
+ * @returns 프리뷰 텍스트
+ */
+export async function getPagePreview(pageId: string): Promise<string> {
+  try {
+    const notion = createNotionClient()
+    const response = await notion.blocks.children.list({
+      block_id: pageId,
+      page_size: 3, // 처음 3개 블록만 가져오기
+    })
+
+    const previewText = response.results
+      .map((block: any) => {
+        // 텍스트 블록에서 내용 추출
+        if (block.type === 'paragraph' && block.paragraph?.rich_text) {
+          return block.paragraph.rich_text
+            .map((text: any) => text.plain_text)
+            .join('')
+        }
+        if (block.type === 'heading_1' && block.heading_1?.rich_text) {
+          return block.heading_1.rich_text
+            .map((text: any) => text.plain_text)
+            .join('')
+        }
+        if (block.type === 'heading_2' && block.heading_2?.rich_text) {
+          return block.heading_2.rich_text
+            .map((text: any) => text.plain_text)
+            .join('')
+        }
+        if (block.type === 'heading_3' && block.heading_3?.rich_text) {
+          return block.heading_3.rich_text
+            .map((text: any) => text.plain_text)
+            .join('')
+        }
+        return ''
+      })
+      .filter((text: string) => text.trim().length > 0)
+      .join(' ')
+
+    // 프리뷰 텍스트가 너무 길면 자르기 (200자 제한)
+    return previewText.length > 200 
+      ? previewText.substring(0, 200) + '...' 
+      : previewText
+  } catch (error) {
+    console.error('페이지 프리뷰 가져오기 실패:', error)
+    return '프리뷰를 불러올 수 없습니다.'
+  }
+}
+
+/**
  * 마크다운 텍스트를 노션 블록으로 변환합니다
  * @param markdown 마크다운 텍스트
  * @returns 노션 블록 배열
