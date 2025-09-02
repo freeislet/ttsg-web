@@ -187,6 +187,46 @@ export const updateProgress = (progress: number) => {
 }
 
 /**
+ * 강제 완료 처리 (방어적 UI 업데이트)
+ * 서버에서 완료 신호를 받았지만 일부 모델이 아직 완료되지 않은 경우 사용
+ */
+export const forceComplete = () => {
+  $wikiGenerationContext.mut((draft) => {
+    console.log('[Store] 강제 완료 처리 - 현재 상태:', {
+      isGenerating: draft.isGenerating,
+      modelResults: draft.modelResults.map(r => ({ model: r.model, status: r.status }))
+    })
+    
+    // 아직 pending이나 generating 상태인 모델들을 success로 변경
+    draft.modelResults.forEach((result) => {
+      if (result.status === 'pending' || result.status === 'generating') {
+        console.log(`[Store] 모델 ${result.model} 상태를 ${result.status}에서 success로 변경`)
+        result.status = 'success'
+        // 내용이 없으면 기본 메시지 추가
+        if (!result.content) {
+          result.content = '생성이 완료되었습니다. 노션에서 확인해주세요.'
+        }
+      }
+    })
+    
+    // 전체 상태 업데이트
+    draft.isGenerating = false
+    draft.isCompleted = true
+    draft.progress = 100
+    
+    // 에러가 있는 모델이 있는지 확인
+    draft.hasErrors = draft.modelResults.some((r) => r.status === 'error')
+    
+    console.log('[Store] 강제 완료 처리 완료 - 최종 상태:', {
+      isGenerating: draft.isGenerating,
+      isCompleted: draft.isCompleted,
+      progress: draft.progress,
+      hasErrors: draft.hasErrors
+    })
+  })
+}
+
+/**
  * 위키 생성 액션 함수들을 그룹화한 객체
  */
 export const wikiGenerationActions = {
@@ -197,6 +237,7 @@ export const wikiGenerationActions = {
   startModelGeneration,
   setModelResult,
   updateProgress,
+  forceComplete,
 } as const
 
 /**

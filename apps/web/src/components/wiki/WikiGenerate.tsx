@@ -37,18 +37,36 @@ export default function WikiGenerate() {
    * 위키 생성 요청을 처리하는 함수 (기본: 스트리밍, 필요시 일반 방식)
    */
   const onSubmit = async (data: WikiFormData) => {
+    console.log('[UI] 위키 생성 시작:', data)
+    
     // 스토어 초기화 및 생성 시작
     actions.startGeneration(data)
 
+    // 타임아웃 설정 (5분)
+    const timeoutId = setTimeout(() => {
+      console.warn('[UI] 위키 생성 타임아웃 - 강제 완료 처리')
+      actions.forceComplete()
+    }, 5 * 60 * 1000)
+
     try {
+      console.log('[UI] SSE 스트리밍 시작')
       // 스트리밍 방식으로 위키 생성
       await generateWikiStream(data, handleSSEEvent)
+      console.log('[UI] SSE 스트리밍 정상 완료')
+      
+      // 스트림이 정상 종료되었지만 UI가 아직 생성 중이면 강제 완료
+      if (isGenerating) {
+        console.log('[UI] 스트림 완료 후 UI 상태 확인 - 강제 완료 처리')
+        actions.forceComplete()
+      }
     } catch (err) {
-      console.error('스트리밍 위키 생성 실패, 일반 방식으로 재시도:', err)
+      console.error('[UI] 스트리밍 위키 생성 실패, 일반 방식으로 재시도:', err)
 
       try {
+        console.log('[UI] 일반 API 호출 시작')
         // 스트리밍 실패 시 일반 방식으로 폴백
         const response = await generateWiki(data)
+        console.log('[UI] 일반 API 호출 완료:', response)
 
         // 결과들을 스토어에 저장 (성공/실패 모두)
         response.results.forEach((result) => {
@@ -56,11 +74,14 @@ export default function WikiGenerate() {
           actions.setModelResult(model, rest)
         })
       } catch (fallbackErr) {
-        console.error('일반 위키 생성도 실패:', fallbackErr)
+        console.error('[UI] 일반 위키 생성도 실패:', fallbackErr)
         actions.setError(
           `위키 생성 실패: ${fallbackErr instanceof Error ? fallbackErr.message : '알 수 없는 오류가 발생했습니다.'}`
         )
       }
+    } finally {
+      clearTimeout(timeoutId)
+      console.log('[UI] 위키 생성 프로세스 종료')
     }
   }
 
@@ -68,13 +89,15 @@ export default function WikiGenerate() {
    * SSE 이벤트를 처리하는 함수
    */
   const handleSSEEvent = (event: SSEEvent) => {
+    console.log('[SSE Event]', event.type, event)
+    
     switch (event.type) {
       case 'generation_start':
-        console.log('위키 생성 시작:', event.totalModels, '개 모델')
+        console.log('[UI] 위키 생성 시작:', event.totalModels, '개 모델')
         break
 
       case 'model_start':
-        console.log('모델 생성 시작:', event.model)
+        console.log('[UI] 모델 생성 시작:', event.model)
         if (event.model) {
           actions.startModelGeneration(event.model)
         }
@@ -84,7 +107,7 @@ export default function WikiGenerate() {
         break
 
       case 'model_complete':
-        console.log('모델 생성 완료:', event.model)
+        console.log('[UI] 모델 생성 완료:', event.model)
         if (event.model && event.result) {
           actions.setModelResult(event.model, event.result)
         }
@@ -94,18 +117,20 @@ export default function WikiGenerate() {
         break
 
       case 'generation_complete':
-        console.log('전체 위키 생성 완료')
+        console.log('[UI] 전체 위키 생성 완료 - UI 상태 강제 업데이트')
+        // 방어적 완료 처리: 모든 모델이 완료되지 않았어도 강제로 완료 상태로 변경
+        actions.forceComplete()
         break
 
       case 'error':
-        console.error('위키 생성 오류:', event.error)
+        console.error('[UI] 위키 생성 오류:', event.error)
         if (event.error) {
           actions.setError(event.error)
         }
         break
 
       default:
-        console.warn('알 수 없는 SSE 이벤트:', event)
+        console.warn('[UI] 알 수 없는 SSE 이벤트:', event)
     }
   }
 

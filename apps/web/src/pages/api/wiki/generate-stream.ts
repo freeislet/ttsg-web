@@ -61,10 +61,12 @@ async function processWikiGeneration(
   language?: Language,
   tags?: string[]
 ): Promise<void> {
-  console.log(`[SSE] 위키 생성 프로세스 시작 - 주제: ${topic}, 모델: ${models.join(', ')}`)
+  const startTime = Date.now()
+  console.log(`[SSE] 위키 생성 프로세스 시작 - 주제: ${topic}, 모델: ${models.join(', ')}, 시작시간: ${new Date().toISOString()}`)
 
   try {
     // 생성 시작 이벤트
+    console.log('[SSE] generation_start 이벤트 전송')
     await sendSSEEvent(writer, encoder, {
       type: 'generation_start',
       totalModels: models.length,
@@ -74,7 +76,10 @@ async function processWikiGeneration(
     for (let i = 0; i < models.length; i++) {
       const model = models[i]
       const progress = Math.round(((i + 1) / models.length) * 100)
+      const modelStartTime = Date.now()
 
+      console.log(`[SSE] 모델 ${model} 처리 시작 (${i + 1}/${models.length})`)
+      
       // 모델 생성 시작 이벤트
       await sendSSEEvent(writer, encoder, {
         type: 'model_start',
@@ -83,7 +88,16 @@ async function processWikiGeneration(
       })
 
       // 실제 위키 생성
+      console.log(`[SSE] 모델 ${model} AI 생성 시작`)
       const result = await generateWikiForModel(model, topic, instruction, language, tags)
+      const modelEndTime = Date.now()
+      
+      console.log(`[SSE] 모델 ${model} AI 생성 완료 - 소요시간: ${modelEndTime - modelStartTime}ms, 결과:`, {
+        hasContent: !!result.content,
+        hasError: !!result.error,
+        notionUrl: result.notionUrl,
+        contentLength: result.content?.length || 0
+      })
 
       // 모델 완료 이벤트
       await sendSSEEvent(writer, encoder, {
@@ -92,13 +106,20 @@ async function processWikiGeneration(
         result,
         progress,
       })
+      
+      console.log(`[SSE] 모델 ${model} model_complete 이벤트 전송 완료`)
     }
 
     // 전체 완료 이벤트
-    console.log(`[SSE] 위키 생성 프로세스 완료`)
+    const totalTime = Date.now() - startTime
+    console.log(`[SSE] 위키 생성 프로세스 완료 - 총 소요시간: ${totalTime}ms, 완료시간: ${new Date().toISOString()}`)
+    
+    console.log('[SSE] generation_complete 이벤트 전송 시작')
     await sendSSEEvent(writer, encoder, {
       type: 'generation_complete',
     })
+    console.log('[SSE] generation_complete 이벤트 전송 완료')
+    
   } catch (error) {
     console.error('[SSE] 위키 생성 중 오류:', error)
     await sendSSEEvent(writer, encoder, {
@@ -106,7 +127,9 @@ async function processWikiGeneration(
       error: AppError.getMessage(error),
     })
   } finally {
+    console.log('[SSE] 스트림 writer 종료 시작')
     await writer.close()
+    console.log('[SSE] 스트림 writer 종료 완료')
   }
 }
 
@@ -118,6 +141,13 @@ async function sendSSEEvent(
   encoder: TextEncoder,
   data: Record<string, unknown>
 ): Promise<void> {
-  const eventData = `data: ${JSON.stringify(data)}\n\n`
-  await writer.write(encoder.encode(eventData))
+  try {
+    const eventData = `data: ${JSON.stringify(data)}\n\n`
+    console.log(`[SSE] 이벤트 전송: ${data.type}, 데이터 크기: ${eventData.length}bytes`)
+    await writer.write(encoder.encode(eventData))
+    console.log(`[SSE] 이벤트 전송 완료: ${data.type}`)
+  } catch (error) {
+    console.error(`[SSE] 이벤트 전송 실패: ${data.type}`, error)
+    throw error
+  }
 }
