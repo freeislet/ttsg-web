@@ -1,0 +1,164 @@
+---
+export interface Props {
+  headings: Array<{depth: number, slug: string, text: string}>;
+  isMobile?: boolean;
+}
+
+const { headings, isMobile = false } = Astro.props;
+
+// H1 제목 제외하고 H2 이상만 표시
+const filteredHeadings = headings.filter(h => h.depth > 1);
+---
+
+{filteredHeadings.length > 0 && (
+  <nav class={`
+    ${isMobile 
+      ? 'bg-white rounded-lg shadow-sm border p-4 mb-6 inline-block' 
+      : 'bg-white rounded-lg border border-gray-300 p-4 sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto'
+    }
+  `} style="pointer-events: auto;">
+    {isMobile ? (
+      <!-- 모바일: 접기/펼치기 기능 -->
+      <div>
+        <button 
+          id="toc-toggle-mobile"
+          class="flex items-center justify-between text-left text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+        >
+          <span>목차</span>
+          <svg 
+            id="toc-icon-mobile" 
+            class="w-4 h-4 transform transition-transform duration-200 rotate-[180deg]" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <ul id="toc-content-mobile" class="mt-3 space-y-1 hidden" style="pointer-events: auto;">
+          {filteredHeadings.map((heading) => (
+            <li style={`margin-left: ${(heading.depth - 2) * 1.2}rem`}>
+              <a 
+                href={`#${heading.slug}`}
+                class="text-xs text-gray-600 hover:text-blue-600 transition-colors block py-0.5 hover:underline leading-tight no-wiki-preview"
+                style="pointer-events: auto;"
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : (
+      <!-- 데스크톱: 사이드바 형태 -->
+      <div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-3">목차</h3>
+        <ul class="space-y-1" style="pointer-events: auto;">
+          {filteredHeadings.map((heading) => (
+            <li style={`margin-left: ${(heading.depth - 2) * 1}rem`}>
+              <a 
+                href={`#${heading.slug}`}
+                class="text-xs text-gray-600 hover:text-blue-600 transition-colors block py-1 hover:underline leading-tight toc-link no-wiki-preview"
+                data-heading-id={heading.slug}
+                style="pointer-events: auto;"
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </nav>
+)}
+
+<script>
+  // 모바일 목차 접기/펼치기 기능
+  document.addEventListener('DOMContentLoaded', () => {
+    const tocToggle = document.getElementById('toc-toggle-mobile');
+    const tocContent = document.getElementById('toc-content-mobile');
+    const tocIcon = document.getElementById('toc-icon-mobile');
+    
+    if (tocToggle && tocContent && tocIcon) {
+      // 초기 상태: 접힌 상태
+      let isExpanded = false;
+      
+      tocToggle.addEventListener('click', () => {
+        isExpanded = !isExpanded;
+        
+        if (isExpanded) {
+          tocContent.classList.remove('hidden');
+          tocIcon.style.transform = 'rotate(180deg)';
+        } else {
+          tocContent.classList.add('hidden');
+          tocIcon.style.transform = 'rotate(0deg)';
+        }
+      });
+    }
+
+    // 데스크톱 목차 활성 링크 하이라이트
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const headings = document.querySelectorAll('h2, h3, h4, h5, h6');
+    
+    if (tocLinks.length > 0 && headings.length > 0) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const id = entry.target.getAttribute('id');
+            const tocLink = document.querySelector(`[data-heading-id="${id}"]`);
+            
+            if (entry.isIntersecting) {
+              // 모든 링크에서 active 클래스 제거
+              tocLinks.forEach(link => {
+                link.classList.remove('text-blue-600', 'bg-blue-50', 'border-l-2', 'border-blue-600');
+                (link as HTMLElement).style.fontWeight = '';
+                (link as HTMLElement).style.paddingLeft = '';
+                (link as HTMLElement).style.marginLeft = '';
+              });
+              // 현재 헤딩에 해당하는 링크에 active 클래스 추가
+              if (tocLink) {
+                tocLink.classList.add('text-blue-600', 'bg-blue-50', 'border-l-2', 'border-blue-600');
+                (tocLink as HTMLElement).style.fontWeight = '600';
+                (tocLink as HTMLElement).style.paddingLeft = '0.75rem';
+                (tocLink as HTMLElement).style.marginLeft = '-0.9rem';
+              }
+            }
+          });
+        },
+        {
+          rootMargin: '-20% 0% -35% 0%',
+          threshold: 0
+        }
+      );
+
+      headings.forEach((heading) => {
+        if (heading.getAttribute('id')) {
+          observer.observe(heading);
+        }
+      });
+    }
+
+    // TOC 링크 클릭 시 부드러운 스크롤
+    tocLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href')?.substring(1);
+        const targetElement = document.getElementById(targetId || '');
+        
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  /* 데스크톱 TOC 스타일 */
+  .toc-link.text-blue-600 {
+    font-weight: 500;
+  }
+</style>

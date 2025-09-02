@@ -1,31 +1,21 @@
 ---
+import type { CollectionEntry } from 'astro:content'
 import Layout from './Layout.astro'
 import Header from '@/components/Header.astro'
 import Footer from '@/components/Footer.astro'
+import TableOfContents from '@/components/blog/TableOfContents.astro'
 import { categoryData, type Category } from '@/types/blog'
 import '../styles/blog.css'
 
 export interface Props {
-  title: string
-  description: string
-  pubDate?: Date
-  updatedDate?: Date
-  heroImage?: string
-  category?: string
-  tags?: string[]
-  author?: string
+  post: CollectionEntry<'blog'>;
 }
 
-const {
-  title,
-  description,
-  pubDate,
-  updatedDate,
-  heroImage,
-  category,
-  tags = [],
-  author = 'TTSG',
-} = Astro.props
+const { post } = Astro.props;
+const { title, description, pubDate, author, heroImage, tags, category, updatedDate } = post.data;
+
+// 콘텐츠 렌더링하여 헤딩 추출
+const { Content, headings } = await post.render();
 
 // SEO를 위한 메타 정보 구성
 const seoTitle = `${title} | TTSG Blog`
@@ -36,7 +26,10 @@ const seoDescription = description
   <Header />
 
   <main class="min-h-screen bg-gray-50">
-    <article class="max-w-4xl mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- 메인 콘텐츠 -->
+        <article class="flex-1 max-w-4xl">
       <!-- 블로그 헤더 -->
       <header class="mb-8">
         {
@@ -104,34 +97,14 @@ const seoDescription = description
               )
             }
 
-            {
-              updatedDate && (
-                <span class="flex items-center gap-1 text-orange-600">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  수정: {updatedDate.toLocaleDateString('ko-KR')}
+            <div class="flex flex-wrap gap-2">
+              {tags.map((tag: string) => (
+                <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-md">
+                  #{tag}
                 </span>
-              )
-            }
+              ))}
+            </div>
           </div>
-
-          <!-- 태그 -->
-          {
-            tags.length > 0 && (
-              <div class="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-md">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )
-          }
 
           <!-- 설명 -->
           <p class="text-lg text-gray-600 leading-relaxed">
@@ -140,27 +113,39 @@ const seoDescription = description
         </div>
       </header>
 
-      <!-- 블로그 내용 -->
+      <!-- 모바일 목차 -->
+      <div class="lg:hidden">
+        <TableOfContents headings={headings} isMobile={true} />
+      </div>
+
+      <!-- 블로그 콘텐츠 -->
       <div class="prose prose-lg prose-gray max-w-none mx-auto blog-content">
         <div class="bg-white rounded-lg shadow-sm p-6 md:p-8">
-          <slot />
+          <Content />
         </div>
       </div>
 
-      <!-- 블로그 푸터 -->
-      <footer class="mt-12 pt-8 border-t border-gray-200">
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-500">
-            이 글이 도움이 되셨나요? TTSG에서 더 많은 정보를 확인하세요.
-          </div>
+          <!-- 블로그 푸터 -->
+          <footer class="mt-12 pt-8 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-gray-500">
+                이 글이 도움이 되셨나요? TTSG에서 더 많은 정보를 확인하세요.
+              </div>
 
-          <!-- 소셜 공유 버튼 (향후 추가 예정) -->
-          <div class="flex gap-2">
-            <!-- 공유 버튼들이 들어갈 자리 -->
-          </div>
-        </div>
-      </footer>
-    </article>
+              <!-- 소셜 공유 버튼 (향후 추가 예정) -->
+              <div class="flex gap-2">
+                <!-- 공유 버튼들이 들어갈 자리 -->
+              </div>
+            </div>
+          </footer>
+        </article>
+
+        <!-- 데스크톱 사이드바 목차 -->
+        <aside class="hidden lg:block w-64 flex-shrink-0">
+          <TableOfContents headings={headings} isMobile={false} />
+        </aside>
+      </div>
+    </div>
   </main>
 
   <Footer />

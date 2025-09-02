@@ -28,7 +28,19 @@ export function enhanceWikiLinksInHTML(): void {
     const walker = document.createTreeWalker(
       element,
       NodeFilter.SHOW_TEXT,
-      null
+      {
+        acceptNode: (node) => {
+          // no-wiki-preview 클래스가 있는 요소의 자식 노드는 제외
+          let parent = node.parentElement;
+          while (parent) {
+            if (parent.classList.contains('no-wiki-preview')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            parent = parent.parentElement;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
     )
     
     const textNodes: Text[] = []
@@ -50,17 +62,9 @@ export function enhanceWikiLinksInHTML(): void {
           return `<span class="wiki-link cursor-pointer text-blue-600 hover:text-blue-800 underline decoration-dotted" data-wiki-title="${linkTitle}">${linkText}</span>`
         })
         
-        // 텍스트 노드를 HTML로 교체
-        const tempDiv = document.createElement('div')
-        tempDiv.innerHTML = newHTML
-        
-        const parent = textNode.parentNode
-        if (parent) {
-          while (tempDiv.firstChild) {
-            parent.insertBefore(tempDiv.firstChild, textNode)
-          }
-          parent.removeChild(textNode)
-        }
+        const wrapper = document.createElement('span')
+        wrapper.innerHTML = newHTML
+        textNode.parentNode?.replaceChild(wrapper, textNode)
       }
     })
   })

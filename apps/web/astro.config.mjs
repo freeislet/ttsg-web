@@ -12,10 +12,15 @@ export default defineConfig({
     platformProxy: {
       enabled: true,
     },
-
     imageService: 'cloudflare',
   }),
   integrations: [react()],
+  markdown: {
+    shikiConfig: {
+      theme: 'github-dark',
+      wrap: true,
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {

@@ -24,22 +24,10 @@ if (!post) {
   throw new Error('Post not found')
 }
 
-// 원본 마크다운으로 렌더링
-const { Content } = await post.render()
+// 마크다운 렌더링은 BlogLayout에서 처리
 ---
 
-<BlogLayout
-  title={post.data.title}
-  description={post.data.description}
-  pubDate={post.data.pubDate}
-  updatedDate={post.data.updatedDate}
-  heroImage={post.data.heroImage}
-  category={post.data.category}
-  tags={post.data.tags}
-  author={post.data.author}
->
-  <Content />
-</BlogLayout>
+<BlogLayout post={post} />
 
 <!-- 위키 링크 클라이언트 사이드 스크립트 -->
 <script>
