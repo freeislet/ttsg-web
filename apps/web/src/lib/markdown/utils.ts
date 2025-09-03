@@ -81,20 +81,6 @@ export function enhanceWikiLinksInHTML(): void {
         }
 
         if (data.success && data.data?.url) {
-          // RAG의 경우 버전 선택 옵션 제공
-          if (title.toLowerCase() === 'rag' && data.data.title?.toLowerCase().includes('rag')) {
-            const userChoice = confirm(
-              `${data.data.title} 페이지를 열시겠습니까?\n\n다른 RAG 관련 페이지를 찾으려면 '취소'를 클릭하세요.`
-            )
-            if (!userChoice) {
-              // 사용자가 취소를 선택한 경우 검색 힌트 제공
-              alert(
-                'RAG 관련 다른 페이지를 찾으려면:\n- "RAG 시스템"\n- "검색 증강 생성"\n- "Retrieval Augmented Generation"\n등의 키워드로 검색해보세요.'
-              )
-              return
-            }
-          }
-
           window.open(data.data.url, '_blank', 'noopener,noreferrer')
         } else {
           console.warn('위키 페이지를 찾을 수 없습니다:', title)
