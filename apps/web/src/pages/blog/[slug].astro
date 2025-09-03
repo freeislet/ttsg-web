@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content'
 import BlogLayout from '@/layouts/BlogLayout.astro'
-import { processWikiLinksInMarkdown } from '@/lib/markdown-utils'
 
 export const prerender = true
 
@@ -23,8 +22,6 @@ const { post } = Astro.props
 if (!post) {
   throw new Error('Post not found')
 }
-
-// 마크다운 렌더링은 BlogLayout에서 처리
 ---
 
 <BlogLayout post={post} />
