@@ -4,6 +4,7 @@ import cloudflare from '@astrojs/cloudflare'
 import react from '@astrojs/react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { remarkWikiLinks } from './src/lib/markdown/remark-wiki-links.mjs'
 
 // https://astro.build/config
 export default defineConfig({
@@ -16,6 +17,7 @@ export default defineConfig({
   }),
   integrations: [react()],
   markdown: {
+    remarkPlugins: [remarkWikiLinks],
     shikiConfig: {
       theme: 'github-dark',
       wrap: true,
