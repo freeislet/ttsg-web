@@ -55,8 +55,8 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
     try {
       // 위키 페이지 정보 가져오기
       const response = await fetch(`/api/wiki/preview?title=${encodeURIComponent(title)}`)
-      const data = await response.json() as { success: boolean; data?: { url: string } }
-      
+      const data = (await response.json()) as { success: boolean; data?: { url: string } }
+
       if (data.success && data.data?.url) {
         // 노션 페이지 새 탭에서 열기
         window.open(data.data.url, '_blank', 'noopener,noreferrer')
@@ -110,7 +110,7 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
       >
         {displayText || title}
       </span>
-      
+
       {/* 프리뷰 팝업 */}
       {showPreview && (
         <WikiPreview

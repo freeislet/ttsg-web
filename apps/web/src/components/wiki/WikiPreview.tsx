@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import type { NotionPage } from '../../lib/notion'
+import type { NotionPage } from '@/lib/notion'
 
 /**
  * 위키 프리뷰 팝업 컴포넌트 props
@@ -40,7 +40,11 @@ export function WikiPreview({ title, position, onClose }: WikiPreviewProps) {
       try {
         setLoadingState('loading')
         const response = await fetch(`/api/wiki/preview?title=${encodeURIComponent(title)}`)
-        const result = await response.json() as { success: boolean; data?: WikiPreviewData; error?: string }
+        const result = (await response.json()) as {
+          success: boolean
+          data?: WikiPreviewData
+          error?: string
+        }
 
         if (result.success && result.data) {
           setData(result.data)
@@ -162,9 +166,7 @@ export function WikiPreview({ title, position, onClose }: WikiPreviewProps) {
         <div className="space-y-3">
           {/* 헤더 */}
           <div className="border-b border-gray-100 pb-2">
-            <h3 className="font-semibold text-gray-900 text-sm leading-tight">
-              {data.title}
-            </h3>
+            <h3 className="font-semibold text-gray-900 text-sm leading-tight">{data.title}</h3>
             <div className="flex items-center gap-2 mt-1">
               {data.tags.length > 0 && (
                 <div className="flex gap-1">
@@ -185,18 +187,14 @@ export function WikiPreview({ title, position, onClose }: WikiPreviewProps) {
           </div>
 
           {/* 프리뷰 내용 */}
-          <div className="text-sm text-gray-700 leading-relaxed">
-            {data.preview}
-          </div>
+          <div className="text-sm text-gray-700 leading-relaxed">{data.preview}</div>
 
           {/* 메타데이터 */}
           <div className="text-xs text-gray-500 border-t border-gray-100 pt-2">
             <div className="flex justify-between items-center">
               <span>수정: {formatDate(data.lastEdited)}</span>
               {data.version && (
-                <span className="bg-gray-100 px-2 py-0.5 rounded">
-                  {data.version}
-                </span>
+                <span className="bg-gray-100 px-2 py-0.5 rounded">{data.version}</span>
               )}
             </div>
           </div>
