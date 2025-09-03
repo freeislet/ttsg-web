@@ -283,65 +283,106 @@ export async function createWikiPage(
 }
 
 /**
+ * 위키 검색 옵션
+ */
+export interface WikiSearchOptions {
+  /** 정확한 제목 매칭만 수행할지 여부 (기본값: false) */
+  exactMatch?: boolean
+  /** 반환할 최대 결과 수 (기본값: 100) */
+  pageSize?: number
+  /** 검색할 언어 배열 */
+  languages?: Language[]
+  /** 검색할 버전 배열 */
+  versions?: string[]
+}
+
+/**
  * 위키 제목으로 노션 페이지를 검색합니다
  * @param title 검색할 위키 제목
- * @returns 찾은 노션 페이지 정보 또는 null
+ * @param options 검색 옵션 (언어, 버전 필터링)
+ * @returns 찾은 노션 페이지 목록
  */
-export async function searchWikiPage(title: string): Promise<NotionPage | null> {
+export async function searchWikiPage(
+  title: string,
+  options?: WikiSearchOptions
+): Promise<NotionPage[]> {
   try {
     const notion = createNotionClient()
-    
-    // 먼저 정확한 제목 매칭 시도
-    const exactResponse = await notion.databases.query({
-      database_id: getEnv('NOTION_DATABASE_ID'),
-      filter: {
-        property: 'Title',
-        title: {
-          equals: title,
-        },
-      },
-      page_size: 1,
-    })
 
-    // 정확한 매칭이 있으면 우선 반환
-    if (exactResponse.results.length > 0) {
-      const page = exactResponse.results[0]
-      if (isPageObjectResponse(page)) {
-        return {
-          id: page.id,
-          url: page.url,
-          title: extractTitle(page.properties),
-          version: extractVersion(page.properties),
-          language: extractLanguage(page.properties),
-          tags: extractTags(page.properties),
-          author: extractAuthor(page.properties),
-          created: extractCreated(page.properties),
-          lastEditor: extractLastEditor(page.properties),
-          lastEdited: page.last_edited_time,
-        }
+    // 기본 제목 필터 구성
+    const titleFilter = {
+      property: 'Title',
+      title: options?.exactMatch
+        ? {
+            equals: title,
+          }
+        : {
+            contains: title,
+          },
+    }
+
+    // 추가 필터 구성
+    const filters: any[] = [titleFilter]
+
+    // 언어 필터 추가
+    if (options?.languages && options.languages.length > 0) {
+      if (options.languages.length === 1) {
+        filters.push({
+          property: 'Language',
+          select: {
+            equals: options.languages[0],
+          },
+        })
+      } else {
+        filters.push({
+          or: options.languages.map((lang) => ({
+            property: 'Language',
+            select: {
+              equals: lang,
+            },
+          })),
+        })
       }
     }
 
-    // 정확한 매칭이 없으면 부분 매칭 시도
-    const partialResponse = await notion.databases.query({
+    // 버전 필터 추가
+    if (options?.versions && options.versions.length > 0) {
+      if (options.versions.length === 1) {
+        filters.push({
+          property: 'Version',
+          rich_text: {
+            equals: options.versions[0],
+          },
+        })
+      } else {
+        filters.push({
+          or: options.versions.map((version) => ({
+            property: 'Version',
+            rich_text: {
+              equals: version,
+            },
+          })),
+        })
+      }
+    }
+
+    // 최종 필터 구성
+    const finalFilter = filters.length > 1 ? { and: filters } : filters[0]
+
+    const response = await notion.databases.query({
       database_id: getEnv('NOTION_DATABASE_ID'),
-      filter: {
-        property: 'Title',
-        title: {
-          contains: title,
-        },
-      },
-      page_size: 10, // 여러 결과를 가져와서 정렬
+      filter: finalFilter,
+      page_size: options?.pageSize ?? 100,
     })
 
-    if (partialResponse.results.length === 0) {
-      return null
+    if (response.results.length === 0) {
+      return []
     }
 
     // 결과를 제목 유사도로 정렬 (정확한 매칭 우선, 그 다음 시작하는 것, 마지막으로 포함하는 것)
-    const sortedResults = partialResponse.results
+    const sortedResults = response.results
       .filter(isPageObjectResponse)
-      .map(page => ({
+      .map((page) => ({
         page,
         title: extractTitle(page.properties),
       }))
@@ -362,26 +403,22 @@ export async function searchWikiPage(title: string): Promise<NotionPage | null> 
         return aTitle.length - bTitle.length
       })
 
-    const bestMatch = sortedResults[0]
-    if (!bestMatch) {
-      return null
-    }
-
-    return {
-      id: bestMatch.page.id,
-      url: bestMatch.page.url,
-      title: bestMatch.title,
-      version: extractVersion(bestMatch.page.properties),
-      language: extractLanguage(bestMatch.page.properties),
-      tags: extractTags(bestMatch.page.properties),
-      author: extractAuthor(bestMatch.page.properties),
-      created: extractCreated(bestMatch.page.properties),
-      lastEditor: extractLastEditor(bestMatch.page.properties),
-      lastEdited: bestMatch.page.last_edited_time,
-    }
+    // 모든 매칭된 결과를 배열로 반환
+    return sortedResults.map((result) => ({
+      id: result.page.id,
+      url: result.page.url,
+      title: result.title,
+      version: extractVersion(result.page.properties),
+      language: extractLanguage(result.page.properties),
+      tags: extractTags(result.page.properties),
+      author: extractAuthor(result.page.properties),
+      created: extractCreated(result.page.properties),
+      lastEditor: extractLastEditor(result.page.properties),
+      lastEdited: result.page.last_edited_time,
+    }))
   } catch (error) {
     console.error('위키 페이지 검색 실패:', error)
-    return null
+    return []
   }
 }
 
@@ -402,24 +439,16 @@ export async function getPagePreview(pageId: string): Promise<string> {
       .map((block: any) => {
         // 텍스트 블록에서 내용 추출
         if (block.type === 'paragraph' && block.paragraph?.rich_text) {
-          return block.paragraph.rich_text
-            .map((text: any) => text.plain_text)
-            .join('')
+          return block.paragraph.rich_text.map((text: any) => text.plain_text).join('')
         }
         if (block.type === 'heading_1' && block.heading_1?.rich_text) {
-          return block.heading_1.rich_text
-            .map((text: any) => text.plain_text)
-            .join('')
+          return block.heading_1.rich_text.map((text: any) => text.plain_text).join('')
         }
         if (block.type === 'heading_2' && block.heading_2?.rich_text) {
-          return block.heading_2.rich_text
-            .map((text: any) => text.plain_text)
-            .join('')
+          return block.heading_2.rich_text.map((text: any) => text.plain_text).join('')
         }
         if (block.type === 'heading_3' && block.heading_3?.rich_text) {
-          return block.heading_3.rich_text
-            .map((text: any) => text.plain_text)
-            .join('')
+          return block.heading_3.rich_text.map((text: any) => text.plain_text).join('')
         }
         return ''
       })
@@ -427,9 +456,7 @@ export async function getPagePreview(pageId: string): Promise<string> {
       .join(' ')
 
     // 프리뷰 텍스트가 너무 길면 자르기 (200자 제한)
-    return previewText.length > 200 
-      ? previewText.substring(0, 200) + '...' 
-      : previewText
+    return previewText.length > 200 ? previewText.substring(0, 200) + '...' : previewText
   } catch (error) {
     console.error('페이지 프리뷰 가져오기 실패:', error)
     return '프리뷰를 불러올 수 없습니다.'
