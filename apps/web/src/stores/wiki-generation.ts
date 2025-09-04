@@ -1,5 +1,5 @@
-import { atom } from '@illuxiza/nanostores-immer'
 import { useStore } from '@nanostores/react'
+import { atom } from '@illuxiza/nanostores-immer'
 import type { AIModel } from '@/lib/ai'
 import type { Language } from '@/lib/notion'
 import type { WikiGenerationResult } from '@/types/wiki'
@@ -194,9 +194,9 @@ export const forceComplete = () => {
   $wikiGenerationContext.mut((draft) => {
     console.log('[Store] 강제 완료 처리 - 현재 상태:', {
       isGenerating: draft.isGenerating,
-      modelResults: draft.modelResults.map(r => ({ model: r.model, status: r.status }))
+      modelResults: draft.modelResults.map((r) => ({ model: r.model, status: r.status })),
     })
-    
+
     // 아직 pending이나 generating 상태인 모델들을 success로 변경
     draft.modelResults.forEach((result) => {
       if (result.status === 'pending' || result.status === 'generating') {
@@ -208,20 +208,20 @@ export const forceComplete = () => {
         }
       }
     })
-    
+
     // 전체 상태 업데이트
     draft.isGenerating = false
     draft.isCompleted = true
     draft.progress = 100
-    
+
     // 에러가 있는 모델이 있는지 확인
     draft.hasErrors = draft.modelResults.some((r) => r.status === 'error')
-    
+
     console.log('[Store] 강제 완료 처리 완료 - 최종 상태:', {
       isGenerating: draft.isGenerating,
       isCompleted: draft.isCompleted,
       progress: draft.progress,
-      hasErrors: draft.hasErrors
+      hasErrors: draft.hasErrors,
     })
   })
 }
