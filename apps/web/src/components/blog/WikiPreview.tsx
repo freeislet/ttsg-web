@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { searchWikiPages, getWikiPreview, type NotionPage } from '@/client/wiki'
+import { OpenInNewIcon } from '../icons'
 
 /**
  * 위키 프리뷰 팝업 컴포넌트 props
@@ -16,16 +17,6 @@ interface WikiPreviewProps {
  */
 interface WikiPreviewData extends NotionPage {
   preview: string
-}
-
-/**
- * API 응답 타입
- */
-interface WikiPreviewResponse {
-  success: boolean
-  data?: WikiPreviewData
-  allPages?: NotionPage[]
-  error?: string
 }
 
 /**
@@ -151,45 +142,35 @@ export function WikiPreview({
    * 팝업 위치 계산 (화면 경계 고려)
    */
   const getPopupStyle = () => {
-    const popupWidth = 320
+    const popupWidth = 400
     const popupHeight = 200
-    const margin = 16
+    const margin = 8
 
-    let x = position.x - popupWidth / 2
-    let y = position.y
+    // absolute positioning을 위해 스크롤 오프셋 추가
+    let x = position.x - popupWidth / 2 + window.pageXOffset
+    let y = position.y + 4 + window.pageYOffset
 
     // 화면 오른쪽 경계 체크
-    if (x + popupWidth > window.innerWidth - margin) {
-      x = window.innerWidth - popupWidth - margin
+    if (x + popupWidth > window.innerWidth + window.pageXOffset - margin) {
+      x = window.innerWidth + window.pageXOffset - popupWidth - margin
     }
 
     // 화면 왼쪽 경계 체크
-    if (x < margin) {
-      x = margin
+    if (x < window.pageXOffset + margin) {
+      x = window.pageXOffset + margin
     }
 
     // 화면 아래쪽 경계 체크
-    if (y + popupHeight > window.innerHeight - margin) {
-      y = position.y - popupHeight - 16 // 링크 위로 표시
+    if (y + popupHeight > window.innerHeight + window.pageYOffset - margin) {
+      y = position.y - popupHeight - 8 + window.pageYOffset
     }
 
     return {
-      position: 'fixed' as const,
+      position: 'absolute' as const,
       left: `${x}px`,
       top: `${y}px`,
       zIndex: 9999,
     }
-  }
-
-  /**
-   * 날짜 포맷팅
-   */
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
   }
 
   /**
@@ -201,7 +182,6 @@ export function WikiPreview({
       setLoadingState('loading')
 
       // 선택된 페이지의 프리뷰 내용 로드
-      const { getWikiPreview } = await import('@/client/wiki')
       const previewContent = await getWikiPreview(page.id)
 
       setData({
@@ -220,19 +200,11 @@ export function WikiPreview({
    * 고유한 페이지 옵션들 추출
    */
   const getUniqueOptions = () => {
-    console.log('getUniqueOptions - allPages:', allPages) // 디버깅용
-
     if (!allPages || allPages.length === 0) {
-      console.log('getUniqueOptions - no pages available')
       return []
     }
 
     const options = allPages.map((page) => {
-      console.log('getUniqueOptions - mapping page:', {
-        id: page.id,
-        version: page.version,
-        language: page.language,
-      })
       return {
         ...page,
         displayVersion: page.version || 'Unknown',
@@ -250,7 +222,6 @@ export function WikiPreview({
         )
     )
 
-    console.log('getUniqueOptions - unique options:', uniqueOptions.length, uniqueOptions)
     return uniqueOptions
   }
 
@@ -271,117 +242,79 @@ export function WikiPreview({
   return (
     <div
       ref={previewRef}
-      className="wiki-preview bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-80 max-h-64 overflow-hidden"
+      className="wiki-preview bg-white border border-gray-200 rounded-md shadow-lg w-96 max-h-96 text-base font-normal overflow-y-auto"
       style={getPopupStyle()}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {loadingState === 'loading' && (
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex items-center justify-center h-32 p-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">로딩 중...</span>
         </div>
       )}
 
       {loadingState === 'error' && (
-        <div className="text-center py-8">
+        <div className="text-center py-8 p-4">
           <div className="text-red-500 mb-2">⚠️</div>
           <p className="text-sm text-gray-600">{error}</p>
         </div>
       )}
 
       {loadingState === 'success' && data && (
-        <div className="space-y-3">
+        <div className="space-y-2 p-3">
           {/* 헤더 */}
-          <div className="border-b border-gray-100 pb-2">
-            <h3 className="font-semibold text-gray-900 text-sm leading-tight">{data.title}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              {data.tags.length > 0 && (
-                <div className="flex gap-1">
-                  {data.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {data.tags.length > 2 && (
-                    <span className="text-xs text-gray-500">+{data.tags.length - 2}</span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Version + Language 선택 옵션 */}
-          {allPages.length > 1 && (
-            <div className="border-b border-gray-100 pb-2">
-              <div className="text-xs text-gray-600 mb-1">
-                버전 선택: ({allPages.length}개 옵션)
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {getUniqueOptions().map((option) => (
-                  <button
-                    key={`${option.id}-${option.language}-${option.version}`}
-                    onClick={() => handlePageSelect(option)}
-                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
-                      selectedPage?.id === option.id &&
-                      selectedPage?.language === option.language &&
-                      selectedPage?.version === option.version
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+          <div className="space-y-2 border-b border-gray-100 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900 text-lg">{data.title}</span>
+              <div className="flex flex-wrap gap-1 items-center flex-shrink-0">
+                {data.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-block bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
                   >
-                    <span>{option.displayVersion}</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageBadgeColor(option.displayLanguage)}`}
-                    >
-                      {option.displayLanguage}
-                    </span>
-                  </button>
+                    {tag}
+                  </span>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* 디버깅용 임시 정보 */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-gray-400 border border-gray-200 p-2 rounded">
-              <div>allPages.length: {allPages.length}</div>
-              <div>uniqueOptions: {getUniqueOptions().length}</div>
-              <div>selectedPage: {selectedPage?.id || 'none'}</div>
+            {/* Version + Language 선택 옵션 */}
+            <div className="flex flex-wrap gap-1">
+              {getUniqueOptions().map((option) => (
+                <button
+                  key={`${option.id}-${option.language}-${option.version}`}
+                  onClick={() => handlePageSelect(option)}
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
+                    selectedPage?.id === option.id &&
+                    selectedPage?.language === option.language &&
+                    selectedPage?.version === option.version
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span>{option.displayVersion}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageBadgeColor(option.displayLanguage)}`}
+                  >
+                    {option.displayLanguage}
+                  </span>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* 프리뷰 내용 */}
           <div className="text-sm text-gray-700 leading-relaxed">{data.preview}</div>
 
-          {/* 메타데이터 */}
-          <div className="text-xs text-gray-500 border-t border-gray-100 pt-2">
-            <div className="flex justify-between items-center">
-              <span>수정: {formatDate(data.lastEdited)}</span>
-              {data.version && (
-                <span className="bg-gray-100 px-2 py-0.5 rounded">{data.version}</span>
-              )}
-            </div>
-          </div>
-
           {/* 액션 */}
-          <div className="flex justify-end pt-1">
+          <div className="flex justify-end border-t border-gray-100 pt-1">
             <button
               onClick={() => window.open(data.url, '_blank', 'noopener,noreferrer')}
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              className="flex items-center text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
             >
               <span>전체 내용 보기</span>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
+              <OpenInNewIcon className="w-3 h-3 ml-0.5" />
             </button>
           </div>
         </div>
