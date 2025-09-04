@@ -73,26 +73,6 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
   }
 
   /**
-   * 클릭 시 위키 페이지로 이동
-   */
-  const handleClick = async () => {
-    try {
-      // 위키 페이지 정보 가져오기
-      const response = await fetch(`/api/wiki/preview?title=${encodeURIComponent(title)}`)
-      const data = (await response.json()) as { success: boolean; data?: { url: string } }
-
-      if (data.success && data.data?.url) {
-        // 노션 페이지 새 탭에서 열기
-        window.open(data.data.url, '_blank', 'noopener,noreferrer')
-      } else {
-        console.warn('위키 페이지를 찾을 수 없습니다:', title)
-      }
-    } catch (error) {
-      console.error('위키 페이지 열기 실패:', error)
-    }
-  }
-
-  /**
    * 컴포넌트 언마운트 시 타이머 정리
    */
   useEffect(() => {
@@ -117,23 +97,13 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
           hover:text-blue-800 
           underline 
           decoration-dotted 
-          cursor-pointer 
+          cursor-default 
           transition-colors 
           duration-200
           ${className}
         `}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleClick()
-          }
-        }}
-        aria-label={`위키 페이지 '${title}' 열기`}
       >
         {displayText || title}
       </span>
