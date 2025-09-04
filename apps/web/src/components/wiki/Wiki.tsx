@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
-import { OpenInNewIcon } from '@/components/icons'
 import { getNotionWikiList, type NotionPage } from '@/client/wiki'
+import { OpenInNewIcon } from '@/components/icons'
+import WikiSearchBox from './WikiSearchBox'
 
 /**
  * 위키 페이지의 메인 컨텐츠를 담당하는 React 컴포넌트
@@ -163,6 +164,19 @@ export default function Wiki() {
             AI 위키 문서 만들기...
           </a>
         </div>
+      </div>
+
+      {/* 위키 검색 섹션 */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <Icon icon="mdi:magnify" className="w-6 h-6 mr-2 text-blue-600" />
+          위키 검색
+        </h2>
+
+        <WikiSearchBox
+          placeholder="위키 페이지 제목이나 키워드를 입력하세요..."
+          className="w-full"
+        />
       </div>
 
       {/* 최근 문서 목록 섹션 */}

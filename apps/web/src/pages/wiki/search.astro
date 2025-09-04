@@ -1,0 +1,176 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import { Icon } from '@iconify/react'
+import WikiSearchBox from '@/components/wiki/WikiSearchBox'
+import WikiSearchResults from '@/components/wiki/WikiSearchResults'
+import { searchWikiPage, type NotionPage } from '@/lib/notion'
+
+// URL 파라미터에서 검색어 추출
+const query = Astro.url.searchParams.get('q') || ''
+
+// 초기 검색 결과 로드 (SSR)
+let initialResults: NotionPage[] = []
+let initialHasMore = false
+let initialNextCursor: string | null = null
+let searchError: string | null = null
+
+if (query) {
+  try {
+    const searchResult = await searchWikiPage(query)
+    
+    initialResults = searchResult.results
+    initialHasMore = searchResult.hasMore
+    initialNextCursor = searchResult.nextCursor
+  } catch (error) {
+    console.error('초기 검색 실패:', error)
+    searchError = error instanceof Error ? error.message : '검색 중 오류가 발생했습니다'
+  }
+}
+
+// 페이지 메타데이터
+const title = query ? `"${query}" 검색 결과 - TT Wiki` : '위키 검색 - TT Wiki'
+const description = query 
+  ? `"${query}"에 대한 위키 검색 결과를 확인하세요.`
+  : 'TTSG 위키에서 원하는 문서를 검색하세요.'
+---
+
+<Layout title={title} description={description}>
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- 페이지 헤더 -->
+    <div class="mb-8">
+      <div class="flex items-center mb-4">
+        <a 
+          href="/wiki" 
+          class="flex items-center text-blue-600 hover:text-blue-800 transition-colors mr-4"
+          aria-label="위키 홈으로 돌아가기"
+        >
+          <Icon icon="mdi:arrow-left" className="w-5 h-5 mr-1" />
+          <span class="font-medium">위키 홈</span>
+        </a>
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+          <Icon icon="mdi:file-search" className="w-8 h-8 mr-3 text-blue-600" />
+          위키 검색
+        </h1>
+      </div>
+      <p class="text-lg text-gray-600">
+        TTSG 위키에서 원하는 문서를 찾아보세요.
+      </p>
+    </div>
+
+    <!-- 검색창 -->
+    <div class="mb-8 bg-white rounded-lg shadow-md p-6">
+      <WikiSearchBox 
+        client:load
+        initialQuery={query}
+        autoFocus={!query}
+        className="w-full"
+      />
+    </div>
+
+    <!-- 검색 결과 또는 시작 화면 -->
+    {query ? (
+      <div class="bg-white rounded-lg shadow-md p-6">
+        {searchError ? (
+          <!-- 검색 오류 -->
+          <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div class="flex items-center mb-2">
+              <Icon icon="mdi:alert-circle" className="w-5 h-5 text-red-500 mr-2" />
+              <span class="text-red-700 font-medium">검색 중 오류가 발생했습니다</span>
+            </div>
+            <p class="text-red-600 text-sm">{searchError}</p>
+            <p class="text-red-600 text-sm mt-1">
+              노션 API 연결을 확인하거나 잠시 후 다시 시도해주세요.
+            </p>
+          </div>
+        ) : (
+          <!-- 검색 결과 -->
+          <WikiSearchResults 
+            client:load
+            query={query}
+            initialResults={initialResults}
+            initialHasMore={initialHasMore}
+            initialNextCursor={initialNextCursor}
+          />
+        )}
+      </div>
+    ) : (
+      <!-- 시작 화면 -->
+      <div class="bg-white rounded-lg shadow-md p-8 text-center">
+        <Icon icon="mdi:book-search" className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">위키 검색을 시작하세요</h2>
+        <p class="text-gray-600 mb-6">
+          위의 검색창에 찾고 싶은 위키 페이지의 제목이나 키워드를 입력하세요.
+        </p>
+        
+        <!-- 검색 팁 -->
+        <div class="bg-blue-50 rounded-lg p-4 text-left max-w-md mx-auto">
+          <h3 class="font-medium text-blue-900 mb-2 flex items-center">
+            <Icon icon="mdi:lightbulb" className="w-4 h-4 mr-1" />
+            검색 팁
+          </h3>
+          <ul class="text-sm text-blue-800 space-y-1">
+            <li>• 부분 검색이 지원됩니다 (예: "React"로 "React Hook" 찾기)</li>
+            <li>• 한글과 영어 모두 검색 가능합니다</li>
+            <li>• AI 모델별 문서도 필터링할 수 있습니다</li>
+            <li>• 검색 결과는 무한 스크롤로 제공됩니다</li>
+          </ul>
+        </div>
+
+        <!-- 최근 문서 바로가기 -->
+        <div class="mt-8">
+          <a 
+            href="/wiki" 
+            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Icon icon="mdi:file-document-multiple" className="w-5 h-5 mr-2" />
+            최근 문서 보기
+          </a>
+        </div>
+      </div>
+    )}
+
+    <!-- 추가 액션 -->
+    <div class="mt-8 flex flex-wrap gap-4 justify-center">
+      <a 
+        href="/wiki" 
+        class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+      >
+        <Icon icon="mdi:home" className="w-4 h-4 mr-2" />
+        위키 홈
+      </a>
+      <a 
+        href="/wiki/generate" 
+        class="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+      >
+        <Icon icon="mdi:auto-fix" className="w-4 h-4 mr-2" />
+        AI 문서 생성
+      </a>
+      <a 
+        href="https://www.notion.so/TT-Wiki-24fffc6454ce806ebaeeee1a0497640d" 
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+      >
+        <Icon icon="simple-icons:notion" className="w-4 h-4 mr-2" />
+        노션에서 보기
+      </a>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  /* 무한 스크롤 애니메이션 최적화 */
+  .container {
+    scroll-behavior: smooth;
+  }
+  
+  /* 검색 결과 항목 호버 효과 */
+  .search-result-item {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .search-result-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+</style>
