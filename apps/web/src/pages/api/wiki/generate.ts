@@ -2,7 +2,11 @@ import type { APIRoute } from 'astro'
 import { responseSuccess, responseError, responseServerError } from '@/lib/api'
 import { createWikiPage } from '@/lib/notion'
 import { WikiGeneratorFactory, type AIModel, type Language } from '@/lib/wiki'
-import type { WikiGenerationRequest, WikiGenerationResponse, WikiGenerationResult } from '@/types'
+import type {
+  WikiGenerationRequest,
+  WikiGenerationResponse,
+  WikiGenerationResult,
+} from '@/types/wiki'
 
 /**
  * 위키 자동 생성 API 엔드포인트
