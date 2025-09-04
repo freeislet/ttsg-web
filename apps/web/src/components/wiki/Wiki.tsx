@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
 import { OpenInNewIcon } from '@/components/icons'
-import type { NotionPage } from '@/lib/notion'
-import { getNotionWikiList } from '@/client/wiki'
+import { getNotionWikiList, type NotionPage } from '@/client/wiki'
 
 /**
  * 위키 페이지의 메인 컨텐츠를 담당하는 React 컴포넌트

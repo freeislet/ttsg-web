@@ -5,10 +5,12 @@
 import type { NotionPage, Language } from '@/lib/notion'
 import type { AIModel } from '@/lib/ai'
 
+export type { NotionPage, Language, AIModel }
+
 /**
- * 노션 API 응답 타입
+ * 위키 목록 API 응답 타입
  */
-export interface NotionApiResponse {
+export interface WikiListResponse {
   success: boolean
   data: NotionPage[]
   count: number

@@ -1,29 +1,12 @@
 import type { AIModel } from '@/lib/ai'
-import type { NotionPage } from '@/lib/notion'
 import type {
-  NotionApiResponse,
   WikiGenerationRequest,
   WikiGenerationResponse,
   WikiGenerationResult,
-} from '@/types'
+} from '@/types/wiki'
 import type { WikiFormData } from '@/types/wiki-form'
 
-/**
- * 노션 위키 목록 조회 API 호출 함수
- * @param limit 조회할 페이지 수 (선택사항, 없으면 서버 기본값 사용)
- * @returns 노션 페이지 목록
- */
-export const getNotionWikiList = async (limit?: number): Promise<NotionPage[]> => {
-  const url = limit ? `/api/wiki/list?limit=${limit}` : '/api/wiki/list'
-  const response = await fetch(url)
-  const result: NotionApiResponse = await response.json()
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || 'API 호출 실패')
-  }
-
-  return result.data
-}
+export type { WikiFormData, WikiGenerationResponse, WikiGenerationResult }
 
 /**
  * 위키 생성 API 호출 함수
