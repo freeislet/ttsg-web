@@ -1,5 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro'
+import Header from '@/components/Header.astro'
+import Footer from '@/components/Footer.astro'
 import { Icon } from '@iconify/react'
 import WikiSearchBox from '@/components/wiki/WikiSearchBox'
 import WikiSearchResults from '@/components/wiki/WikiSearchResults'
@@ -35,18 +37,11 @@ const description = query
 ---
 
 <Layout title={title} description={description}>
+  <Header />
   <main class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- 페이지 헤더 -->
     <div class="mb-8">
       <div class="flex items-center mb-4">
-        <a 
-          href="/wiki" 
-          class="flex items-center text-blue-600 hover:text-blue-800 transition-colors mr-4"
-          aria-label="위키 홈으로 돌아가기"
-        >
-          <Icon icon="mdi:arrow-left" className="w-5 h-5 mr-1" />
-          <span class="font-medium">위키 홈</span>
-        </a>
         <h1 class="text-3xl font-bold text-gray-900 flex items-center">
           <Icon icon="mdi:file-search" className="w-8 h-8 mr-3 text-blue-600" />
           위키 검색
@@ -156,6 +151,7 @@ const description = query
       </a>
     </div>
   </main>
+  <Footer />
 </Layout>
 
 <style>
