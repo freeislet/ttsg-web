@@ -50,3 +50,21 @@ export interface WikiGenerationResult {
   notionPageId?: string
   error?: string
 }
+
+/**
+ * 위키 검색 API 응답 타입
+ */
+export interface WikiSearchResponse {
+  success: boolean
+  data: NotionPage[]
+  error?: string
+}
+
+/**
+ * 위키 프리뷰 API 응답 타입
+ */
+export interface WikiPreviewResponse {
+  success: boolean
+  data: { preview: string }
+  error?: string
+}

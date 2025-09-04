@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import type { NotionPage } from '@/lib/notion'
+import { searchWikiPages, getWikiPreview, type NotionPage } from '@/client/wiki'
 
 /**
  * 위키 프리뷰 팝업 컴포넌트 props
@@ -49,7 +49,6 @@ export function WikiPreview({
   const [loadingState, setLoadingState] = useState<LoadingState>('loading')
   const [error, setError] = useState<string>('')
   const previewRef = useRef<HTMLDivElement>(null)
-  // 공유된 hideTimeoutRef가 있으면 사용하고, 없으면 로컬 생성
   const hideTimeoutRef = sharedHideTimeoutRef || useRef<NodeJS.Timeout>()
 
   /**
@@ -58,29 +57,33 @@ export function WikiPreview({
   const loadPreviewData = async (language?: string, version?: string) => {
     try {
       setLoadingState('loading')
-      const params = new URLSearchParams({ title })
-      if (language) params.append('language', language)
-      if (version) params.append('version', version)
 
-      const response = await fetch(`/api/wiki/preview?${params.toString()}`)
-      const result = (await response.json()) as WikiPreviewResponse
+      // 1단계: 위키 페이지 검색
+      const searchResults = await searchWikiPages(title, language, version)
 
-      console.log('WikiPreview API Response:', result) // 디버깅용
-
-      if (result.success && result.data) {
-        setData(result.data)
-        setAllPages(result.allPages || [])
-        setSelectedPage(result.data)
-        setLoadingState('success')
-        console.log('AllPages loaded:', result.allPages?.length || 0) // 디버깅용
-      } else {
-        setError(result.error || '페이지를 찾을 수 없습니다.')
+      if (searchResults.length === 0) {
+        setError('해당 위키 페이지를 찾을 수 없습니다.')
         setLoadingState('error')
+        return
       }
+
+      // 검색 결과 설정
+      setAllPages(searchResults)
+      const firstPage = searchResults[0]
+      setSelectedPage(firstPage)
+
+      // 2단계: 선택된 페이지의 프리뷰 내용 로드
+      const previewContent = await getWikiPreview(firstPage.id)
+
+      setData({
+        ...firstPage,
+        preview: previewContent,
+      })
+      setLoadingState('success')
     } catch (err) {
-      console.error('WikiPreview load error:', err) // 디버깅용
-      setError('프리뷰를 불러오는 중 오류가 발생했습니다.')
+      setError(err instanceof Error ? err.message : '데이터를 불러올 수 없습니다.')
       setLoadingState('error')
+      console.error('위키 프리뷰 로드 오류:', err)
     }
   }
 
@@ -192,9 +195,25 @@ export function WikiPreview({
   /**
    * 페이지 옵션 선택 핸들러
    */
-  const handlePageSelect = (page: NotionPage) => {
+  const handlePageSelect = async (page: NotionPage) => {
     setSelectedPage(page)
-    loadPreviewData(page.language, page.version)
+    try {
+      setLoadingState('loading')
+
+      // 선택된 페이지의 프리뷰 내용 로드
+      const { getWikiPreview } = await import('@/client/wiki')
+      const previewContent = await getWikiPreview(page.id)
+
+      setData({
+        ...page,
+        preview: previewContent,
+      })
+      setLoadingState('success')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '데이터를 불러올 수 없습니다.')
+      setLoadingState('error')
+      console.error('위키 프리뷰 로드 오류:', err)
+    }
   }
 
   /**
