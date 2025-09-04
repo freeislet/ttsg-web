@@ -36,7 +36,7 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
       if (rect) {
         setPreviewPosition({
           x: rect.left + rect.width / 2,
-          y: rect.bottom + 8, // 링크 아래 8px
+          y: rect.bottom,
         })
         setShowPreview(true)
       }
