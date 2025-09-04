@@ -19,11 +19,17 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 })
   const linkRef = useRef<HTMLSpanElement>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout>()
+  const hideTimeoutRef = useRef<NodeJS.Timeout>()
 
   /**
    * 마우스 호버 시 프리뷰 표시
    */
   const handleMouseEnter = (event: React.MouseEvent) => {
+    // 기존 숨김 타이머 취소
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current)
+    }
+
     // 디바운싱: 300ms 후에 프리뷰 표시
     hoverTimeoutRef.current = setTimeout(() => {
       const rect = linkRef.current?.getBoundingClientRect()
@@ -38,14 +44,32 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
   }
 
   /**
-   * 마우스 떠날 시 프리뷰 숨김
+   * 마우스 떠날 시 프리뷰 숨김 (지연)
    */
   const handleMouseLeave = () => {
     // 디바운싱 취소
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current)
     }
+
+    // 500ms 지연 후 프리뷰 숨김 (프리뷰로 이동할 시간 제공)
+    hideTimeoutRef.current = setTimeout(() => {
+      setShowPreview(false)
+    }, 500)
+  }
+
+  /**
+   * 프리뷰 닫기 핸들러
+   */
+  const handlePreviewClose = () => {
     setShowPreview(false)
+    // 모든 타이머 정리
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current)
+    }
   }
 
   /**
@@ -75,6 +99,9 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current)
+      }
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current)
       }
     }
   }, [])
@@ -116,7 +143,8 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
         <WikiPreview
           title={title}
           position={previewPosition}
-          onClose={() => setShowPreview(false)}
+          onClose={handlePreviewClose}
+          hideTimeoutRef={hideTimeoutRef}
         />
       )}
     </>
