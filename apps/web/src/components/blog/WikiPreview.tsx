@@ -163,6 +163,11 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
    * 페이지 옵션 선택 핸들러
    */
   const handlePageSelect = async (page: NotionPage) => {
+    // 현재 선택된 페이지와 동일한 경우 무시
+    if (selectedPage?.id === page.id) {
+      return
+    }
+
     setSelectedPage(page)
     try {
       setLoadingState('loading')
@@ -190,21 +195,24 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {loadingState === 'loading' && (
+      {/* 초기 로딩 상태 */}
+      {loadingState === 'loading' && !data && (
         <div className="flex items-center justify-center h-32 p-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">로딩 중...</span>
         </div>
       )}
 
-      {loadingState === 'error' && (
+      {/* 초기 에러 상태 */}
+      {loadingState === 'error' && !data && (
         <div className="text-center py-8 p-4">
           <div className="text-red-500 mb-2">⚠️</div>
           <p className="text-sm text-gray-600">{error}</p>
         </div>
       )}
 
-      {loadingState === 'success' && data && (
+      {/* 데이터가 있을 때 (성공 또는 페이지 변경 중 로딩) */}
+      {data && (
         <div className="space-y-2 p-3">
           {/* 헤더 */}
           <div className="space-y-2 border-b border-gray-100 pb-2">
@@ -228,10 +236,8 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
                 <button
                   key={`${page.id}-${page.language}-${page.version}`}
                   onClick={() => handlePageSelect(page)}
-                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
-                    selectedPage?.id === page.id &&
-                    selectedPage?.language === page.language &&
-                    selectedPage?.version === page.version
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                    selectedPage?.id === page.id
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
@@ -239,7 +245,7 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
                   <span>{page.version || 'Unknown'}</span>
                   {page.language && (
                     <span
-                      className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageBadgeColor(page.language)}`}
+                      className={`px-1 py-0 rounded text-xs font-medium border ${getLanguageBadgeColor(page.language)}`}
                     >
                       {page.language}
                     </span>
@@ -249,8 +255,20 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
             </div>
           </div>
 
-          {/* 프리뷰 내용 */}
-          <div className="text-sm text-gray-700 leading-relaxed">{data.preview}</div>
+          {/* 프리뷰 내용 영역 */}
+          {loadingState === 'loading' ? (
+            <div className="flex items-center justify-center h-20 p-4">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-gray-600 text-sm">로딩 중...</span>
+            </div>
+          ) : loadingState === 'error' ? (
+            <div className="text-center py-4">
+              <div className="text-red-500 mb-1">⚠️</div>
+              <p className="text-sm text-gray-600">{error}</p>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-700 leading-relaxed">{data.preview}</div>
+          )}
 
           {/* 액션 */}
           <div className="flex justify-end border-t border-gray-100 pt-1">
