@@ -10,7 +10,7 @@ interface WikiPreviewProps {
   title: string // 위키 제목
   position: { x: number; y: number } // 팝업 위치
   onClose: () => void // 닫기 콜백
-  hideTimeoutRef?: React.MutableRefObject<NodeJS.Timeout | undefined> // 공유 타이머 참조
+  onMouseEnter?: () => void // 마우스 진입 시 호출될 콜백
 }
 
 /**
@@ -29,19 +29,13 @@ type LoadingState = 'loading' | 'success' | 'error'
  * 위키 프리뷰 팝업 컴포넌트
  * 노션 위키 페이지의 미리보기를 표시합니다.
  */
-export function WikiPreview({
-  title,
-  position,
-  onClose,
-  hideTimeoutRef: sharedHideTimeoutRef,
-}: WikiPreviewProps) {
+export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPreviewProps) {
   const [data, setData] = useState<WikiPreviewData | null>(null)
   const [allPages, setAllPages] = useState<NotionPage[]>([])
   const [selectedPage, setSelectedPage] = useState<NotionPage | null>(null)
   const [loadingState, setLoadingState] = useState<LoadingState>('loading')
   const [error, setError] = useState<string>('')
   const previewRef = useRef<HTMLDivElement>(null)
-  const hideTimeoutRef = sharedHideTimeoutRef || useRef<NodeJS.Timeout>()
 
   /**
    * 위키 프리뷰 데이터 로드
@@ -87,17 +81,12 @@ export function WikiPreview({
    * 마우스 호버 이벤트 핸들러
    */
   const handleMouseEnter = () => {
-    // 숨김 타이머 취소 (프리뷰에 마우스가 올라가면 유지)
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current)
-    }
+    // WikiLink의 hide 타이머 취소를 위해 부모 콜백 호출
+    onMouseEnter?.()
   }
 
   const handleMouseLeave = () => {
-    // 200ms 지연 후 프리뷰 닫기
-    hideTimeoutRef.current = setTimeout(() => {
-      onClose()
-    }, 200)
+    onClose()
   }
 
   /**
@@ -118,10 +107,6 @@ export function WikiPreview({
     return () => {
       clearTimeout(timeoutId)
       document.removeEventListener('mousedown', handleClickOutside)
-      // 컴포넌트 언마운트 시 타이머 정리
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current)
-      }
     }
   }, [onClose])
 

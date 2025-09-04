@@ -59,6 +59,15 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
   }
 
   /**
+   * 프리뷰에서 마우스 진입 시 hide 타이머 취소
+   */
+  const handlePreviewMouseEnter = () => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current)
+    }
+  }
+
+  /**
    * 프리뷰 닫기 핸들러
    */
   const handlePreviewClose = () => {
@@ -114,7 +123,7 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
           title={title}
           position={previewPosition}
           onClose={handlePreviewClose}
-          hideTimeoutRef={hideTimeoutRef}
+          onMouseEnter={handlePreviewMouseEnter}
         />
       )}
     </>
