@@ -1,13 +1,25 @@
 import type { APIRoute } from 'astro'
-import { searchWikiPage, getPagePreview } from '../../../lib/notion'
+import { searchWikiPage, getPagePreview, type WikiSearchOptions } from '@/lib/notion'
 
 /**
  * 위키 페이지 프리뷰 API 엔드포인트
- * GET /api/wiki/preview?title=위키제목
+ * GET /api/wiki/preview?title=위키제목&language=ko&version=Gemini 2.5 Pro
+ * 
+ * @param title - 검색할 위키 제목 (필수)
+ * @param language - 언어 필터 (ko | en, 선택적)
+ * @param version - AI 모델명 필터 (예: "Gemini 2.5 Pro", "GPT-5", 선택적)
+ * 
+ * @returns {
+ *   success: boolean,
+ *   data: NotionPage & { preview: string },
+ *   allPages: NotionPage[] // 전체 검색 결과 (Version + Language 선택 UI용)
+ * }
  */
 export const GET: APIRoute = async ({ url }) => {
   try {
     const title = url.searchParams.get('title')
+    const language = url.searchParams.get('language')
+    const version = url.searchParams.get('version')
 
     if (!title) {
       return new Response(
@@ -21,11 +33,24 @@ export const GET: APIRoute = async ({ url }) => {
       )
     }
 
-    // 위키 페이지 검색
-    const wikiPages = await searchWikiPage(title, {
+    // 검색 옵션 구성
+    const searchOptions: WikiSearchOptions = {
       exactMatch: true,
       pageSize: 10,
-    })
+    }
+
+    // 언어 파라미터가 있으면 추가
+    if (language) {
+      searchOptions.languages = [language as 'ko' | 'en']
+    }
+
+    // AI 모델명 파라미터가 있으면 추가 (예: "Gemini 2.5 Pro", "GPT-5")
+    if (version) {
+      searchOptions.versions = [version]
+    }
+
+    // 위키 페이지 검색
+    const wikiPages = await searchWikiPage(title, searchOptions)
 
     if (wikiPages.length === 0) {
       return new Response(
@@ -53,6 +78,8 @@ export const GET: APIRoute = async ({ url }) => {
           ...wikiPage,
           preview: previewContent,
         },
+        // 전체 검색 결과 목록 (Version + Language 선택 UI용)
+        allPages: wikiPages,
       }),
       {
         status: 200,
