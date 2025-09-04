@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
-import type { NotionApiResponse } from '@/types'
 import { responseSuccess, responseServerError } from '@/lib/api'
 import { getRecentPages } from '@/lib/notion'
+import type { NotionApiResponse } from '@/types/wiki'
 
 /**
  * 노션 데이터베이스에서 최근 페이지 목록을 반환하는 API 엔드포인트

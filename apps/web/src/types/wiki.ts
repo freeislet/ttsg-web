@@ -1,9 +1,19 @@
 /**
- * 위키 생성 API 관련 타입 정의
+ * 위키 API 관련 타입 정의
  */
 
+import type { NotionPage, Language } from '@/lib/notion'
 import type { AIModel } from '@/lib/ai'
-import type { Language } from '@/lib/notion'
+
+/**
+ * 노션 API 응답 타입
+ */
+export interface NotionApiResponse {
+  success: boolean
+  data: NotionPage[]
+  count: number
+  message?: string
+}
 
 /**
  * 위키 생성 API 요청 타입
