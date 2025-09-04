@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getLanguageBadgeColor } from '@/lib/notion'
-import { searchWikiPages, getWikiPreview, type NotionPage } from '@/client/wiki'
+import { searchWikiPages, getWikiPreview, type NotionPage, type Language } from '@/client/wiki'
 import { OpenInNewIcon } from '../icons'
 
 /**
@@ -40,22 +40,28 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
   /**
    * 위키 프리뷰 데이터 로드
    */
-  const loadPreviewData = async (language?: string, version?: string) => {
+  const loadPreviewData = async (language?: Language, version?: string) => {
     try {
       setLoadingState('loading')
 
       // 1단계: 위키 페이지 검색
-      const searchResults = await searchWikiPages(title, language, version)
+      const searchResults = await searchWikiPages(title, {
+        exactMatch: true,
+        pageSize: 10,
+        languages: language ? [language] : undefined,
+        versions: version ? [version] : undefined,
+      })
+      const pages = searchResults.results
 
-      if (searchResults.length === 0) {
+      if (pages.length === 0) {
         setError('해당 위키 페이지를 찾을 수 없습니다.')
         setLoadingState('error')
         return
       }
 
       // 검색 결과 설정
-      setAllPages(searchResults)
-      const firstPage = searchResults[0]
+      setAllPages(pages)
+      const firstPage = pages[0]
       setSelectedPage(firstPage)
 
       // 2단계: 선택된 페이지의 프리뷰 내용 로드

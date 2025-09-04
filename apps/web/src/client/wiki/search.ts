@@ -1,22 +1,25 @@
-import type { NotionPage, WikiSearchResponse } from '@/types/wiki'
+import type { NotionPage, WikiSearchResponse, WikiSearchResult, Language } from '@/types/wiki'
+import type { WikiSearchOptions } from '@/lib/notion'
 
-export type { NotionPage }
+export type { NotionPage, WikiSearchResult, Language }
 
 /**
- * 위키 페이지 검색 API 호출 함수
- * @param title 검색할 위키 제목
- * @param language 언어 필터 (선택적)
- * @param version AI 모델명 필터 (선택적)
- * @returns 검색된 노션 페이지 목록
+ * 위키 페이지 검색 API 호출 함수 (무한 스크롤 지원)
+ * @param query 검색어
+ * @param options 검색 옵션
+ * @returns 검색 결과 (페이지네이션 정보 포함)
  */
 export const searchWikiPages = async (
-  title: string,
-  language?: string,
-  version?: string
-): Promise<NotionPage[]> => {
-  const params = new URLSearchParams({ title })
-  if (language) params.append('language', language)
-  if (version) params.append('version', version)
+  query: string,
+  options?: WikiSearchOptions
+): Promise<WikiSearchResult> => {
+  const params = new URLSearchParams({ q: query })
+
+  if (options?.startCursor) params.append('cursor', options.startCursor)
+  if (options?.pageSize) params.append('size', options.pageSize.toString())
+  if (options?.exactMatch !== undefined) params.append('exact', options.exactMatch.toString())
+  if (options?.languages) params.append('language', options.languages.join(','))
+  if (options?.versions) params.append('version', options.versions.join(','))
 
   const response = await fetch(`/api/wiki/search?${params}`)
   const result: WikiSearchResponse = await response.json()

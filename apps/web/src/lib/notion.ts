@@ -300,10 +300,12 @@ export async function createWikiPage(
  * 위키 검색 옵션
  */
 export interface WikiSearchOptions {
+  /** 페이지네이션을 위한 시작 커서 */
+  startCursor?: string
+  /** 반환할 최대 결과 수 (기본값: 20) */
+  pageSize?: number
   /** 정확한 제목 매칭만 수행할지 여부 (기본값: false) */
   exactMatch?: boolean
-  /** 반환할 최대 결과 수 (기본값: 100) */
-  pageSize?: number
   /** 검색할 언어 배열 */
   languages?: Language[]
   /** 검색할 버전 배열 */
@@ -311,15 +313,27 @@ export interface WikiSearchOptions {
 }
 
 /**
+ * 위키 검색 결과
+ */
+export interface WikiSearchResult {
+  /** 검색된 페이지 목록 */
+  results: NotionPage[]
+  /** 더 많은 결과가 있는지 여부 */
+  hasMore: boolean
+  /** 다음 페이지를 위한 커서 */
+  nextCursor: string | null
+}
+
+/**
  * 위키 제목으로 노션 페이지를 검색합니다
  * @param title 검색할 위키 제목
- * @param options 검색 옵션 (언어, 버전 필터링)
- * @returns 찾은 노션 페이지 목록
+ * @param options 검색 옵션 (언어, 버전 필터링, 페이지네이션)
+ * @returns 검색 결과 (페이지 목록, 페이지네이션 정보 포함)
  */
 export async function searchWikiPage(
   title: string,
   options?: WikiSearchOptions
-): Promise<NotionPage[]> {
+): Promise<WikiSearchResult> {
   try {
     const notion = createNotionClient()
 
@@ -386,53 +400,45 @@ export async function searchWikiPage(
     const response = await notion.databases.query({
       database_id: getEnv('NOTION_DATABASE_ID'),
       filter: finalFilter,
-      page_size: options?.pageSize ?? 100,
+      page_size: options?.pageSize ?? 20,
+      start_cursor: options?.startCursor,
     })
 
     if (response.results.length === 0) {
-      return []
+      return {
+        results: [],
+        hasMore: false,
+        nextCursor: null,
+      }
     }
 
-    // 결과를 제목 유사도로 정렬 (정확한 매칭 우선, 그 다음 시작하는 것, 마지막으로 포함하는 것)
-    const sortedResults = response.results
-      .filter(isPageObjectResponse)
-      .map((page) => ({
-        page,
-        title: extractTitle(page.properties),
-      }))
-      .sort((a, b) => {
-        const aTitle = a.title.toLowerCase()
-        const bTitle = b.title.toLowerCase()
-        const searchTitle = title.toLowerCase()
-
-        // 정확한 매칭
-        if (aTitle === searchTitle && bTitle !== searchTitle) return -1
-        if (bTitle === searchTitle && aTitle !== searchTitle) return 1
-
-        // 시작하는 매칭
-        if (aTitle.startsWith(searchTitle) && !bTitle.startsWith(searchTitle)) return -1
-        if (bTitle.startsWith(searchTitle) && !aTitle.startsWith(searchTitle)) return 1
-
-        // 길이가 짧은 것 우선 (더 정확한 매칭일 가능성)
-        return aTitle.length - bTitle.length
-      })
-
-    // 모든 매칭된 결과를 배열로 반환
-    return sortedResults.map((result) => ({
-      id: result.page.id,
-      url: result.page.url,
-      title: result.title,
-      version: extractVersion(result.page.properties),
-      language: extractLanguage(result.page.properties),
-      tags: extractTags(result.page.properties),
-      author: extractAuthor(result.page.properties),
-      created: extractCreated(result.page.properties),
-      lastEditor: extractLastEditor(result.page.properties),
-      lastEdited: result.page.last_edited_time,
+    // 페이지 결과 추출
+    const results = response.results.filter(isPageObjectResponse).map((page) => ({
+      id: page.id,
+      url: page.url,
+      title: extractTitle(page.properties),
+      version: extractVersion(page.properties),
+      language: extractLanguage(page.properties),
+      tags: extractTags(page.properties),
+      author: extractAuthor(page.properties),
+      created: extractCreated(page.properties),
+      lastEditor: extractLastEditor(page.properties),
+      lastEdited: page.last_edited_time,
     }))
+
+    // 페이지네이션 정보와 함께 결과 반환
+    return {
+      results,
+      hasMore: response.has_more,
+      nextCursor: response.next_cursor,
+    }
   } catch (error) {
     console.error('위키 페이지 검색 실패:', error)
-    return []
+    return {
+      results: [],
+      hasMore: false,
+      nextCursor: null,
+    }
   }
 }
 

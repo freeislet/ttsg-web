@@ -2,10 +2,10 @@
  * 위키 API 관련 타입 정의
  */
 
-import type { NotionPage, Language } from '@/lib/notion'
+import type { NotionPage, Language, WikiSearchResult } from '@/lib/notion'
 import type { AIModel } from '@/lib/ai'
 
-export type { NotionPage, Language, AIModel }
+export type { NotionPage, Language, WikiSearchResult, AIModel }
 
 /**
  * 위키 목록 API 응답 타입
@@ -56,7 +56,7 @@ export interface WikiGenerationResult {
  */
 export interface WikiSearchResponse {
   success: boolean
-  data: NotionPage[]
+  data: WikiSearchResult
   error?: string
 }
 
