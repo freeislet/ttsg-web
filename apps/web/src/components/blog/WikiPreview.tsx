@@ -182,35 +182,6 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
     }
   }
 
-  /**
-   * 고유한 페이지 옵션들 추출
-   */
-  const getUniqueOptions = () => {
-    if (!allPages || allPages.length === 0) {
-      return []
-    }
-
-    const options = allPages.map((page) => {
-      return {
-        ...page,
-        displayVersion: page.version || 'Unknown',
-        displayLanguage: page.language || 'ko',
-      }
-    })
-
-    const uniqueOptions = options.filter(
-      (option, index, self) =>
-        index ===
-        self.findIndex(
-          (o) =>
-            o.displayVersion === option.displayVersion &&
-            o.displayLanguage === option.displayLanguage
-        )
-    )
-
-    return uniqueOptions
-  }
-
   return (
     <div
       ref={previewRef}
@@ -253,24 +224,26 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
 
             {/* Version + Language 선택 옵션 */}
             <div className="flex flex-wrap gap-1">
-              {getUniqueOptions().map((option) => (
+              {allPages.map((page) => (
                 <button
-                  key={`${option.id}-${option.language}-${option.version}`}
-                  onClick={() => handlePageSelect(option)}
+                  key={`${page.id}-${page.language}-${page.version}`}
+                  onClick={() => handlePageSelect(page)}
                   className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
-                    selectedPage?.id === option.id &&
-                    selectedPage?.language === option.language &&
-                    selectedPage?.version === option.version
+                    selectedPage?.id === page.id &&
+                    selectedPage?.language === page.language &&
+                    selectedPage?.version === page.version
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <span>{option.displayVersion}</span>
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageBadgeColor(option.displayLanguage)}`}
-                  >
-                    {option.displayLanguage}
-                  </span>
+                  <span>{page.version || 'Unknown'}</span>
+                  {page.language && (
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageBadgeColor(page.language)}`}
+                    >
+                      {page.language}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
