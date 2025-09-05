@@ -69,7 +69,7 @@ export const defaultFormValues: WikiFormData = {
   instruction: '',
   language: 'ko',
   tags: [],
-  models: ['gpt-5-mini', 'gemini-2.5-flash'],
+  models: ['gpt-5', 'gemini-2.5-pro'],
 }
 
 /**
