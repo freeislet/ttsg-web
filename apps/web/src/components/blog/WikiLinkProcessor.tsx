@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { WikiLink } from './WikiLink'
 
 /**
- * 블로그 콘텐츠에서 [[위키링크]] 패턴을 찾아 React WikiLink 컴포넌트로 변환하는 프로세서
+ * 블로그 콘텐츠에서 ((위키링크)) 패턴을 찾아 React WikiLink 컴포넌트로 변환하는 프로세서
  * 클라이언트 사이드에서 DOM 조작을 통해 마크다운 렌더링 후 위키링크를 처리합니다.
  */
 export function WikiLinkProcessor() {
@@ -45,7 +45,7 @@ export function WikiLinkProcessor() {
         // 각 텍스트 노드에서 위키링크 패턴 처리
         textNodes.forEach((textNode) => {
           const text = textNode.textContent || ''
-          const wikiLinkRegex = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g
+          const wikiLinkRegex = /\(\(([^)|]+)(?:\|([^)]+))?\)\)/g
           
           if (wikiLinkRegex.test(text)) {
             const parent = textNode.parentNode
