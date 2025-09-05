@@ -455,28 +455,70 @@ export async function getPagePreview(pageId: string): Promise<string> {
       page_size: 3, // 처음 3개 블록만 가져오기
     })
 
-    const previewText = response.results
-      .map((block: any) => {
-        // 텍스트 블록에서 내용 추출
-        if (block.type === 'paragraph' && block.paragraph?.rich_text) {
-          return block.paragraph.rich_text.map((text: any) => text.plain_text).join('')
-        }
-        if (block.type === 'heading_1' && block.heading_1?.rich_text) {
-          return block.heading_1.rich_text.map((text: any) => text.plain_text).join('')
-        }
-        if (block.type === 'heading_2' && block.heading_2?.rich_text) {
-          return block.heading_2.rich_text.map((text: any) => text.plain_text).join('')
-        }
-        if (block.type === 'heading_3' && block.heading_3?.rich_text) {
-          return block.heading_3.rich_text.map((text: any) => text.plain_text).join('')
-        }
-        return ''
-      })
-      .filter((text: string) => text.trim().length > 0)
-      .join(' ')
+    // 블록에서 텍스트를 추출하는 재귀 함수
+    const extractTextFromBlock = async (block: any): Promise<string[]> => {
+      const texts: string[] = []
 
-    // 프리뷰 텍스트가 너무 길면 자르기 (200자 제한)
-    return previewText.length > 200 ? previewText.substring(0, 200) + '...' : previewText
+      // 기본 텍스트 블록 처리
+      if (block.type === 'paragraph' && block.paragraph?.rich_text) {
+        texts.push(block.paragraph.rich_text.map((text: any) => text.plain_text).join(''))
+        console.log(block.paragraph.rich_text)
+      }
+      // if (block.type === 'heading_1' && block.heading_1?.rich_text) {
+      //   texts.push(block.heading_1.rich_text.map((text: any) => text.plain_text).join(''))
+      // }
+      // if (block.type === 'heading_2' && block.heading_2?.rich_text) {
+      //   texts.push(block.heading_2.rich_text.map((text: any) => text.plain_text).join(''))
+      // }
+      // if (block.type === 'heading_3' && block.heading_3?.rich_text) {
+      //   texts.push(block.heading_3.rich_text.map((text: any) => text.plain_text).join(''))
+      // }
+
+      // 리스트 아이템 직접 처리
+      if (block.type === 'bulleted_list_item' && block.bulleted_list_item?.rich_text) {
+        texts.push(block.bulleted_list_item.rich_text.map((text: any) => text.plain_text).join(''))
+      }
+      if (block.type === 'numbered_list_item' && block.numbered_list_item?.rich_text) {
+        texts.push(block.numbered_list_item.rich_text.map((text: any) => text.plain_text).join(''))
+      }
+
+      // 자식 블록이 있는 경우 재귀적으로 처리
+      if (block.has_children) {
+        try {
+          const childResponse = await notion.blocks.children.list({
+            block_id: block.id,
+            page_size: 2,
+          })
+
+          for (const childBlock of childResponse.results) {
+            const childTexts = await extractTextFromBlock(childBlock)
+            texts.push(...childTexts)
+          }
+        } catch (error) {
+          console.warn('자식 블록 가져오기 실패:', error)
+        }
+      }
+
+      return texts
+    }
+
+    // 모든 블록에서 텍스트 추출
+    const allTexts: string[] = []
+    for (const block of response.results) {
+      const blockTexts = await extractTextFromBlock(block)
+      allTexts.push(...blockTexts)
+
+      // 충분한 텍스트를 얻었으면 중단
+      if (allTexts.join(' ').length > 200) break
+    }
+
+    const previewText = allTexts.filter((text: string) => text.trim().length > 0).join(' ')
+
+    // 프리뷰 텍스트가 너무 길면 자르기 (300자 제한)
+    const MAX_LENGTH = 300
+    return previewText.length > MAX_LENGTH
+      ? previewText.substring(0, MAX_LENGTH) + '...'
+      : previewText
   } catch (error) {
     console.error('페이지 프리뷰 가져오기 실패:', error)
     return '프리뷰를 불러올 수 없습니다.'
