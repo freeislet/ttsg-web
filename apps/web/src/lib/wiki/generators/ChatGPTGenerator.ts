@@ -54,7 +54,7 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
         ],
         onChunk || (() => {}),
         {
-          maxTokens: 4000, // 스트리밍에서는 더 높은 토큰 수 사용 가능
+          maxTokens: 8000, // 긴 위키 콘텐츠 생성을 위해 토큰 수 4000에서 증가
         }
       )
 
