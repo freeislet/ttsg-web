@@ -47,8 +47,8 @@ Writing Guidelines:
 - Provide accurate and objective information.
 - Reflect the latest information, but do not include uncertain content.
 - If there are external images that would help with the explanation, insert them at appropriate locations.
-- Use GitHub flavored markdown syntax, and for topics that need separate wiki documents, use [[topic]] or [[topic|display text]] syntax.
-  The [[topic]] syntax is used as links to view or create other wiki documents.
+- Use GitHub flavored markdown syntax, and for topics that need separate wiki documents, use ((topic)) or ((topic|display text)) syntax.
+  The ((topic)) syntax creates Wikipedia-style links for viewing or creating related wiki documents.
 ${
   instruction
     ? `
