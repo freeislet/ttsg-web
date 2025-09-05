@@ -15,14 +15,14 @@ export const englishPrompts: PromptStrings = {
 
 Topic: ${topic}
 
-Please write in markdown format following this structure:
+Please write in markdown format using this structure as a reference:
 
 # ${topic}
 
-- Simple and clear definition of the topic
+Simple and clear definition of the topic
 
 ## Overview
-- Elaboration on the definition and core concepts of the topic
+Elaboration on the definition and core concepts of the topic
 
 ## Key Features
 - Core characteristics and components
@@ -46,7 +46,7 @@ Writing Guidelines:
 - Focus on essential content without being verbose.
 - Provide accurate and objective information.
 - Reflect the latest information, but do not include uncertain content.
-- If there are external images that would help with the explanation, insert them at appropriate locations.
+- If there are external images that would help with the explanation, insert them at appropriate locations. However, image links must be actual URLs where images exist.
 - Use GitHub flavored markdown syntax, and for topics that need separate wiki documents, use ((topic)) or ((topic|display text)) syntax.
   The ((topic)) syntax creates Wikipedia-style links for viewing or creating related wiki documents.
 ${
