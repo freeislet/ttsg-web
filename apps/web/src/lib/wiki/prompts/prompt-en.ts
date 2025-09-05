@@ -19,46 +19,36 @@ Please write in markdown format following this structure:
 
 # ${topic}
 
-## Overview
 - Simple and clear definition of the topic
-- Core concepts and importance
 
-## History and Background
-- Development process and major milestones
-- Important figures or events
+## Overview
+- Elaboration on the definition and core concepts of the topic
 
 ## Key Features
 - Core characteristics and components
 - Operating principles or mechanisms
+- Advantages and disadvantages
 
 ## Classification and Types
-- Various categories or types
-- Features and differences of each
-
-## Advantages and Disadvantages
-- Positive aspects
-- Limitations or problems
+- Position within broader concepts or categories
+- Sub-classifications and their distinctive features and differences
+- Comparison with related concepts
 
 ## Applications and Uses
 - Real-world use cases
-- Applications in various fields
-
-## Related Terms
-- Key technical term explanations
-- Related concepts
+- Actual implementation methods and code examples
 
 ## References
-- Resources for additional learning
 - Related websites or literature
 
 Writing Guidelines:
-- Provide accurate and objective information.
 - Explain professionally yet understandably.
-- Use markdown syntax correctly.
-- Write naturally in English.
+- Focus on essential content without being verbose.
+- Provide accurate and objective information.
 - Reflect the latest information, but do not include uncertain content.
-- Include actual implementation methods and code examples when possible.
 - If there are external images that would help with the explanation, insert them at appropriate locations.
+- Use GitHub flavored markdown syntax, and for topics that need separate wiki documents, use [[topic]] or [[topic|display text]] syntax.
+  The [[topic]] syntax is used as links to view or create other wiki documents.
 ${
   instruction
     ? `

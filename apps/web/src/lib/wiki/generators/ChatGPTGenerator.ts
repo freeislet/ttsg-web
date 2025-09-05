@@ -34,7 +34,7 @@ export class ChatGPTGenerator extends WikiGeneratorBase {
     instruction?: string,
     onChunk?: (chunk: string, fullText: string) => void
   ): Promise<WikiContent> {
-    const systemMessage = getWikiSystemMessage(language, 'ChatGPT')
+    const systemMessage = getWikiSystemMessage(language) // NOTE: AI 타입별 최적화 메시지 제외
     const prompt = getWikiPrompt(topic, language, instruction)
     const combinedPrompt = systemMessage + '\n\n' + prompt
 
