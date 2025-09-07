@@ -18,7 +18,7 @@ export class ChatRoom {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
 
-    if (url.pathname === '/websocket') {
+    if (url.pathname.endsWith('/websocket')) {
       // WebSocket 업그레이드 처리
       const upgradeHeader = request.headers.get('Upgrade')
       if (upgradeHeader !== 'websocket') {
