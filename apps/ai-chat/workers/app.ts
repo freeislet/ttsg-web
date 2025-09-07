@@ -65,7 +65,7 @@ export class ChatRoom {
   // 메시지 처리 로직
   private async handleMessage(data: any, sender: WebSocket) {
     if (data.type === 'user_message') {
-      // 사용자 메시지 저장
+      // 사용자 메시지 저장 (브로드캐스트하지 않음 - 클라이언트에서 이미 UI에 추가함)
       const userMessage = {
         id: crypto.randomUUID(),
         content: data.content,
@@ -73,12 +73,6 @@ export class ChatRoom {
         sender: 'user' as const,
       }
       this.messages.push(userMessage)
-
-      // 모든 클라이언트에게 사용자 메시지 브로드캐스트
-      this.broadcast({
-        type: 'message',
-        message: userMessage,
-      })
 
       // AI 응답 생성 (Gemini API 호출)
       try {
@@ -91,7 +85,7 @@ export class ChatRoom {
         }
         this.messages.push(aiMessage)
 
-        // AI 응답 브로드캐스트
+        // AI 응답만 브로드캐스트
         this.broadcast({
           type: 'message',
           message: aiMessage,

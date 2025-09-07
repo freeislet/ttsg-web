@@ -35,7 +35,8 @@ export default function Index() {
   useEffect(() => {
     const connectWebSocket = () => {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const wsUrl = `${protocol}//${window.location.host}/chat/default/websocket`
+      const roomId = 'test-' + Date.now() // 새로운 채팅방 ID 생성
+      const wsUrl = `${protocol}//${window.location.host}/chat/${roomId}/websocket`
 
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
@@ -52,9 +53,9 @@ export default function Index() {
           // 기존 메시지 히스토리 로드
           setMessages(data.messages || [])
         } else if (data.type === 'message') {
-          // 새 메시지 추가
-          setMessages((prev) => [...prev, data.message])
+          // AI 메시지만 추가 (사용자 메시지는 이미 UI에 추가됨)
           if (data.message.sender === 'ai') {
+            setMessages((prev) => [...prev, data.message])
             setIsLoading(false)
           }
         }
@@ -85,6 +86,16 @@ export default function Index() {
   // 메시지 전송
   const sendMessage = () => {
     if (!inputMessage.trim() || !isConnected || isLoading) return
+
+    // 사용자 메시지를 즉시 UI에 추가
+    const userMessage = {
+      id: crypto.randomUUID(),
+      content: inputMessage.trim(),
+      timestamp: Date.now(),
+      sender: 'user' as const,
+    }
+    
+    setMessages((prev) => [...prev, userMessage])
 
     const message = {
       type: 'user_message',
