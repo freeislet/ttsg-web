@@ -7,7 +7,7 @@ tags: ['ttsg', 'platform', 'ai', 'knowledge-management']
 author: 'TTSG'
 draft: false
 featured: true
-heroImage: '/assets/images/blog/ttsg-hero.png'
+heroImage: '/assets/images/ttsg-hero.png'
 ---
 
 # TT 스터디 그룹(TTSG) 소개
