@@ -127,7 +127,7 @@ export default function Index() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* 헤더 */}
-      <AppHeader title="AI CHAT" homeUrl="https://ttsg.space">
+      <AppHeader title="AI CHAT" titleUrl="/" homeUrl={import.meta.env.VITE_TTSG_BASE_URL}>
         <div className="flex items-center space-x-2 px-4">
           <div
             className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
