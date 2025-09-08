@@ -1,0 +1,5 @@
+# AI Chat 앱 리다이렉트
+/apps/ai-chat/* https://ai-chat.ttsg.space/:splat 301
+
+# 기본 리다이렉트 (필요시 추가)
+# /old-path/* /new-path/:splat 301
