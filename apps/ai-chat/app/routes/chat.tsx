@@ -95,7 +95,7 @@ export default function Index() {
       timestamp: Date.now(),
       sender: 'user' as const,
     }
-    
+
     setMessages((prev) => [...prev, userMessage])
 
     const message = {
@@ -128,7 +128,7 @@ export default function Index() {
     <div className="flex flex-col h-screen bg-gray-50">
       {/* 헤더 */}
       <AppHeader title="AI CHAT" homeUrl="https://ttsg.space">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 px-4">
           <div
             className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
           ></div>
