@@ -180,6 +180,39 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
 
+    // /apps/ai-chat 경로를 루트로 매핑
+    if (url.pathname.startsWith('/apps/ai-chat')) {
+      // /apps/ai-chat을 / 로 변환
+      const newPathname = url.pathname.replace(/^\/apps\/ai-chat/, '') || '/'
+      
+      // 새로운 URL 생성
+      const newUrl = new URL(request.url)
+      newUrl.pathname = newPathname
+      
+      // 새로운 Request 객체 생성
+      const newRequest = new Request(newUrl.toString(), {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+      })
+      
+      // Durable Object 라우팅 (매핑된 경로 기준)
+      if (newPathname.startsWith('/chat/')) {
+        const roomId = newPathname.split('/')[2]
+        if (roomId) {
+          const durableObjectId = env.CHAT_ROOM.idFromName(roomId)
+          const chatRoom = env.CHAT_ROOM.get(durableObjectId)
+          return chatRoom.fetch(newRequest)
+        }
+      }
+
+      // React Router 요청 처리 (매핑된 경로로)
+      return requestHandler(newRequest, {
+        cloudflare: { env, ctx },
+      })
+    }
+
+    // 직접 접속 (ai-chat.ttsg.space) - 기존 로직 유지
     // Durable Object 라우팅
     if (url.pathname.startsWith('/chat/')) {
       const roomId = url.pathname.split('/')[2]
