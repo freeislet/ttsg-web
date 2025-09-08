@@ -2,7 +2,7 @@
 title: '2025년 AI 개발 트렌드: 주목해야 할 5가지 변화'
 description: '2025년 AI 개발 분야의 주요 트렌드와 개발자들이 알아야 할 핵심 변화들을 정리해봅니다.'
 pubDate: 2025-09-02
-category: 'news'
+category: 'ai'
 tags: ['ai', 'trends', 'development', '2025']
 author: 'TTSG'
 draft: false

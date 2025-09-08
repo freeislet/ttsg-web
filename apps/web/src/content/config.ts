@@ -1,4 +1,5 @@
 import { defineCollection, z } from 'astro:content'
+import { categories } from '@/types/blog'
 
 /**
  * 블로그 컬렉션 스키마 정의
@@ -11,7 +12,7 @@ const blogCollection = defineCollection({
     description: z.string(), // 요약 설명
     pubDate: z.date(), // 발행일
     updatedDate: z.date().optional(), // 수정일 (선택)
-    category: z.enum(['news', 'tech', 'misc']), // 카테고리
+    category: z.enum(categories), // 카테고리
     tags: z.array(z.string()), // 태그 배열
     author: z.string().default('TTSG'), // 작성자
     draft: z.boolean().default(false), // 임시저장 여부

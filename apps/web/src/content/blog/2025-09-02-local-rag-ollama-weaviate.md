@@ -2,7 +2,7 @@
 title: '로컬 RAG 시스템 구축하기: Ollama와 Weaviate로 프라이버시 보호하는 AI 지식베이스'
 description: 'Ollama와 Weaviate를 활용하여 완전히 로컬에서 동작하는 RAG(Retrieval-Augmented Generation) 시스템을 구축하는 완전한 가이드입니다.'
 pubDate: 2025-09-02
-category: 'tech'
+category: 'ai'
 tags: ['rag', 'ollama', 'weaviate', 'local-ai', 'privacy', 'langchain']
 author: 'TTSG'
 draft: false

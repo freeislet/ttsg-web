@@ -1,7 +1,7 @@
 /**
  * 블로그 카테고리 정의
  */
-export const categories = ['news', 'tech', 'misc'] as const
+export const categories = ['ai', 'dev', 'misc'] as const
 export type Category = (typeof categories)[number]
 
 /**
@@ -18,22 +18,22 @@ interface CategoryInfo {
  * 카테고리별 통합 데이터
  */
 export const categoryData: Record<Category, CategoryInfo> = {
-  news: {
-    name: '소식',
-    detailedName: '소식',
-    description: '최신 업계 동향, 제품 소식, 그리고 중요한 발표 내용을 전해드립니다.',
+  ai: {
+    name: 'AI',
+    detailedName: 'AI 기술 문서',
+    description: 'AI 관련 기술 문서와 동향',
     style: 'bg-green-100 text-green-800',
   },
-  tech: {
-    name: '기술',
-    detailedName: '기술 문서',
-    description: '개발 관련 기술 문서, 튜토리얼, 그리고 실무 경험을 공유합니다.',
+  dev: {
+    name: '개발',
+    detailedName: '개발 기술 문서',
+    description: '개발 관련 기술 문서, 튜토리얼',
     style: 'bg-blue-100 text-blue-800',
   },
   misc: {
     name: '기타',
     detailedName: '기타',
-    description: 'TTSG의 제품, 서비스, 그리고 팀에 대한 소개글을 확인하세요.',
+    description: '기타 기술 문서와 소식',
     style: 'bg-purple-100 text-purple-800',
   },
 }

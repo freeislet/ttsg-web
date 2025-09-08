@@ -6,7 +6,7 @@ export interface Props {
   title: string
   description: string
   pubDate: Date
-  category: string
+  category: Category
   tags: string[]
   slug: string
   heroImage?: string
@@ -82,9 +82,9 @@ const {
       <!-- 카테고리 및 날짜 -->
       <div class="flex items-center justify-between mb-3">
         <span
-          class={`inline-block px-2 py-1 text-xs font-medium rounded-full ${categoryData[category as Category].style}`}
+          class={`inline-block px-2 py-1 text-xs font-medium rounded-full ${categoryData[category].style}`}
         >
-          {categoryData[category as Category].name}
+          {categoryData[category].name}
         </span>
         <time class="text-sm text-gray-500" datetime={pubDate.toISOString()}>
           {pubDate.toLocaleDateString('ko-KR')}

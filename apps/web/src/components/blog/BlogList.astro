@@ -8,7 +8,7 @@ export interface Props {
   posts: CollectionEntry<'blog'>[]
   title?: string
   showFeatured?: boolean
-  category?: string
+  category?: Category
 }
 
 const { posts, title, showFeatured = false, category } = Astro.props
@@ -34,11 +34,9 @@ filteredPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
     (title || category) && (
       <div class="mb-8">
         <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-          {title ||
-            (category && categoryData[category as Category].detailedName) ||
-            '블로그 포스트'}
+          {title || (category && categoryData[category].detailedName) || '블로그 포스트'}
         </h2>
-        {category && <p class="text-gray-600">{categoryData[category as Category].description}</p>}
+        {category && <p class="text-gray-600">{categoryData[category].description}</p>}
       </div>
     )
   }
@@ -77,12 +75,12 @@ filteredPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
         </svg>
         <h3 class="text-lg font-medium text-gray-900 mb-2">
           {category
-            ? `${categoryData[category as Category].detailedName} 포스트가 없습니다`
+            ? `${categoryData[category].detailedName} 포스트가 없습니다`
             : '포스트가 없습니다'}
         </h3>
         <p class="text-gray-500">
           {category
-            ? `${categoryData[category as Category].detailedName} 카테고리의 새로운 포스트를 기다려주세요.`
+            ? `${categoryData[category].detailedName} 카테고리의 새로운 포스트를 기다려주세요.`
             : '새로운 포스트를 기다려주세요.'}
         </p>
       </div>
