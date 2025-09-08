@@ -1,1 +1,11 @@
 @import 'tailwindcss';
+
+/* 폰트 렌더링 안정화 */
+* {
+  font-stretch: normal;
+}
+
+body {
+  font-feature-settings: "kern" 1;
+  text-rendering: optimizeLegibility;
+}
