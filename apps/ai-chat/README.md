@@ -1,6 +1,9 @@
-# Welcome to React Router!
+# AI Chat
 
-A modern, production-ready template for building full-stack React applications using React Router.
+AI Chat application built with React Router and Cloudflare Workers.
+
+## 배포 테스트
+- GitHub Actions 제거 후 기본 Cloudflare 연동 테스트
 
 ## Features
 
