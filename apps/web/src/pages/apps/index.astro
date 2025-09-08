@@ -1,0 +1,205 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Header from '@/components/Header.astro'
+import Footer from '@/components/Footer.astro'
+import { getActiveApps } from '@/data/apps'
+
+// 활성 상태의 앱들만 가져오기
+const activeApps = getActiveApps()
+---
+
+<Layout title="Demo Apps - TTSG">
+  <Header />
+  <main class="min-h-screen bg-gray-50">
+    <!-- 헤더 섹션 -->
+    <section class="bg-white border-b">
+      <div class="max-w-6xl mx-auto px-4 py-16">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-gray-900 mb-4">Demo Apps</h1>
+          <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+            TTSG에서 개발한 다양한 데모 애플리케이션들을 확인해보세요.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 앱 목록 섹션 -->
+    <section class="py-16">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="grid gap-12">
+          
+          {activeApps.map((app) => (
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div class="flex flex-col lg:flex-row">
+                <!-- 스크린샷 영역 -->
+                <div class="lg:w-1/2 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 flex items-center justify-center min-h-[300px]">
+                  {app.screenshots.length > 0 ? (
+                    <div class="w-full h-full flex items-center justify-center">
+                      <img 
+                        src={app.screenshots[0]} 
+                        alt={`${app.name} 스크린샷`}
+                        class="max-w-full max-h-[250px] object-contain rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+                        onclick={`openImageModal('${app.screenshots[0]}', '${app.name} 스크린샷')`}
+                      />
+                    </div>
+                  ) : (
+                    <div class="text-center">
+                      <div class="w-24 h-24 bg-blue-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+                        {app.icon === 'chat' ? (
+                          <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                          </svg>
+                        ) : (
+                          <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"></path>
+                          </svg>
+                        )}
+                      </div>
+                      <p class="text-gray-500 text-sm">스크린샷 준비 중</p>
+                    </div>
+                  )}
+                </div>
+                
+                <!-- 설명 영역 -->
+                <div class="lg:w-1/2 p-8">
+                  <div class="h-full flex flex-col justify-center">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                      <a 
+                        href={app.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        {app.name}
+                      </a>
+                    </h2>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                      {app.description}
+                    </p>
+                    
+                    <!-- 기술 스택 태그 -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                      {app.tags.map((tag) => (
+                        <span class={`px-3 py-1 text-sm rounded-full ${tag.color}`}>
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    <!-- 링크 버튼 -->
+                    <div class="flex gap-3">
+                      <a 
+                        href={app.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                        앱 실행하기
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <!-- 추가 앱들을 위한 플레이스홀더 -->
+          {activeApps.length === 0 && (
+            <div class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl">
+              <div class="text-gray-400">
+                <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                <p class="text-lg font-medium mb-2">앱을 준비 중입니다</p>
+                <p class="text-sm">새로운 데모 애플리케이션들을 준비 중입니다.</p>
+              </div>
+            </div>
+          )}
+
+          {activeApps.length > 0 && (
+            <div class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl">
+              <div class="text-gray-400">
+                <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                <p class="text-lg font-medium mb-2">더 많은 앱이 곧 추가됩니다</p>
+                <p class="text-sm">새로운 데모 애플리케이션들을 준비 중입니다.</p>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <!-- 이미지 확대 모달 -->
+  <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4">
+    <div class="relative max-w-4xl max-h-full">
+      <button 
+        onclick="closeImageModal()"
+        class="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl font-bold"
+        aria-label="닫기"
+      >
+        ✕
+      </button>
+      <img 
+        id="modalImage" 
+        src="" 
+        alt="" 
+        class="max-w-full max-h-full object-contain rounded-lg"
+      />
+    </div>
+  </div>
+
+  <script>
+    function openImageModal(src: string, alt: string) {
+      const modal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage') as HTMLImageElement;
+      
+      if (modal && modalImage) {
+        modalImage.src = src;
+        modalImage.alt = alt;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', handleEscKey);
+      }
+    }
+    
+    function closeImageModal() {
+      const modal = document.getElementById('imageModal');
+      
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        
+        // 이벤트 리스너 제거
+        document.removeEventListener('keydown', handleEscKey);
+      }
+    }
+    
+    function handleEscKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        closeImageModal();
+      }
+    }
+    
+    // 모달 배경 클릭 시 닫기
+    document.addEventListener('DOMContentLoaded', () => {
+      const modal = document.getElementById('imageModal');
+      if (modal) {
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal) {
+            closeImageModal();
+          }
+        });
+      }
+    });
+  </script>
+</Layout>
