@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { AppHeader } from 'shared'
 
 interface Message {
   id: string
@@ -126,17 +127,14 @@ export default function Index() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-white shadow-sm border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">TTSG AI Chat</h1>
-          <div className="flex items-center space-x-2">
-            <div
-              className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
-            ></div>
-            <span className="text-sm text-gray-600">{isConnected ? '연결됨' : '연결 끊김'}</span>
-          </div>
+      <AppHeader title="AI CHAT" homeUrl="https://ttsg.space">
+        <div className="flex items-center space-x-2">
+          <div
+            className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+          ></div>
+          <span className="text-sm text-gray-600">{isConnected ? '연결됨' : '연결 끊김'}</span>
         </div>
-      </header>
+      </AppHeader>
 
       {/* 메시지 영역 */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
