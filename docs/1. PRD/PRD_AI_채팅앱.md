@@ -65,8 +65,9 @@
 ## 3. 기술 아키텍처
 
 ### 3.1 기술 스택
-- **프론트엔드**: Vite + React + TypeScript
-- **상태 관리**: Zustand
+- **프론트엔드**: React Router v7 + React + TypeScript
+- **스타일링**: Tailwind CSS v4
+- **호스팅**: Cloudflare Workers
 - **도메인**: ai-chat.ttsg.space
 - **데이터베이스**: Cloudflare D1 (필요시)
 - **스토리지**: Cloudflare R2 (파일 업로드 시)
@@ -76,9 +77,9 @@
 ```
 [사용자] 
     ↓
-[ai-chat.ttsg.space (서브도메인) - React SPA]
+[ai-chat.ttsg.space (서브도메인) - React Router SSR]
     ↓
-[Cloudflare Pages Functions]
+[Cloudflare Workers]
     ↓
 [Gemini API]
 ```
@@ -86,7 +87,7 @@
 ### 3.3 폴더 구조
 ```
 ai-chat/
-├── src/
+├── app/
 │   ├── components/
 │   │   ├── Chat/
 │   │   │   ├── ChatContainer.tsx
@@ -99,6 +100,9 @@ ai-chat/
 │   │   └── Layout/
 │   │       ├── Header.tsx
 │   │       └── Sidebar.tsx
+│   ├── routes/
+│   │   ├── _index.tsx
+│   │   └── chat.tsx
 │   ├── hooks/
 │   │   ├── useChat.ts
 │   │   ├── useSettings.ts
@@ -111,14 +115,16 @@ ai-chat/
 │   ├── types/
 │   │   ├── chat.ts
 │   │   └── settings.ts
-│   └── utils/
-│       ├── formatters.ts
-│       └── constants.ts
-├── functions/
+│   ├── utils/
+│   │   ├── formatters.ts
+│   │   └── constants.ts
+│   ├── root.tsx
+│   └── app.css
+├── workers/
 │   └── api/
 │       └── chat.ts
 ├── public/
-├── wrangler.toml
+├── wrangler.jsonc
 └── package.json
 ```
 
@@ -126,7 +132,7 @@ ai-chat/
 
 ### 4.1 채팅 API
 
-#### POST /api/chat
+#### POST /workers/api/chat
 **요청**:
 ```typescript
 interface ChatRequest {
@@ -294,7 +300,7 @@ interface ChatSettings {
 ## 9. 개발 일정
 
 ### 9.1 Phase 1: 기본 채팅 기능 (2주)
-- [ ] 프로젝트 셋업 및 기본 구조
+- [x] 프로젝트 셋업 및 기본 구조
 - [ ] 채팅 UI 컴포넌트 개발
 - [ ] Gemini API 연동
 - [ ] 기본 메시지 송수신 기능
@@ -363,8 +369,9 @@ interface ChatSettings {
 
 ---
 
-**문서 버전**: 1.0  
+**문서 버전**: 1.1  
 **작성일**: 2025-09-05  
+**최종 수정일**: 2025-09-08  
 **작성자**: TTSG 개발팀  
 **승인자**: [승인자명]  
-**다음 리뷰 예정일**: 2025-09-12
+**다음 리뷰 예정일**: 2025-09-15
