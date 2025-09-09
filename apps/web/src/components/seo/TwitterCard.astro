@@ -1,0 +1,27 @@
+---
+import type { TwitterCardData } from '@/types/seo'
+
+export interface Props {
+  data: TwitterCardData;
+}
+
+const { data } = Astro.props;
+---
+
+<!-- Twitter Card 메타태그 -->
+<meta name="twitter:card" content={data.card} />
+<meta name="twitter:title" content={data.title} />
+<meta name="twitter:description" content={data.description} />
+
+<!-- Twitter 이미지 -->
+{data.image && (
+  <meta name="twitter:image" content={data.image} />
+)}
+
+<!-- Twitter 사이트 및 작성자 -->
+{data.site && (
+  <meta name="twitter:site" content={data.site} />
+)}
+{data.creator && (
+  <meta name="twitter:creator" content={data.creator} />
+)}

@@ -1,0 +1,49 @@
+---
+import type { OpenGraphData } from '@/types/seo'
+
+export interface Props {
+  data: OpenGraphData;
+}
+
+const { data } = Astro.props;
+---
+
+<!-- Open Graph 기본 메타태그 -->
+<meta property="og:title" content={data.title} />
+<meta property="og:description" content={data.description} />
+<meta property="og:type" content={data.type} />
+<meta property="og:url" content={data.url} />
+<meta property="og:site_name" content={data.siteName} />
+<meta property="og:locale" content={data.locale} />
+
+<!-- Open Graph 이미지 -->
+{data.image && (
+  <>
+    <meta property="og:image" content={data.image} />
+    <meta property="og:image:alt" content={data.title} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+  </>
+)}
+
+<!-- 기사 타입 전용 메타태그 -->
+{data.type === 'article' && (
+  <>
+    {data.publishedTime && (
+      <meta property="article:published_time" content={data.publishedTime} />
+    )}
+    {data.modifiedTime && (
+      <meta property="article:modified_time" content={data.modifiedTime} />
+    )}
+    {data.author && (
+      <meta property="article:author" content={data.author} />
+    )}
+    {data.section && (
+      <meta property="article:section" content={data.section} />
+    )}
+    {data.tags && data.tags.map(tag => (
+      <meta property="article:tag" content={tag} />
+    ))}
+  </>
+)}

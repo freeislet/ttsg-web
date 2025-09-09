@@ -1,0 +1,55 @@
+---
+import type { SEOData } from '@/types/seo'
+import { seoToJsonLD } from '@/lib/seo/utils'
+
+export interface Props {
+  seo: SEOData;
+}
+
+const { seo } = Astro.props;
+const jsonLD = seoToJsonLD(seo);
+---
+
+<!-- JSON-LD 구조화된 데이터 -->
+<script type="application/ld+json" set:html={JSON.stringify(jsonLD)} />
+
+<!-- 웹사이트 구조화된 데이터 (메인 페이지용) -->
+{seo.type === 'website' && (
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "TTSG",
+    "url": "https://ttsg.space",
+    "description": "Technology & Innovation Hub - 최신 기술과 혁신을 탐구하는 플랫폼",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://ttsg.space/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TTSG",
+      "url": "https://ttsg.space",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://ttsg.space/favicon.svg"
+      }
+    }
+  })} />
+)}
+
+<!-- 조직 구조화된 데이터 -->
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "TTSG",
+  "url": "https://ttsg.space",
+  "description": "Technology & Innovation Hub",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://ttsg.space/favicon.svg"
+  },
+  "sameAs": [
+    "https://github.com/ttsg-space"
+  ]
+})} />
