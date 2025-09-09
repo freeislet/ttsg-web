@@ -54,7 +54,7 @@ const blogCollection = defineCollection({
     title: z.string(),
     description: z.string(),
     pubDate: z.date(),
-    category: z.enum(['news', 'tech', 'misc']),
+    category: z.enum(['ai', 'dev', 'misc']),
     tags: z.array(z.string()),
     author: z.string().default('TTSG'),
     draft: z.boolean().default(false),
@@ -77,7 +77,7 @@ export const collections = {
 title: '첫 번째 포스트'
 description: 'Astro로 만든 첫 번째 블로그 포스트입니다.'
 pubDate: 2024-08-30
-category: 'tech'
+category: 'dev'
 tags: ['astro', 'blog']
 featured: true
 ---
@@ -155,7 +155,7 @@ const { Content } = await post.render()
 ```typescript
 // 특정 카테고리 포스트만 가져오기
 const techPosts = await getCollection('blog', ({ data }) => {
-  return data.category === 'tech' && !data.draft
+  return data.category === 'dev' && !data.draft
 })
 ```
 
