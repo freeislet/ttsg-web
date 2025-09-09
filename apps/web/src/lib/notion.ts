@@ -1,6 +1,7 @@
 import { Client } from '@notionhq/client'
 import type { PageObjectResponse, BlockObjectRequest } from '@notionhq/client'
 import { markdownToBlocks } from '@tryfabric/martian'
+import { NotionToMarkdown } from 'notion-to-md'
 
 /**
  * 언어 타입
@@ -75,16 +76,6 @@ function isPageObjectResponse(page: unknown): page is PageObjectResponse {
  * 노션 페이지 속성에서 제목을 안전하게 추출
  */
 function extractTitle(properties: PageObjectResponse['properties']): string {
-  // Name 속성에서 제목 추출 시도
-  const nameProperty = properties.Name
-  if (nameProperty && 'title' in nameProperty && nameProperty.title) {
-    const firstTitle = nameProperty.title[0]
-    if (firstTitle && 'plain_text' in firstTitle) {
-      return firstTitle.plain_text
-    }
-  }
-
-  // Title 속성에서 제목 추출 시도
   const titleProperty = properties.Title
   if (titleProperty && 'title' in titleProperty && titleProperty.title) {
     const firstTitle = titleProperty.title[0]
@@ -233,6 +224,8 @@ export async function createWikiPage(
     const notion = createNotionClient()
 
     // 1. 빈 페이지 생성
+    // NOTE: 생성 단계에서 전체 컨텐츠를 children으로 넘기면 100개 제한으로 인해 오류가 발생할 수 있으므로,
+    //       우선 빈 페이지를 생성한 후에 100개 단위로 블록을 추가
     const response = await notion.pages.create({
       parent: {
         database_id: getEnv('NOTION_DATABASE_ID'),
@@ -293,6 +286,22 @@ export async function createWikiPage(
     throw new Error(
       `노션 페이지 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
     )
+  }
+}
+
+/**
+ * 마크다운 텍스트를 노션 블록으로 변환합니다
+ * @param markdown 마크다운 텍스트
+ * @returns 노션 블록 배열
+ */
+function convertMarkdownToBlocks(markdown: string): BlockObjectRequest[] {
+  try {
+    // @tryfabric/martian을 사용하여 마크다운을 노션 블록으로 변환
+    return markdownToBlocks(markdown) as BlockObjectRequest[]
+  } catch (error) {
+    console.error('마크다운 변환 중 오류 발생:', error)
+    // 변환 실패 시 빈 배열 반환
+    return []
   }
 }
 
@@ -526,17 +535,32 @@ export async function getPagePreview(pageId: string): Promise<string> {
 }
 
 /**
- * 마크다운 텍스트를 노션 블록으로 변환합니다
- * @param markdown 마크다운 텍스트
- * @returns 노션 블록 배열
+ * 노션 페이지의 전체 컨텐츠를 마크다운으로 변환하여 반환합니다
+ * @param pageId 노션 페이지 ID
+ * @returns 마크다운 형식의 페이지 컨텐츠
  */
-function convertMarkdownToBlocks(markdown: string): BlockObjectRequest[] {
+export async function getPageContentAsMarkdown(pageId: string): Promise<string> {
   try {
-    // @tryfabric/martian을 사용하여 마크다운을 노션 블록으로 변환
-    return markdownToBlocks(markdown) as BlockObjectRequest[]
+    const notion = createNotionClient()
+
+    // NotionToMarkdown 인스턴스 생성
+    const n2m = new NotionToMarkdown({
+      notionClient: notion,
+      config: {
+        parseChildPages: false, // 자식 페이지는 파싱하지 않음
+        convertImagesToBase64: false, // 이미지를 base64로 변환하지 않음
+      },
+    })
+
+    // 페이지의 모든 블록을 마크다운으로 변환
+    const mdblocks = await n2m.pageToMarkdown(pageId)
+    const mdString = n2m.toMarkdownString(mdblocks)
+
+    return mdString.parent
   } catch (error) {
-    console.error('마크다운 변환 중 오류 발생:', error)
-    // 변환 실패 시 빈 배열 반환
-    return []
+    console.error('노션 페이지 마크다운 변환 실패:', error)
+    throw new Error(
+      `노션 페이지를 마크다운으로 변환하는 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+    )
   }
 }
