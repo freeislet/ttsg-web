@@ -3,7 +3,7 @@ import { categories } from '@/types/blog'
 
 /**
  * 블로그 컬렉션 스키마 정의
- * 기술 문서, 뉴스, 소개글 카테고리를 지원합니다.
+ * 카테고리: AI(ai), 개발(dev), 기타(misc)
  */
 const blogCollection = defineCollection({
   type: 'content',

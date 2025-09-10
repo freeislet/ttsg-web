@@ -28,9 +28,9 @@ const seo = {
   author: author,
   publishedTime: pubDate.toISOString(),
   modifiedTime: updatedDate?.toISOString() || pubDate.toISOString(),
-  section: category,
+  section: categoryData[category].name,
   tags: tags,
-  keywords: [...tags, category, 'TTSG', '블로그'],
+  keywords: [...tags, categoryData[category].name, 'TTSG', '블로그'],
 }
 ---
 
@@ -68,9 +68,9 @@ const seo = {
                 category && (
                   <div class="flex items-center gap-2">
                     <span
-                      class={`inline-block px-3 py-1 text-sm font-medium rounded-full ${categoryData[category as Category].style}`}
+                      class={`inline-block px-3 py-1 text-sm font-medium rounded-full ${categoryData[category].style}`}
                     >
-                      {categoryData[category as Category].name}
+                      {categoryData[category].name}
                     </span>
                   </div>
                 )
