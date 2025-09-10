@@ -7,36 +7,66 @@ import { categoryData } from '@/types/blog'
 export interface Props {
   posts: CollectionEntry<'blog'>[]
   title?: string
-  showFeatured?: boolean
   category?: Category
+  featured?: boolean
+  maxPosts?: number
+  compact?: boolean
+  showViewAll?: boolean
 }
 
-const { posts, title, showFeatured = false, category } = Astro.props
+const {
+  posts,
+  title,
+  category,
+  featured = false,
+  maxPosts,
+  compact = false,
+  showViewAll = false,
+} = Astro.props
 
 // 포스트 필터링 및 정렬
-let filteredPosts = posts.filter((post) => !post.data.draft)
+let filteredPosts = posts //.filter((post) => !post.data.draft)
 
 if (category) {
   filteredPosts = filteredPosts.filter((post) => post.data.category === category)
 }
 
-if (showFeatured) {
+if (featured) {
   filteredPosts = filteredPosts.filter((post) => post.data.featured)
 }
 
 // 발행일 기준 내림차순 정렬
-filteredPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
+// filteredPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
+
+// maxPosts가 설정된 경우 제한
+if (maxPosts) {
+  filteredPosts = filteredPosts.slice(0, maxPosts)
+}
 ---
 
-<section class="py-8">
+<section class={compact ? '' : 'py-8'}>
   <!-- 섹션 헤더 -->
   {
     (title || category) && (
-      <div class="mb-8">
-        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+      <div class={compact ? 'flex items-center justify-between mb-6' : 'mb-8'}>
+        <h2
+          class={
+            compact
+              ? 'text-2xl font-bold text-gray-900'
+              : 'text-2xl md:text-3xl font-bold text-gray-900 mb-2'
+          }
+        >
           {title || (category && categoryData[category].detailedName) || '블로그 포스트'}
         </h2>
-        {category && <p class="text-gray-600">{categoryData[category].description}</p>}
+        {showViewAll && category && (
+          <a
+            href={`/blog/category/${category}`}
+            class="text-blue-600 hover:text-blue-800 font-medium text-sm"
+          >
+            전체 보기 →
+          </a>
+        )}
+        {!compact && category && <p class="text-gray-600">{categoryData[category].description}</p>}
       </div>
     )
   }
@@ -55,6 +85,7 @@ filteredPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
             slug={post.slug}
             heroImage={post.data.heroImage}
             featured={post.data.featured}
+            compact={compact}
           />
         ))}
       </div>
@@ -83,28 +114,6 @@ filteredPosts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()
             ? `${categoryData[category].detailedName} 카테고리의 새로운 포스트를 기다려주세요.`
             : '새로운 포스트를 기다려주세요.'}
         </p>
-      </div>
-    )
-  }
-
-  <!-- 더 보기 링크 (필요시) -->
-  {
-    filteredPosts.length > 6 && !showFeatured && (
-      <div class="text-center mt-8">
-        <a
-          href={category ? `/blog/category/${category}` : '/blog'}
-          class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md text-base font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200"
-        >
-          더 많은 포스트 보기
-          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </a>
       </div>
     )
   }

@@ -11,6 +11,7 @@ export interface Props {
   slug: string
   heroImage?: string
   featured?: boolean
+  compact?: boolean
 }
 
 const {
@@ -22,6 +23,7 @@ const {
   slug,
   heroImage,
   featured = false,
+  compact = false,
 } = Astro.props
 
 ---
@@ -47,38 +49,40 @@ const {
       )
     }
 
-    <!-- 대표 이미지 -->
+    <!-- 대표 이미지 (compact 모드에서는 숨김) -->
     {
-      heroImage ? (
-        <div class="aspect-video overflow-hidden relative">
-          <!-- 흐릿한 배경 이미지 (cover) -->
-          <div 
-            class="absolute inset-0 bg-cover bg-center blur-sm scale-110 opacity-30"
-            style={`background-image: url(${heroImage})`}
-          ></div>
-          <!-- 메인 이미지 (contain) -->
-          <img
-            src={heroImage}
-            alt={title}
-            class="relative z-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
-          />
-        </div>
-      ) : (
-        <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+      !compact && (
+        heroImage ? (
+          <div class="aspect-video overflow-hidden relative">
+            <!-- 흐릿한 배경 이미지 (cover) -->
+            <div 
+              class="absolute inset-0 bg-cover bg-center blur-sm scale-110 opacity-30"
+              style={`background-image: url(${heroImage})`}
+            ></div>
+            <!-- 메인 이미지 (contain) -->
+            <img
+              src={heroImage}
+              alt={title}
+              class="relative z-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
             />
-          </svg>
-        </div>
+          </div>
+        ) : (
+          <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+        )
       )
     }
 
     <!-- 카드 내용 -->
-    <div class="p-6 flex-1 flex flex-col">
+    <div class={compact ? "p-6" : "p-6 flex-1 flex flex-col"}>
       <!-- 카테고리 및 날짜 -->
       <div class="flex items-center justify-between mb-3">
         <span
@@ -93,47 +97,51 @@ const {
 
       <!-- 제목 -->
       <h3
-        class="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2"
+        class={compact ? "text-lg font-semibold text-gray-900 mb-2 line-clamp-2" : "text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2"}
       >
         {title}
       </h3>
 
       <!-- 설명 -->
-      <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 flex-1">
+      <p class={compact ? "text-gray-600 text-sm line-clamp-2 mb-3" : "text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 flex-1"}>
         {description}
       </p>
 
       <!-- 태그 -->
       {
         tags.length > 0 && (
-          <div class="flex flex-wrap gap-1 mb-4">
-            {tags.slice(0, 3).map((tag) => (
+          <div class={compact ? "flex flex-wrap gap-1" : "flex flex-wrap gap-1 mb-4"}>
+            {tags.slice(0, compact ? 2 : 3).map((tag) => (
               <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
                 #{tag}
               </span>
             ))}
-            {tags.length > 3 && (
+            {tags.length > (compact ? 2 : 3) && (
               <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
-                +{tags.length - 3}
+                +{tags.length - (compact ? 2 : 3)}
               </span>
             )}
           </div>
         )
       }
 
-      <!-- 더 읽기 링크 -->
-      <div class="flex items-center text-sm font-medium text-blue-600 group-hover:text-blue-800 mt-auto">
-        더 읽기
-        <svg
-          class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"
-          ></path>
-        </svg>
-      </div>
+      <!-- 더 읽기 링크 (compact 모드에서는 숨김) -->
+      {
+        !compact && (
+          <div class="flex items-center text-sm font-medium text-blue-600 group-hover:text-blue-800 mt-auto">
+            더 읽기
+            <svg
+              class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"
+              ></path>
+            </svg>
+          </div>
+        )
+      }
     </div>
   </article>
 </a>
