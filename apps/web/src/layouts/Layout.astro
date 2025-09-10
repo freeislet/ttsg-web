@@ -1,17 +1,26 @@
 ---
 import { Toaster } from 'react-hot-toast'
-import '@/styles/global.css'
+import type { SEOData } from '@/types/seo'
+import SEOHead from '@/components/seo/SEOHead.astro'
 import '@/lib/errors'
+import '@/styles/global.css'
+
+export interface Props {
+  seo?: Partial<SEOData>
+}
+
+const { seo } = Astro.props
 ---
 
 <!DOCTYPE html>
 <html lang="ko" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
-    <title>TTSG</title>
+
+    <!-- SEO 메타태그 -->
+    <SEOHead seo={seo} />
   </head>
   <body class="min-h-screen w-full font-sans antialiased">
     <slot />

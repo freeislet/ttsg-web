@@ -19,11 +19,22 @@ const { title, description, pubDate, author, heroImage, tags, category, updatedD
 const { Content, headings } = await post.render();
 
 // SEO를 위한 메타 정보 구성
-const seoTitle = `${title} | TTSG Blog`
-const seoDescription = description
+const seo = {
+  title: `${title} | TTSG Blog`,
+  description: description,
+  url: `/blog/${post.slug}`,
+  type: 'article' as const,
+  image: heroImage,
+  author: author,
+  publishedTime: pubDate.toISOString(),
+  modifiedTime: updatedDate?.toISOString() || pubDate.toISOString(),
+  section: category,
+  tags: tags,
+  keywords: [...tags, category, 'TTSG', '블로그'],
+}
 ---
 
-<Layout title={seoTitle} description={seoDescription}>
+<Layout seo={seo}>
   <Header />
 
   <main class="min-h-screen bg-gray-50">

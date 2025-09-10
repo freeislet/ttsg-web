@@ -54,12 +54,12 @@ export const DEMO_APPS: DemoApp[] = [
     id: 'ai-chat',
     name: 'AI Chat',
     description:
-      'Gemini API를 활용한 실시간 AI 채팅 애플리케이션입니다. 스트리밍 응답과 직관적인 UI를 통해 자연스러운 대화 경험을 제공합니다.',
+      'Gemini API를 활용한 실시간 AI 채팅 애플리케이션입니다. 기본적인 Gemini API 연동과 스트리밍 응답을 통해 AI 채팅 기능을 제공합니다.',
     url: 'https://ai-chat.ttsg.space',
     screenshots: ['/assets/images/apps/ai-chat/image.png'],
     tags: [
-      APP_TAGS.REACT,
       APP_TAGS.GEMINI,
+      APP_TAGS.REACT,
       APP_TAGS.TYPESCRIPT,
       APP_TAGS.CLOUDFLARE,
       APP_TAGS.AI,
