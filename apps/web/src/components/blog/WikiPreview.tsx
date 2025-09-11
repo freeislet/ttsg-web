@@ -23,7 +23,7 @@ interface WikiPreviewData extends NotionPage {
 /**
  * 로딩 상태 타입
  */
-type LoadingState = 'loading' | 'success' | 'error'
+type LoadingState = 'loading' | 'success' | 'error' | 'not-found'
 
 /**
  * 위키 프리뷰 팝업 컴포넌트
@@ -54,8 +54,7 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
       const pages = searchResults.pages
 
       if (pages.length === 0) {
-        setError('해당 위키 페이지를 찾을 수 없습니다.')
-        setLoadingState('error')
+        setLoadingState('not-found')
         return
       }
 
@@ -120,8 +119,8 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
    * ESC 키로 닫기
    */
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         onClose()
       }
     }
@@ -130,12 +129,28 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
+  // 팝업 내용이 변경될 때마다 위치 재조정을 위해 강제 리렌더링
+  useEffect(() => {
+    if (
+      previewRef.current &&
+      (loadingState === 'success' || loadingState === 'error' || loadingState === 'not-found')
+    ) {
+      // 다음 프레임에서 위치 재계산 (DOM 업데이트 후)
+      requestAnimationFrame(() => {
+        if (previewRef.current) {
+          // 스타일 재적용을 통해 위치 업데이트
+          const newStyle = getPopupStyle()
+          Object.assign(previewRef.current.style, newStyle)
+        }
+      })
+    }
+  }, [loadingState, data, selectedPage])
+
   /**
    * 팝업 위치 계산 (화면 경계 고려)
    */
   const getPopupStyle = () => {
     const popupWidth = 400
-    const popupHeight = 200
     const margin = 8
 
     // absolute positioning을 위해 스크롤 오프셋 추가
@@ -152,9 +167,20 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
       x = window.pageXOffset + margin
     }
 
-    // 화면 아래쪽 경계 체크
-    if (y + popupHeight > window.innerHeight + window.pageYOffset - margin) {
-      y = position.y - popupHeight - 8 + window.pageYOffset
+    // 팝업이 렌더링된 후 실제 높이를 기반으로 위치 조정
+    if (previewRef.current) {
+      const popupHeight = previewRef.current.offsetHeight
+      const viewportBottom = window.innerHeight + window.pageYOffset
+
+      // 팝업이 화면 아래로 벗어나는 경우 위쪽으로 이동
+      if (y + popupHeight > viewportBottom - margin) {
+        y = position.y - popupHeight - 4 + window.pageYOffset
+
+        // 위쪽으로 이동해도 화면을 벗어나는 경우 최소 여백 유지
+        if (y < window.pageYOffset + margin) {
+          y = window.pageYOffset + margin
+        }
+      }
     }
 
     return {
@@ -214,6 +240,34 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
         <div className="text-center py-8 p-4">
           <div className="text-red-500 mb-2">⚠️</div>
           <p className="text-sm text-gray-600">{error}</p>
+        </div>
+      )}
+
+      {/* not-found 상태 */}
+      {loadingState === 'not-found' && (
+        <div className="space-y-2 p-3">
+          {/* 헤더 */}
+          <div className="space-y-2 border-b border-gray-100 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900 text-lg">{title}</span>
+            </div>
+          </div>
+
+          {/* 알림 및 액션 */}
+          <div className="text-center py-4">
+            <div className="text-gray-400 mb-2">⚠️</div>
+            <p className="text-sm text-gray-600 mb-3">해당 위키 페이지를 찾을 수 없습니다.</p>
+            <a
+              href={`/wiki/generate?topic=${encodeURIComponent(title)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-xs bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors no-underline"
+              style={{ color: '#fff', textDecoration: 'none', WebkitTextFillColor: '#fff' }}
+            >
+              <span style={{ color: '#fff', WebkitTextFillColor: '#fff' }}>위키 생성하기</span>
+              <OpenInNewIcon className="w-3 h-3 ml-1 text-white" />
+            </a>
+          </div>
         </div>
       )}
 
