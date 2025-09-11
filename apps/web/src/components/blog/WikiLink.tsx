@@ -17,7 +17,7 @@ interface WikiLinkProps {
 export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) {
   const [showPreview, setShowPreview] = useState(false)
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 })
-  const linkRef = useRef<HTMLSpanElement>(null)
+  const linkRef = useRef<HTMLAnchorElement>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout>()
   const hideTimeoutRef = useRef<NodeJS.Timeout>()
 
@@ -97,8 +97,9 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
 
   return (
     <>
-      <span
+      <a
         ref={linkRef}
+        href={`/wiki/${encodeURIComponent(title)}`}
         className={`
           wiki-link 
           inline-block 
@@ -106,7 +107,7 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
           hover:text-blue-800 
           underline 
           decoration-dotted 
-          cursor-default 
+          cursor-pointer 
           transition-colors 
           duration-200
           ${className}
@@ -115,7 +116,7 @@ export function WikiLink({ title, displayText, className = '' }: WikiLinkProps) 
         onMouseLeave={handleMouseLeave}
       >
         {displayText || title}
-      </span>
+      </a>
 
       {/* 프리뷰 팝업 */}
       {showPreview && (
