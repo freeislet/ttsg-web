@@ -87,7 +87,7 @@ export default function Wiki() {
     return (
       <div className="space-y-3">
         {pages.map((page, index) => {
-          const url = `/wiki/${encodeURIComponent(page.title)}`
+          const url = `/wiki/${encodeURIComponent(page.title)}?version=${page.version || ''}&language=${page.language}`
           const color = colors[index % colors.length]
           const date = new Date(page.lastEdited).toLocaleDateString('ko-KR', {
             year: 'numeric',
