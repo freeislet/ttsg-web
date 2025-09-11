@@ -1,0 +1,121 @@
+---
+import { marked, Renderer } from 'marked'
+import WikiLayout from '@/layouts/WikiLayout.astro'
+import { getPageContentAsMarkdown, searchWikiPage } from '@/lib/notion'
+
+export async function getStaticPaths() {
+  // 동적 라우팅을 위해 빈 배열 반환 (SSR 모드에서 처리)
+  return []
+}
+
+const { slug } = Astro.params
+const url = new URL(Astro.request.url)
+const version = url.searchParams.get('version') || undefined
+const language = url.searchParams.get('language') || 'ko'
+
+let content = ''
+let headings: any[] = []
+let title = ''
+let tags: string[] = []
+let createdDate: Date | undefined
+let updatedDate: Date | undefined
+let availableVersions: string[] = []
+let availableLanguages: string[] = []
+let currentPageId = ''
+
+try {
+  // slug(제목)로 위키 페이지 검색
+  const searchResult = await searchWikiPage(decodeURIComponent(slug), {
+    exactMatch: true,
+  })
+
+  if (searchResult.results.length === 0) {
+    throw new Error('위키 페이지를 찾을 수 없습니다.')
+  }
+
+  // 모든 버전과 언어 수집
+  const allVersions = new Set<string>()
+  const allLanguages = new Set<string>()
+
+  searchResult.results.forEach((page) => {
+    if (page.version) allVersions.add(page.version)
+    if (page.language) allLanguages.add(page.language)
+  })
+
+  availableVersions = Array.from(allVersions).sort()
+  availableLanguages = Array.from(allLanguages).sort()
+
+  // 현재 요청된 version과 language에 맞는 페이지 찾기
+  let targetPage = searchResult.results.find((page) => {
+    const versionMatch = version ? page.version === version : !page.version || page.version === ''
+    const languageMatch = page.language === language
+    return versionMatch && languageMatch
+  })
+
+  // 정확히 일치하는 페이지가 없으면 기본값 사용
+  if (!targetPage) {
+    // 언어만 맞는 페이지 찾기
+    targetPage = searchResult.results.find((page) => page.language === language)
+
+    // 그것도 없으면 첫 번째 페이지 사용
+    if (!targetPage) {
+      targetPage = searchResult.results[0]
+    }
+  }
+
+  currentPageId = targetPage.id
+  title = targetPage.title
+  tags = targetPage.tags || []
+  createdDate = targetPage.created ? new Date(targetPage.created) : undefined
+  updatedDate = targetPage.lastEdited ? new Date(targetPage.lastEdited) : undefined
+
+  // 노션 페이지 콘텐츠를 마크다운으로 가져오기
+  const markdownContent = await getPageContentAsMarkdown(currentPageId)
+
+  // 마크다운을 HTML로 변환
+  const renderer = new Renderer()
+
+  // 헤딩 추출을 위한 커스텀 렌더러
+  renderer.heading = function (text, level, raw) {
+    const anchor = raw.toLowerCase().replace(/[^\w\u3131-\u314e\u314f-\u3163\uac00-\ud7a3]+/g, '-')
+    headings.push({
+      depth: level,
+      slug: anchor,
+      text: text,
+    })
+    return `<h${level} id="${anchor}">${text}</h${level}>`
+  }
+
+  marked.setOptions({
+    renderer: renderer,
+    gfm: true,
+    breaks: true,
+  })
+
+  content = marked(markdownContent)
+} catch (error) {
+  console.error('위키 페이지 콘텐츠 로드 실패:', error)
+  title = '페이지를 찾을 수 없습니다'
+  content = `
+    <div class="text-center py-12">
+      <div class="text-red-500 text-lg mb-4">⚠️ 페이지를 불러올 수 없습니다</div>
+      <p class="text-gray-600">위키 페이지 콘텐츠를 로드하는 중 오류가 발생했습니다.</p>
+      <p class="text-sm text-gray-500 mt-2">검색어: ${decodeURIComponent(slug)}</p>
+      <p class="text-sm text-gray-500">버전: ${version || '기본'}, 언어: ${language}</p>
+    </div>
+  `
+}
+---
+
+<WikiLayout
+  title={title}
+  content={content}
+  headings={headings}
+  tags={tags}
+  createdDate={createdDate}
+  updatedDate={updatedDate}
+  availableVersions={availableVersions}
+  availableLanguages={availableLanguages}
+  currentVersion={version}
+  currentLanguage={language}
+/>

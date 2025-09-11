@@ -101,13 +101,19 @@ export default function Wiki() {
             >
               <h3 className="font-medium text-gray-900 flex items-center gap-2">
                 <a
-                  href={page.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/wiki/${encodeURIComponent(page.title)}`}
                   className={`hover:text-${color}-600 transition-colors flex items-center`}
                 >
                   {page.title}
-                  <OpenInNewIcon className="w-4 h-4 ml-1 text-gray-400" />
+                </a>
+                <a
+                  href={page.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="노션에서 보기"
+                >
+                  <OpenInNewIcon className="w-4 h-4" />
                 </a>
                 {page.version && (
                   <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">

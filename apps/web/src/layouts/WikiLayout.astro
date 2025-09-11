@@ -1,0 +1,221 @@
+---
+import Layout from './Layout.astro'
+import Header from '@/components/Header.astro'
+import Footer from '@/components/Footer.astro'
+import TableOfContents from '@/components/blog/TableOfContents.astro'
+import { WikiLinkProcessor } from '@/components/blog/WikiLinkProcessor'
+import '@/styles/blog.css'
+
+export interface Props {
+  title: string
+  description?: string
+  content: string
+  headings?: any[]
+  tags?: string[]
+  createdDate?: Date
+  updatedDate?: Date
+  availableVersions?: string[]
+  availableLanguages?: string[]
+  currentVersion?: string
+  currentLanguage?: string
+}
+
+const {
+  title,
+  description,
+  content,
+  headings = [],
+  tags = [],
+  createdDate,
+  updatedDate,
+  availableVersions = [],
+  availableLanguages = [],
+  currentVersion,
+  currentLanguage = 'ko',
+} = Astro.props
+
+// SEO를 위한 메타 정보 구성
+const seo = {
+  title: `${title} | TTSG Wiki`,
+  description: description || `${title}에 대한 위키 페이지입니다.`,
+  url: `/wiki/${Astro.params.slug}`,
+  type: 'article' as const,
+  keywords: [...tags, 'TTSG', '위키', 'Wiki'],
+}
+---
+
+<Layout seo={seo}>
+  <Header />
+
+  <main class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- 메인 콘텐츠 -->
+        <article class="flex-1 max-w-4xl">
+          <!-- 위키 헤더 -->
+          <header class="mb-8">
+            <div class="space-y-4">
+              <!-- 위키 배지 -->
+              <div class="flex items-center gap-2">
+                <span
+                  class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800"
+                >
+                  📖 Wiki
+                </span>
+              </div>
+
+              <!-- 제목 -->
+              <h1 class="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                {title}
+              </h1>
+
+              <!-- 메타 정보 -->
+              <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                {
+                  createdDate && (
+                    <span class="flex items-center gap-1">
+                      📅 생성: {createdDate.toLocaleDateString('ko-KR')}
+                    </span>
+                  )
+                }
+
+                {
+                  updatedDate && (
+                    <span class="flex items-center gap-1">
+                      ✏️ 수정: {updatedDate.toLocaleDateString('ko-KR')}
+                    </span>
+                  )
+                }
+
+                {
+                  tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                      {tags.map((tag: string) => (
+                        <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-200 text-gray-700 rounded-md">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                }
+              </div>
+
+              <!-- 설명 -->
+              {description && <p class="text-lg text-gray-600 leading-relaxed">{description}</p>}
+
+              <!-- 버전 및 언어 선택 -->
+              {
+                (availableVersions.length > 0 || availableLanguages.length > 1) && (
+                  <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex flex-wrap gap-4 items-center">
+                      {availableVersions.length > 0 && (
+                        <div class="flex items-center gap-2">
+                          <label class="text-sm font-medium text-blue-800">버전:</label>
+                          <select
+                            id="version-select"
+                            class="px-3 py-1 text-sm border border-blue-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onchange="updateWikiVersion(this.value)"
+                          >
+                            <option value="">기본</option>
+                            {availableVersions.map((version) => (
+                              <option value={version} selected={version === currentVersion}>
+                                {version}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {availableLanguages.length > 1 && (
+                        <div class="flex items-center gap-2">
+                          <label class="text-sm font-medium text-blue-800">언어:</label>
+                          <select
+                            id="language-select"
+                            class="px-3 py-1 text-sm border border-blue-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onchange="updateWikiLanguage(this.value)"
+                          >
+                            {availableLanguages.map((language) => (
+                              <option value={language} selected={language === currentLanguage}>
+                                {language === 'ko'
+                                  ? '한국어'
+                                  : language === 'en'
+                                    ? 'English'
+                                    : language}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              }
+            </div>
+          </header>
+
+          <!-- 모바일 목차 -->
+          {
+            headings.length > 0 && (
+              <div class="lg:hidden">
+                <TableOfContents headings={headings} isMobile={true} />
+              </div>
+            )
+          }
+
+          <!-- 위키 콘텐츠 -->
+          <div class="prose prose-lg prose-gray max-w-none mx-auto blog-content">
+            <div class="bg-white rounded-lg shadow-sm p-6 md:p-8">
+              <div set:html={content} />
+            </div>
+          </div>
+
+          <!-- WikiLink 프로세서 -->
+          <WikiLinkProcessor client:load />
+
+          <!-- 위키 푸터 -->
+          <footer class="mt-12 pt-8 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-gray-500">
+                이 위키 페이지가 도움이 되셨나요? TTSG에서 더 많은 정보를 확인하세요.
+              </div>
+            </div>
+          </footer>
+        </article>
+
+        <!-- 데스크톱 사이드바 목차 -->
+        {
+          headings.length > 0 && (
+            <aside class="hidden lg:block w-64 flex-shrink-0">
+              <TableOfContents headings={headings} isMobile={false} />
+            </aside>
+          )
+        }
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+
+  <!-- 버전/언어 변경을 위한 JavaScript -->
+  <script>
+    function updateWikiVersion(version: string) {
+      const url = new URL(window.location.href)
+      if (version) {
+        url.searchParams.set('version', version)
+      } else {
+        url.searchParams.delete('version')
+      }
+      window.location.href = url.toString()
+    }
+
+    function updateWikiLanguage(language: string) {
+      const url = new URL(window.location.href)
+      url.searchParams.set('language', language)
+      window.location.href = url.toString()
+    }
+
+    // 전역 함수로 등록
+    ;(window as any).updateWikiVersion = updateWikiVersion
+    ;(window as any).updateWikiLanguage = updateWikiLanguage
+  </script>
+</Layout>
