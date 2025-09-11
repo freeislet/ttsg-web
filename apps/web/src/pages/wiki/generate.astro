@@ -4,12 +4,14 @@ import Layout from '@/layouts/Layout.astro'
 import Header from '@/components/Header.astro'
 import Footer from '@/components/Footer.astro'
 import WikiGenerate from '@/components/wiki/WikiGenerate'
+
+const topic = Astro.url.searchParams.get('topic') || ''
 ---
 
 <Layout>
   <Header />
   <main class="max-w-5xl mx-auto px-4 py-8">
-    <WikiGenerate client:load />
+    <WikiGenerate initialTopic={topic} client:load />
   </main>
   <Footer />
 </Layout>

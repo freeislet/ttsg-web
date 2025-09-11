@@ -15,7 +15,12 @@ import GenerationResult from './GenerationResult'
  * 위키 자동 생성 메인 컴포넌트
  * 주제 입력, AI 모델 선택, 생성 진행 상태, 결과 표시를 관리합니다.
  */
-export default function WikiGenerate() {
+interface WikiGenerateProps {
+  /** 초기 주제 - 쿼리 파라미터로 전달된 topic을 채움 */
+  initialTopic?: string
+}
+
+export default function WikiGenerate({ initialTopic }: WikiGenerateProps) {
   // 위키 생성 스토어 사용
   const wikiGeneration = useWikiGenerationStore()
   const { isGenerating, isCompleted, modelResults, actions } = wikiGeneration
@@ -31,7 +36,7 @@ export default function WikiGenerate() {
     reset,
     watch,
     formState: { errors, isValid },
-  } = useWikiGenerationForm()
+  } = useWikiGenerationForm(initialTopic ? { topic: initialTopic } : undefined)
 
   /**
    * 위키 생성 요청을 처리하는 함수 (기본: 스트리밍, 필요시 일반 방식)

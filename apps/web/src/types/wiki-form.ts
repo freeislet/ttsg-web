@@ -76,10 +76,14 @@ export const defaultFormValues: WikiFormData = {
  * 위키 생성 폼을 위한 커스텀 hook
  * react-hook-form과 zod validation을 함께 제공합니다.
  */
-export const useWikiGenerationForm = () => {
+/**
+ * 위키 생성 폼을 위한 커스텀 hook
+ * 선택적으로 초기값을 받아 기본값을 오버라이드합니다.
+ */
+export const useWikiGenerationForm = (initial?: Partial<WikiFormData>) => {
   return useForm<WikiFormData>({
     resolver: zodResolver(wikiFormSchema),
-    defaultValues: defaultFormValues,
+    defaultValues: { ...defaultFormValues, ...(initial ?? {}) },
     mode: 'onChange',
   })
 }
