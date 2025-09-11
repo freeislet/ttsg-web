@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { getLanguageBadgeColor } from '@/lib/notion'
 import { searchWikiPages, getWikiPreview, type NotionPage, type Language } from '@/client/wiki'
+import { getLanguageBadgeColor } from '@/types/wiki'
 import { OpenInNewIcon } from '../icons'
 
 /**

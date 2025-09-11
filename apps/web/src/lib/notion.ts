@@ -9,20 +9,6 @@ import { NotionToMarkdown } from 'notion-to-md'
 export type Language = 'ko' | 'en'
 
 /**
- * 언어별 배지 색상 반환
- */
-export const getLanguageBadgeColor = (language: string) => {
-  switch (language) {
-    case 'ko':
-      return 'bg-blue-100 text-blue-800 border-blue-200'
-    case 'en':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200'
-  }
-}
-
-/**
  * 노션 페이지 데이터 타입
  */
 export interface NotionPage {
