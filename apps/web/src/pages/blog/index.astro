@@ -17,15 +17,6 @@ const allPosts = _allPosts.sort(
   (a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
 )
 
-// 카테고리별 포스트 수 계산
-const categoryStats = categories.reduce(
-  (acc, category) => {
-    acc[category] = allPosts.filter((post) => post.data.category === category).length
-    return acc
-  },
-  {} as Record<Category, number>
-)
-
 const seo = {
   ...pageSEO.blog,
   url: '/blog',
@@ -46,18 +37,11 @@ const seo = {
       <!-- 카테고리 네비게이션 -->
       <nav class="mb-8">
         <div class="flex flex-wrap justify-center gap-4">
-          <a
-            href="/blog"
-            class="inline-flex items-center justify-center min-w-16 px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
-          >
-            전체
-          </a>
+          <a href="/blog/featured" class="blog-nav-button">⭐ 추천 포스트</a>
+          <a href="/blog/all" class="blog-nav-button">📚 모든 포스트</a>
           {
             Object.entries(categoryData).map(([key, category]) => (
-              <a
-                href={`/blog/category/${key}`}
-                class="inline-flex items-center justify-center min-w-16 px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors duration-200"
-              >
+              <a href={`/blog/category/${key}`} class="blog-nav-button">
                 {category.name}
               </a>
             ))
@@ -66,27 +50,31 @@ const seo = {
       </nav>
 
       <!-- 추천 포스트 섹션 -->
-      <BlogList posts={allPosts} title="⭐ 추천 포스트" featured={true} maxPosts={6} />
+      <BlogList
+        posts={allPosts}
+        title="⭐ 추천 포스트"
+        featured={true}
+        maxPosts={6}
+        viewAllHref="/blog/featured"
+      />
 
       <!-- 최신 포스트 섹션 -->
-      <BlogList posts={allPosts} title="최신 포스트" maxPosts={6} />
+      <BlogList posts={allPosts} title="최신 포스트" maxPosts={6} viewAllHref="/blog/all" />
 
       <!-- 카테고리별 미리보기 -->
       {
-        categories
-          .filter((category: Category) => categoryStats[category] > 0)
-          .map((category: Category) => (
-            <div class="mt-16">
-              <BlogList
-                posts={allPosts}
-                title={`${categoryData[category].name} (${categoryStats[category]})`}
-                category={category}
-                compact={true}
-                maxPosts={6}
-                showViewAll={true}
-              />
-            </div>
-          ))
+        categories.map((category: Category) => (
+          <div class="mt-16">
+            <BlogList
+              posts={allPosts}
+              title={categoryData[category].name}
+              category={category}
+              compact={true}
+              maxPosts={6}
+              viewAllHref={`/blog/category/${category}`}
+            />
+          </div>
+        ))
       }
     </div>
   </main>

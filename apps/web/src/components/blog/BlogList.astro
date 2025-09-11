@@ -11,7 +11,7 @@ export interface Props {
   featured?: boolean
   maxPosts?: number
   compact?: boolean
-  showViewAll?: boolean
+  viewAllHref?: string
 }
 
 const {
@@ -21,7 +21,7 @@ const {
   featured = false,
   maxPosts,
   compact = false,
-  showViewAll = false,
+  viewAllHref,
 } = Astro.props
 
 // 포스트 필터링 및 정렬
@@ -48,25 +48,15 @@ if (maxPosts) {
   <!-- 섹션 헤더 -->
   {
     (title || category) && (
-      <div class={compact ? 'flex items-center justify-between mb-6' : 'mb-8'}>
-        <h2
-          class={
-            compact
-              ? 'text-2xl font-bold text-gray-900'
-              : 'text-2xl md:text-3xl font-bold text-gray-900 mb-2'
-          }
-        >
+      <div class="flex items-center gap-4 mb-6">
+        <h2 class="text-3xl font-bold text-gray-900">
           {title || (category && categoryData[category].detailedName) || '블로그 포스트'}
         </h2>
-        {showViewAll && category && (
-          <a
-            href={`/blog/category/${category}`}
-            class="text-blue-600 hover:text-blue-800 font-medium text-sm"
-          >
+        {viewAllHref && (
+          <a href={viewAllHref} class="text-blue-600 hover:text-blue-800 font-medium text-sm">
             전체 보기 →
           </a>
         )}
-        {!compact && category && <p class="text-gray-600">{categoryData[category].description}</p>}
       </div>
     )
   }
@@ -91,29 +81,11 @@ if (maxPosts) {
       </div>
     ) : (
       <div class="text-center py-12">
-        <svg
-          class="w-16 h-16 text-gray-300 mx-auto mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
         <h3 class="text-lg font-medium text-gray-900 mb-2">
           {category
             ? `${categoryData[category].detailedName} 포스트가 없습니다`
             : '포스트가 없습니다'}
         </h3>
-        <p class="text-gray-500">
-          {category
-            ? `${categoryData[category].detailedName} 카테고리의 새로운 포스트를 기다려주세요.`
-            : '새로운 포스트를 기다려주세요.'}
-        </p>
       </div>
     )
   }
