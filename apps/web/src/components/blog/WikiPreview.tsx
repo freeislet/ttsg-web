@@ -278,13 +278,15 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
 
           {/* 액션 */}
           <div className="flex justify-end border-t border-gray-100 pt-1">
-            <button
-              onClick={() => window.open(data.url, '_blank', 'noopener,noreferrer')}
+            <a
+              href={`/wiki/${encodeURIComponent(data.title)}?version=${data.version ? encodeURIComponent(data.version) : ''}&language=${data.language ? data.language : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
             >
               <span>전체 내용 보기</span>
               <OpenInNewIcon className="w-3 h-3 ml-0.5" />
-            </button>
+            </a>
           </div>
         </div>
       )}
