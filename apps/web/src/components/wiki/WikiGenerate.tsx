@@ -9,7 +9,7 @@ import LanguageSelector from './LanguageSelector'
 import TagSelector from './TagSelector'
 import ModelSelector from './ModelSelector'
 import GenerationProgress from './GenerationProgress'
-import ResultDisplay from './ResultDisplay'
+import GenerationResult from './GenerationResult'
 
 /**
  * 위키 자동 생성 메인 컴포넌트
@@ -38,22 +38,25 @@ export default function WikiGenerate() {
    */
   const onSubmit = async (data: WikiFormData) => {
     console.log('[UI] 위키 생성 시작:', data)
-    
+
     // 스토어 초기화 및 생성 시작
     actions.startGeneration(data)
 
     // 타임아웃 설정 (5분)
-    const timeoutId = setTimeout(() => {
-      console.warn('[UI] 위키 생성 타임아웃 - 강제 완료 처리')
-      actions.forceComplete()
-    }, 5 * 60 * 1000)
+    const timeoutId = setTimeout(
+      () => {
+        console.warn('[UI] 위키 생성 타임아웃 - 강제 완료 처리')
+        actions.forceComplete()
+      },
+      5 * 60 * 1000
+    )
 
     try {
       console.log('[UI] SSE 스트리밍 시작')
       // 스트리밍 방식으로 위키 생성
       await generateWikiStream(data, handleSSEEvent)
       console.log('[UI] SSE 스트리밍 정상 완료')
-      
+
       // 스트림이 정상 종료되었지만 UI가 아직 생성 중이면 강제 완료
       if (isGenerating) {
         console.log('[UI] 스트림 완료 후 UI 상태 확인 - 강제 완료 처리')
@@ -90,7 +93,7 @@ export default function WikiGenerate() {
    */
   const handleSSEEvent = (event: SSEEvent) => {
     console.log('[SSE Event]', event.type, event)
-    
+
     switch (event.type) {
       case 'generation_start':
         console.log('[UI] 위키 생성 시작:', event.totalModels, '개 모델')
@@ -280,7 +283,7 @@ export default function WikiGenerate() {
         (result) => result.status === 'success' || result.status === 'error'
       ) && (
         <div ref={resultsRef}>
-          <ResultDisplay />
+          <GenerationResult />
         </div>
       )}
     </div>

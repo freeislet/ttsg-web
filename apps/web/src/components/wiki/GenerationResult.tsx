@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Icon } from '@iconify/react'
-import toast from 'react-hot-toast'
 import { getModelMeta } from '@/lib/ai'
 import { useWikiGenerationStore } from '@/stores/wiki-generation'
 import { OpenInNewIcon } from '@/components/icons'
@@ -9,7 +8,7 @@ import { OpenInNewIcon } from '@/components/icons'
  * 위키 생성 결과 표시 컴포넌트
  * 스토어에서 위키 생성 컨텍스트를 가져와 결과를 표시합니다.
  */
-export default function ResultDisplay() {
+export default function GenerationResult() {
   const wikiGeneration = useWikiGenerationStore()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
@@ -94,7 +93,7 @@ export default function ResultDisplay() {
                 </div>
               </div>
 
-              {/* 에러 시 에러 메시지 - 항상 표시 */}
+              {/* 에러 시 에러 메시지 */}
               {result.status === 'error' && result.error && (
                 <div className="mb-3">
                   <h4 className="text-sm font-medium text-red-700 mb-1">오류 내용</h4>
@@ -104,30 +103,27 @@ export default function ResultDisplay() {
                 </div>
               )}
 
-              {/* 노션 링크 - 항상 표시 */}
-              {result.status === 'success' && result.notionUrl && (
+              {/* 위키 페이지 링크 */}
+              {result.status === 'success' && wikiGeneration.topic && (
                 <div className="flex items-center space-x-3 mb-3">
+                  <a
+                    href={`/wiki/${encodeURIComponent(wikiGeneration.topic)}?version=${encodeURIComponent(modelName)}&language=${wikiGeneration.language}`}
+                    className={`inline-flex items-center ${colors.text} bg-white border ${colors.border} px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:${colors.bg}`}
+                  >
+                    <Icon icon="mdi:file-document-outline" className="w-4 h-4 mr-2" />
+                    위키에서 보기
+                  </a>
+
                   <a
                     href={result.notionUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`inline-flex items-center ${colors.text} bg-white border ${colors.border} px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:${colors.bg}`}
-                  >
-                    <Icon icon="simple-icons:notion" className="w-4 h-4 mr-2" />
-                    노션에서 보기
-                    <OpenInNewIcon className="w-4 h-4 ml-2" />
-                  </a>
-
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(result.notionUrl!)
-                      toast.success('링크가 클립보드에 복사되었습니다')
-                    }}
                     className="inline-flex items-center text-gray-600 hover:text-gray-800 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-sm"
                   >
-                    <Icon icon="mdi:content-copy" className="w-4 h-4 mr-1" />
-                    링크 복사
-                  </button>
+                    <Icon icon="simple-icons:notion" className="w-4 h-4 mr-1" />
+                    노션에서 보기
+                    <OpenInNewIcon className="w-4 h-4 ml-1" />
+                  </a>
                 </div>
               )}
 
