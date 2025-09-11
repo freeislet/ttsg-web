@@ -1,0 +1,37 @@
+---
+import { categoryData, type Category } from '@/types/blog'
+
+export interface Props {
+  currentPage?: 'featured' | 'all' | Category // 카테고리 키 또는 특별 페이지
+}
+
+const { currentPage } = Astro.props
+---
+
+<!-- 카테고리 네비게이션 -->
+<nav class="my-6">
+  <div class="flex flex-wrap justify-center gap-4">
+    <a
+      href="/blog/featured"
+      class={`blog-nav-button ${currentPage === 'featured' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+    >
+      ⭐ 추천 포스트
+    </a>
+    <a
+      href="/blog/all"
+      class={`blog-nav-button ${currentPage === 'all' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+    >
+      📚 모든 포스트
+    </a>
+    {
+      Object.entries(categoryData).map(([key, category]) => (
+        <a
+          href={`/blog/category/${key}`}
+          class={`blog-nav-button ${currentPage === key ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+        >
+          {category.name}
+        </a>
+      ))
+    }
+  </div>
+</nav>

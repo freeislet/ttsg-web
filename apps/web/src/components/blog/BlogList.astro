@@ -2,7 +2,6 @@
 import BlogCard from './BlogCard.astro'
 import type { CollectionEntry } from 'astro:content'
 import type { Category } from '@/types/blog'
-import { categoryData } from '@/types/blog'
 
 export interface Props {
   posts: CollectionEntry<'blog'>[]
@@ -47,11 +46,9 @@ if (maxPosts) {
 <section class={compact ? '' : 'py-8'}>
   <!-- 섹션 헤더 -->
   {
-    (title || category) && (
+    title && (
       <div class="flex items-center gap-4 mb-6">
-        <h2 class="text-3xl font-bold text-gray-900">
-          {title || (category && categoryData[category].detailedName) || '블로그 포스트'}
-        </h2>
+        <h2 class="text-3xl font-bold text-gray-900">{title}</h2>
         {viewAllHref && (
           <a href={viewAllHref} class="text-blue-600 hover:text-blue-800 font-medium text-sm">
             전체 보기 →
@@ -81,11 +78,7 @@ if (maxPosts) {
       </div>
     ) : (
       <div class="text-center py-12">
-        <h3 class="text-lg font-medium text-gray-900 mb-2">
-          {category
-            ? `${categoryData[category].detailedName} 포스트가 없습니다`
-            : '포스트가 없습니다'}
-        </h3>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">포스트가 없습니다</h3>
       </div>
     )
   }

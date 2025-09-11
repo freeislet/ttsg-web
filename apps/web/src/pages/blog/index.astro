@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content'
 import Layout from '@/layouts/Layout.astro'
 import Header from '@/components/Header.astro'
 import Footer from '@/components/Footer.astro'
+import BlogHeader from '@/components/blog/BlogHeader.astro'
 import BlogList from '@/components/blog/BlogList.astro'
 import { categories, categoryData, type Category } from '@/types/blog'
 import { pageSEO } from '@/lib/seo/config'
@@ -29,25 +30,7 @@ const seo = {
 
   <main class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 py-8">
-      <!-- 헤더 섹션 -->
-      <header class="text-center mb-8">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">TTSG 블로그</h1>
-      </header>
-
-      <!-- 카테고리 네비게이션 -->
-      <nav class="mb-8">
-        <div class="flex flex-wrap justify-center gap-4">
-          <a href="/blog/featured" class="blog-nav-button">⭐ 추천 포스트</a>
-          <a href="/blog/all" class="blog-nav-button">📚 모든 포스트</a>
-          {
-            Object.entries(categoryData).map(([key, category]) => (
-              <a href={`/blog/category/${key}`} class="blog-nav-button">
-                {category.name}
-              </a>
-            ))
-          }
-        </div>
-      </nav>
+      <BlogHeader title="TTSG 블로그" />
 
       <!-- 추천 포스트 섹션 -->
       <BlogList
@@ -67,7 +50,7 @@ const seo = {
           <div class="mt-16">
             <BlogList
               posts={allPosts}
-              title={categoryData[category].name}
+              title={categoryData[category].detailedName}
               category={category}
               compact={true}
               maxPosts={6}

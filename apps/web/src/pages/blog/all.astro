@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content'
 import Layout from '@/layouts/Layout.astro'
+import Header from '@/components/Header.astro'
+import Footer from '@/components/Footer.astro'
+import BlogHeader from '@/components/blog/BlogHeader.astro'
 import BlogList from '@/components/blog/BlogList.astro'
 import { categoryData } from '@/types/blog'
 import { pageSEO } from '@/lib/seo/config'
@@ -14,10 +17,13 @@ const publishedPosts = allPosts
   .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
 
 // 카테고리별 통계
-const categoryStats = Object.keys(categoryData).reduce((stats, category) => {
-  stats[category] = publishedPosts.filter(post => post.data.category === category).length
-  return stats
-}, {} as Record<string, number>)
+const categoryStats = Object.keys(categoryData).reduce(
+  (stats, category) => {
+    stats[category] = publishedPosts.filter((post) => post.data.category === category).length
+    return stats
+  },
+  {} as Record<string, number>
+)
 
 const pageTitle = '전체 포스트 | TTSG'
 const pageDescription = 'TTSG 블로그의 모든 포스트를 한눈에 확인해보세요.'
@@ -32,93 +38,14 @@ const seo = {
 ---
 
 <Layout seo={seo}>
-  <main class="container mx-auto px-4 py-8">
-    <!-- 페이지 헤더 -->
-    <div class="text-center mb-12">
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-        전체 포스트
-      </h1>
-      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-        TTSG 블로그의 모든 포스트를 한눈에 확인해보세요.
-      </p>
-      <div class="mt-6 text-sm text-gray-500">
-        총 {publishedPosts.length}개의 포스트
-      </div>
+  <Header />
+
+  <main class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <BlogHeader title="모든 포스트" count={publishedPosts.length} currentPage="all" />
+      <BlogList posts={publishedPosts} />
     </div>
-
-    <!-- 네비게이션 -->
-    <nav class="mb-8">
-      <div class="flex flex-wrap gap-4 justify-center">
-        <a
-          href="/blog"
-          class="px-4 py-2 text-gray-600 hover:text-blue-600 border border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
-        >
-          ← 블로그 홈
-        </a>
-        <a
-          href="/blog/featured"
-          class="px-4 py-2 text-gray-600 hover:text-blue-600 border border-gray-300 rounded-lg hover:border-blue-300 transition-colors"
-        >
-          추천 포스트
-        </a>
-      </div>
-    </nav>
-
-    <!-- 카테고리 필터 -->
-    <div class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4 text-center">카테고리별 보기</h2>
-      <div class="flex flex-wrap gap-3 justify-center">
-        {Object.entries(categoryData).map(([key, data]) => (
-          <a
-            href={`/blog/category/${key}`}
-            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-          >
-            <span class="font-medium text-gray-900">{data.detailedName}</span>
-            <span class="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              {categoryStats[key] || 0}
-            </span>
-          </a>
-        ))}
-      </div>
-    </div>
-
-    <!-- 전체 포스트 목록 -->
-    <BlogList
-      posts={publishedPosts}
-      title="모든 포스트"
-    />
-
-    <!-- 빈 상태일 때 -->
-    {publishedPosts.length === 0 && (
-      <div class="text-center py-16">
-        <div class="max-w-md mx-auto">
-          <svg
-            class="w-20 h-20 text-gray-300 mx-auto mb-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">
-            아직 포스트가 없습니다
-          </h2>
-          <p class="text-gray-600 mb-6">
-            곧 흥미로운 포스트들을 만나보실 수 있습니다.
-          </p>
-          <a
-            href="/blog"
-            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            블로그 홈으로
-          </a>
-        </div>
-      </div>
-    )}
   </main>
+
+  <Footer />
 </Layout>

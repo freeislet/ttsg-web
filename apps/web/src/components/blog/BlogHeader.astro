@@ -1,0 +1,25 @@
+---
+import BlogNavigation from './BlogNavigation.astro'
+import type { Category } from '@/types/blog'
+
+export interface Props {
+  title: string
+  description?: string
+  count?: number
+  currentPage?: 'featured' | 'all' | Category
+}
+
+const { title, description, count, currentPage } = Astro.props
+---
+
+<!-- 헤더 섹션 -->
+<header class="text-center mb-8">
+  <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{title}</h1>
+
+  {description && <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-4">{description}</p>}
+
+  {count && <div class="mt-4 text-sm text-gray-500">{`총 ${count}개의 포스트`}</div>}
+
+  <!-- 카테고리 네비게이션 -->
+  <BlogNavigation currentPage={currentPage} />
+</header>
