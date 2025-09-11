@@ -23,6 +23,8 @@ let availableVersions: string[] = []
 let availableLanguages: string[] = []
 let currentPageId = ''
 let notionUrl = ''
+let currentVersion: string | undefined = undefined
+let currentLanguage: string = 'ko'
 
 try {
   // slug(제목)로 위키 페이지 검색
@@ -70,6 +72,8 @@ try {
   createdDate = targetPage.created ? new Date(targetPage.created) : undefined
   updatedDate = targetPage.lastEdited ? new Date(targetPage.lastEdited) : undefined
   notionUrl = targetPage.url
+  currentVersion = targetPage.version
+  currentLanguage = targetPage.language
 
   // 노션 페이지 콘텐츠를 마크다운으로 가져오기
   const markdownContent = await getPageContentAsMarkdown(currentPageId)
@@ -118,8 +122,8 @@ try {
   updatedDate={updatedDate}
   availableVersions={availableVersions}
   availableLanguages={availableLanguages}
-  currentVersion={version}
-  currentLanguage={language}
+  currentVersion={currentVersion}
+  currentLanguage={currentLanguage}
   notionUrl={notionUrl}
 >
   <div set:html={content} />
