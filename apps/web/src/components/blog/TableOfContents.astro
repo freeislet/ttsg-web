@@ -40,7 +40,7 @@ const filteredHeadings = headings.filter(h => h.depth > 1);
             <li style={`margin-left: ${(heading.depth - 2) * 1.2}rem`}>
               <a 
                 href={`#${heading.slug}`}
-                class="text-xs text-gray-600 hover:text-blue-600 transition-colors block py-0.5 hover:underline leading-tight no-wiki-preview"
+                class="text-xs text-gray-600 hover:text-blue-600 transition-colors block py-0.5 hover:underline leading-tight"
                 style="pointer-events: auto;"
               >
                 {heading.text}
@@ -58,7 +58,7 @@ const filteredHeadings = headings.filter(h => h.depth > 1);
             <li style={`margin-left: ${(heading.depth - 2) * 1}rem`}>
               <a 
                 href={`#${heading.slug}`}
-                class="text-xs text-gray-600 hover:text-blue-600 transition-colors block py-1 hover:underline leading-tight toc-link no-wiki-preview"
+                class="text-xs text-gray-600 hover:text-blue-600 transition-colors block py-1 hover:underline leading-tight toc-link"
                 data-heading-id={heading.slug}
                 style="pointer-events: auto;"
               >

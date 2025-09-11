@@ -6,7 +6,7 @@ import Footer from '@/components/Footer.astro'
 import TableOfContents from '@/components/blog/TableOfContents.astro'
 import { WikiLinkProcessor } from '@/components/blog/WikiLinkProcessor'
 import { categoryData } from '@/types/blog'
-import '@/styles/blog.css'
+import '@/styles/markdown.css'
 
 export interface Props {
   post: CollectionEntry<'blog'>;
@@ -130,8 +130,8 @@ const seo = {
             <TableOfContents headings={headings} isMobile={true} />
           </div>
 
-          <!-- 블로그 콘텐츠 -->
-          <div class="prose prose-lg prose-gray max-w-none mx-auto blog-content">
+          <!-- 블로그/위키 공용 마크다운 콘텐츠 -->
+          <div class="prose prose-lg prose-gray max-w-none mx-auto md-content">
             <div class="bg-white rounded-lg shadow-sm p-6 md:p-8">
               <Content />
             </div>

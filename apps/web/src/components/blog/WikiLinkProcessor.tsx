@@ -12,8 +12,8 @@ export function WikiLinkProcessor() {
      * 위키링크 패턴을 찾아 React 컴포넌트로 교체
      */
     const processWikiLinks = () => {
-      // 블로그 콘텐츠 영역에서 위키링크 처리
-      const contentElements = document.querySelectorAll('.prose, .blog-content, article')
+      // 블로그/위키 마크다운 콘텐츠 영역에서 위키링크 처리
+      const contentElements = document.querySelectorAll('.prose, .md-content, article')
       
       contentElements.forEach((element) => {
         // 이미 처리된 요소는 스킵
@@ -128,8 +128,8 @@ export function WikiLinkProcessor() {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               const element = node as Element
-              if (element.matches('.prose, .blog-content, article') || 
-                  element.querySelector('.prose, .blog-content, article')) {
+              if (element.matches('.prose, .md-content, article') || 
+                  element.querySelector('.prose, .md-content, article')) {
                 shouldProcess = true
               }
             }
@@ -143,10 +143,10 @@ export function WikiLinkProcessor() {
       }
     })
 
-    // 블로그 콘텐츠 영역 관찰 시작
-    const blogContent = document.querySelector('.blog-content, article, main')
-    if (blogContent) {
-      observer.observe(blogContent, {
+    // 마크다운 콘텐츠 영역 관찰 시작
+    const mdContent = document.querySelector('.md-content, article, main')
+    if (mdContent) {
+      observer.observe(mdContent, {
         childList: true,
         subtree: true,
       })

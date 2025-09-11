@@ -1,0 +1,300 @@
+/* 마크다운 컨텐츠 스타일 */
+.md-content {
+  /* 기본 라인 높이 */
+  line-height: 1.8;
+
+  /* 아래 모든 규칙은 :not(:where(.no-md-content *)) 조건을 걸어 제외 처리함 */
+
+  /* 헤더 스타일 */
+  & :where(h1):not(:where(.no-md-content *)) {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  & :where(h2):not(:where(.no-md-content *)) {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  & :where(h3):not(:where(.no-md-content *)) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  & :where(h4):not(:where(.no-md-content *)) {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #111827;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  & :where(h5):not(:where(.no-md-content *)) {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #111827;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  & :where(h6):not(:where(.no-md-content *)) {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111827;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* 단락 스타일 */
+  & :where(p):not(:where(.no-md-content *)) {
+    color: #374151;
+    margin-bottom: 1rem;
+    line-height: 1.625;
+  }
+
+  /* 링크 스타일 */
+  & :where(a):not(:where(.no-md-content *)) {
+    color: #2563eb;
+    text-decoration: underline;
+    text-decoration-color: #bfdbfe;
+    transition: color 0.2s ease;
+  }
+
+  & :where(a:hover):not(:where(.no-md-content *)) {
+    color: #1e40af;
+    text-decoration-color: #60a5fa;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  /* 리스트 스타일 */
+  & :where(ul):not(:where(.no-md-content *)) {
+    list-style-type: disc;
+    list-style-position: inside;
+    margin-bottom: 1rem;
+  }
+
+  & :where(ol):not(:where(.no-md-content *)) {
+    list-style-type: decimal;
+    list-style-position: inside;
+    margin-bottom: 1rem;
+  }
+
+  & :where(li):not(:where(.no-md-content *)) {
+    color: #374151;
+    line-height: 1.625;
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  & :where(ul ul):not(:where(.no-md-content *)),
+  & :where(ol ol):not(:where(.no-md-content *)) {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  & :where(ul li):not(:where(.no-md-content *)) {
+    position: relative;
+  }
+
+  & :where(ul li):not(:where(.no-md-content *))::before {
+    content: '•';
+    color: #3b82f6;
+    font-weight: 700;
+    position: absolute;
+    left: -1rem;
+  }
+
+  /* 코드 스타일 */
+  & :where(code):not(:where(.no-md-content *)) {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-family:
+      ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+
+  & :where(pre):not(:where(.no-md-content *)) {
+    background-color: #111827;
+    color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    position: relative;
+  }
+
+  & :where(pre code):not(:where(.no-md-content *)) {
+    background-color: transparent;
+    color: #f9fafb;
+    padding: 0;
+  }
+
+  /* 코드 하이라이팅 개선 */
+  & :where(pre):not(:where(.no-md-content *))::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0.25rem;
+    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+
+  /* 인용문 스타일 */
+  & :where(blockquote):not(:where(.no-md-content *)) {
+    border-left: 4px solid #3b82f6;
+    padding-left: 1.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: #eff6ff;
+    font-style: italic;
+    color: #374151;
+    border-radius: 0 0.5rem 0.5rem 0;
+    position: relative;
+  }
+
+  & :where(blockquote p):not(:where(.no-md-content *)) {
+    margin-bottom: 0;
+  }
+
+  & :where(blockquote):not(:where(.no-md-content *))::before {
+    content: '"';
+    font-size: 2.25rem;
+    color: #60a5fa;
+    font-family: serif;
+    position: absolute;
+    left: -0.5rem;
+    top: -0.5rem;
+  }
+
+  /* 테이블 스타일 */
+  & :where(table):not(:where(.no-md-content *)) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    box-shadow:
+      0 1px 3px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  & :where(th):not(:where(.no-md-content *)) {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  & :where(td):not(:where(.no-md-content *)) {
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    color: #374151;
+  }
+
+  & :where(tr:nth-child(even)):not(:where(.no-md-content *)) {
+    background-color: #f9fafb;
+  }
+
+  & :where(tr:hover):not(:where(.no-md-content *)) {
+    background-color: #eff6ff;
+    transition: background-color 0.2s ease;
+  }
+
+  /* 이미지 스타일 */
+  & :where(img):not(:where(.no-md-content *)) {
+    border-radius: 0.5rem;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* 이미지 캡션 스타일 */
+  & :where(img + em):not(:where(.no-md-content *)) {
+    display: block;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* 구분선 스타일 */
+  & :where(hr):not(:where(.no-md-content *)) {
+    border: 0;
+    border-top: 1px solid #d1d5db;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  /* 강조 텍스트 */
+  & :where(strong):not(:where(.no-md-content *)) {
+    font-weight: 600;
+    color: #111827;
+  }
+
+  & :where(em):not(:where(.no-md-content *)) {
+    font-style: italic;
+    color: #374151;
+  }
+
+  /* 첫 번째 단락 스타일 */
+  & :where(p:first-of-type):not(:where(.no-md-content *)) {
+    font-size: 1.125rem;
+    color: #1f2937;
+    font-weight: 500;
+  }
+
+  /* 반응형 디자인 */
+  @media (max-width: 768px) {
+    & :where(h1):not(:where(.no-md-content *)) {
+      font-size: 1.5rem;
+    }
+
+    & :where(h2):not(:where(.no-md-content *)) {
+      font-size: 1.25rem;
+    }
+
+    & :where(h3):not(:where(.no-md-content *)) {
+      font-size: 1.125rem;
+    }
+
+    & :where(pre):not(:where(.no-md-content *)) {
+      font-size: 0.875rem;
+      padding: 0.75rem;
+    }
+
+    & :where(table):not(:where(.no-md-content *)) {
+      font-size: 0.875rem;
+    }
+
+    & :where(th):not(:where(.no-md-content *)),
+    & :where(td):not(:where(.no-md-content *)) {
+      padding: 0.5rem;
+    }
+  }
+}

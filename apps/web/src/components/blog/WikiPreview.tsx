@@ -222,7 +222,7 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
   return (
     <div
       ref={previewRef}
-      className="wiki-preview bg-white border border-gray-200 rounded-md shadow-lg w-96 max-h-96 text-base font-normal overflow-y-auto"
+      className="no-md-content bg-white border border-gray-200 rounded-md shadow-lg w-96 max-h-96 text-base font-normal overflow-y-auto"
       style={getPopupStyle()}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
