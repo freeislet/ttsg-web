@@ -21,7 +21,7 @@ if (query) {
   try {
     const searchResult = await searchWikiPage(query)
     
-    initialResults = searchResult.results
+    initialResults = searchResult.pages
     initialHasMore = searchResult.hasMore
     initialNextCursor = searchResult.nextCursor
   } catch (error) {

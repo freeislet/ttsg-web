@@ -32,7 +32,7 @@ try {
     exactMatch: true,
   })
 
-  if (searchResult.results.length === 0) {
+  if (searchResult.pages.length === 0) {
     throw new Error('위키 페이지를 찾을 수 없습니다.')
   }
 
@@ -40,7 +40,7 @@ try {
   const allVersions = new Set<string>()
   const allLanguages = new Set<string>()
 
-  searchResult.results.forEach((page) => {
+  searchResult.pages.forEach((page) => {
     if (page.version) allVersions.add(page.version)
     if (page.language) allLanguages.add(page.language)
   })
@@ -49,7 +49,7 @@ try {
   availableLanguages = Array.from(allLanguages).sort()
 
   // 현재 요청된 version과 language에 맞는 페이지 찾기
-  let targetPage = searchResult.results.find((page) => {
+  let targetPage = searchResult.pages.find((page) => {
     const versionMatch = version ? page.version === version : !page.version || page.version === ''
     const languageMatch = page.language === language
     return versionMatch && languageMatch
@@ -58,11 +58,11 @@ try {
   // 정확히 일치하는 페이지가 없으면 기본값 사용
   if (!targetPage) {
     // 언어만 맞는 페이지 찾기
-    targetPage = searchResult.results.find((page) => page.language === language)
+    targetPage = searchResult.pages.find((page) => page.language === language)
 
     // 그것도 없으면 첫 번째 페이지 사용
     if (!targetPage) {
-      targetPage = searchResult.results[0]
+      targetPage = searchResult.pages[0]
     }
   }
 

@@ -51,7 +51,7 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
         languages: language ? [language] : undefined,
         versions: version ? [version] : undefined,
       })
-      const pages = searchResults.results
+      const pages = searchResults.pages
 
       if (pages.length === 0) {
         setError('해당 위키 페이지를 찾을 수 없습니다.')

@@ -326,7 +326,7 @@ export interface WikiSearchOptions {
  */
 export interface WikiSearchResult {
   /** 검색된 페이지 목록 */
-  results: NotionPage[]
+  pages: NotionPage[]
   /** 더 많은 결과가 있는지 여부 */
   hasMore: boolean
   /** 다음 페이지를 위한 커서 */
@@ -415,14 +415,14 @@ export async function searchWikiPage(
 
     if (response.results.length === 0) {
       return {
-        results: [],
+        pages: [],
         hasMore: false,
         nextCursor: null,
       }
     }
 
     // 페이지 결과 추출
-    const results = response.results.filter(isPageObjectResponse).map((page) => ({
+    const pages = response.results.filter(isPageObjectResponse).map((page) => ({
       id: page.id,
       url: page.url,
       title: extractTitle(page.properties),
@@ -437,14 +437,14 @@ export async function searchWikiPage(
 
     // 페이지네이션 정보와 함께 결과 반환
     return {
-      results,
+      pages,
       hasMore: response.has_more,
       nextCursor: response.next_cursor,
     }
   } catch (error) {
     console.error('위키 페이지 검색 실패:', error)
     return {
-      results: [],
+      pages: [],
       hasMore: false,
       nextCursor: null,
     }

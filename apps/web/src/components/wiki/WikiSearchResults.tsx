@@ -46,7 +46,7 @@ export default function WikiSearchResults({
       })
 
       // 기존 결과에 새 결과 추가
-      setResults((prev) => [...prev, ...searchResult.results])
+      setResults((prev) => [...prev, ...searchResult.pages])
       setHasMore(searchResult.hasMore)
       setNextCursor(searchResult.nextCursor)
     } catch (err) {
