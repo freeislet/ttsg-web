@@ -66,10 +66,10 @@ const seo = {
       </nav>
 
       <!-- 추천 포스트 섹션 -->
-      <BlogList posts={allPosts} title="⭐ 추천 포스트" featured={true} />
+      <BlogList posts={allPosts} title="⭐ 추천 포스트" featured={true} maxPosts={6} />
 
       <!-- 최신 포스트 섹션 -->
-      <BlogList posts={allPosts} title="최신 포스트" />
+      <BlogList posts={allPosts} title="최신 포스트" maxPosts={6} />
 
       <!-- 카테고리별 미리보기 -->
       {
