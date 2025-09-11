@@ -87,6 +87,7 @@ export default function Wiki() {
     return (
       <div className="space-y-3">
         {pages.map((page, index) => {
+          const url = `/wiki/${encodeURIComponent(page.title)}`
           const color = colors[index % colors.length]
           const date = new Date(page.lastEdited).toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -101,17 +102,17 @@ export default function Wiki() {
             >
               <h3 className="font-medium text-gray-900 flex items-center gap-2">
                 <a
-                  href={`/wiki/${encodeURIComponent(page.title)}`}
+                  href={url}
                   className={`hover:text-${color}-600 transition-colors flex items-center`}
                 >
                   {page.title}
                 </a>
                 <a
-                  href={page.url}
+                  href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-400 hover:text-gray-600 transition-colors"
-                  title="노션에서 보기"
+                  title="새 창에서 보기"
                 >
                   <OpenInNewIcon className="w-4 h-4" />
                 </a>
