@@ -13,13 +13,13 @@ const { currentPage } = Astro.props
   <div class="flex flex-wrap justify-center gap-4">
     <a
       href="/blog/featured"
-      class={`blog-nav-button ${currentPage === 'featured' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+      class={`blog-nav-button ${currentPage === 'featured' ? 'active' : ''}`}
     >
       ⭐ 추천 포스트
     </a>
     <a
       href="/blog/all"
-      class={`blog-nav-button ${currentPage === 'all' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+      class={`blog-nav-button ${currentPage === 'all' ? 'active' : ''}`}
     >
       📚 모든 포스트
     </a>
@@ -27,7 +27,7 @@ const { currentPage } = Astro.props
       Object.entries(categoryData).map(([key, category]) => (
         <a
           href={`/blog/category/${key}`}
-          class={`blog-nav-button ${currentPage === key ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}`}
+          class={`blog-nav-button ${currentPage === key ? 'active' : ''}`}
         >
           {category.name}
         </a>
