@@ -6,6 +6,7 @@ import { Icon } from '@iconify/react'
 import WikiSearchBox from '@/components/wiki/WikiSearchBox'
 import WikiSearchResults from '@/components/wiki/WikiSearchResults'
 import { searchWikiPage, type NotionPage } from '@/lib/notion'
+import type { SEOData } from '@/types/seo'
 
 // URL 파라미터에서 검색어 추출
 const query = Astro.url.searchParams.get('q') || ''
@@ -32,12 +33,27 @@ if (query) {
 // 페이지 메타데이터
 const title = query ? `"${query}" 검색 결과 - TT Wiki` : '위키 검색 - TT Wiki'
 const description = query 
-  ? `"${query}"에 대한 위키 검색 결과를 확인하세요.`
-  : 'TTSG 위키에서 원하는 문서를 검색하세요.'
+  ? `"${query}"에 대한 위키 검색 결과를 확인하세요. TTSG 위키에서 ${initialResults.length}개의 관련 문서를 찾았습니다.`
+  : 'TTSG 위키에서 원하는 문서를 검색하세요. AI 모델별 문서, 기술 가이드, 프로젝트 문서 등을 찾을 수 있습니다.'
+
+// SEO 데이터 구성
+const seoData: Partial<SEOData> = {
+  title,
+  description,
+  keywords: query 
+    ? [`${query}`, 'TTSG', '위키', '검색', '문서', 'AI', ...initialResults.map(r => r.title).slice(0, 3)]
+    : ['TTSG', '위키', '검색', 'AI 문서', '기술 가이드', '프로젝트 문서', '노션'],
+  url: `${Astro.site}wiki/search${query ? `?q=${encodeURIComponent(query)}` : ''}`,
+  image: `${Astro.site}images/og-wiki-search.png`,
+  type: 'website',
+  siteName: 'TTSG Wiki',
+  locale: 'ko_KR'
+}
 ---
 
-<Layout title={title} description={description}>
+<Layout seo={seoData}>
   <Header />
+
   <main class="container mx-auto px-4 py-8 max-w-4xl">
     <!-- 페이지 헤더 -->
     <div class="mb-8">
@@ -50,6 +66,35 @@ const description = query
       <p class="text-lg text-gray-600">
         TTSG 위키에서 원하는 문서를 찾아보세요.
       </p>
+      
+      <!-- 구조화된 데이터 (JSON-LD) -->
+      {query && initialResults.length > 0 && (
+        <script type="application/ld+json" set:html={JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SearchResultsPage",
+          "name": title,
+          "description": description,
+          "url": seoData.url,
+          "mainEntity": {
+            "@type": "ItemList",
+            "numberOfItems": initialResults.length,
+            "itemListElement": initialResults.slice(0, 10).map((result, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Article",
+                "name": result.title,
+                "url": `${Astro.site}wiki/${encodeURIComponent(result.title)}`,
+                "dateModified": result.lastEdited,
+                "author": {
+                  "@type": "Organization",
+                  "name": "TTSG"
+                }
+              }
+            }))
+          }
+        })} />
+      )}
     </div>
 
     <!-- 검색창 -->
@@ -151,6 +196,7 @@ const description = query
       </a>
     </div>
   </main>
+  
   <Footer />
 </Layout>
 
