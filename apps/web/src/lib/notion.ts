@@ -457,7 +457,6 @@ export async function getPagePreview(pageId: string): Promise<string> {
       // 기본 텍스트 블록 처리
       if (block.type === 'paragraph' && block.paragraph?.rich_text) {
         texts.push(block.paragraph.rich_text.map((text: any) => text.plain_text).join(''))
-        console.log(block.paragraph.rich_text)
       }
       // if (block.type === 'heading_1' && block.heading_1?.rich_text) {
       //   texts.push(block.heading_1.rich_text.map((text: any) => text.plain_text).join(''))
