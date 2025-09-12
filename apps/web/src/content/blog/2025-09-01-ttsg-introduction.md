@@ -6,7 +6,7 @@ category: 'misc'
 tags: ['ttsg', 'platform', 'ai', 'knowledge-management']
 author: 'TTSG'
 draft: false
-featured: true
+featured: false
 heroImage: '/assets/images/ttsg-hero.png'
 ---
 

@@ -6,7 +6,7 @@ category: "dev"
 tags: ["notion", "api", "database", "document-management", "typescript", "javascript"]
 author: "TTSG"
 draft: false
-featured: true
+featured: false
 heroImage: "/assets/images/blog/notion-database.png"
 ---
 
