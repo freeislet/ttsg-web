@@ -1,7 +1,7 @@
 ---
 import { marked, Renderer } from 'marked'
 import WikiLayout from '@/layouts/WikiLayout.astro'
-import { getPageContentAsMarkdown, searchWikiPage } from '@/lib/notion'
+import { getPageContentAsMarkdown, searchWikiPages } from '@/lib/notion'
 
 export async function getStaticPaths() {
   // 동적 라우팅을 위해 빈 배열 반환 (SSR 모드에서 처리)
@@ -28,7 +28,7 @@ let currentLanguage: string = 'ko'
 
 try {
   // slug(제목)로 위키 페이지 검색
-  const searchResult = await searchWikiPage(decodeURIComponent(slug), {
+  const searchResult = await searchWikiPages(decodeURIComponent(slug), {
     exactMatch: true,
   })
 

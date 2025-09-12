@@ -5,7 +5,7 @@ import Footer from '@/components/Footer.astro'
 import { Icon } from '@iconify/react'
 import WikiSearchBox from '@/components/wiki/WikiSearchBox'
 import WikiSearchResults from '@/components/wiki/WikiSearchResults'
-import { searchWikiPage, type NotionPage } from '@/lib/notion'
+import { searchWikiPages, type NotionPage } from '@/lib/notion'
 import type { SEOData } from '@/types/seo'
 
 // URL 파라미터에서 검색어 추출
@@ -19,7 +19,7 @@ let searchError: string | null = null
 
 if (query) {
   try {
-    const searchResult = await searchWikiPage(query)
+    const searchResult = await searchWikiPages(query)
     
     initialResults = searchResult.pages
     initialHasMore = searchResult.hasMore

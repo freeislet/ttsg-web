@@ -325,7 +325,7 @@ export interface WikiSearchResult {
  * @param options 검색 옵션 (언어, 버전 필터링, 페이지네이션)
  * @returns 검색 결과 (페이지 목록, 페이지네이션 정보 포함)
  */
-export async function searchWikiPage(
+export async function searchWikiPages(
   title: string,
   options?: WikiSearchOptions
 ): Promise<WikiSearchResult> {

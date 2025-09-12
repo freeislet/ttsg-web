@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { searchWikiPage, type WikiSearchOptions } from '@/lib/notion'
+import { searchWikiPages, type WikiSearchOptions } from '@/lib/notion'
 
 /**
  * 위키 페이지 검색 API 엔드포인트
@@ -72,16 +72,16 @@ export const GET: APIRoute = async ({ url }) => {
 
     // 언어 파라미터가 있으면 쉼표로 분리하여 배열로 추가
     if (languages) {
-      searchOptions.languages = languages.split(',').map(lang => lang.trim() as 'ko' | 'en')
+      searchOptions.languages = languages.split(',').map((lang) => lang.trim() as 'ko' | 'en')
     }
 
     // AI 모델명 파라미터가 있으면 쉼표로 분리하여 배열로 추가
     if (versions) {
-      searchOptions.versions = versions.split(',').map(version => version.trim())
+      searchOptions.versions = versions.split(',').map((version) => version.trim())
     }
 
     // 위키 페이지 검색
-    const searchResult = await searchWikiPage(query, searchOptions)
+    const searchResult = await searchWikiPages(query, searchOptions)
 
     return new Response(
       JSON.stringify({
