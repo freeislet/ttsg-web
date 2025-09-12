@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { searchWikiPages, getWikiPreview, type NotionPage, type Language } from '@/client/wiki'
-import { getLanguageBadgeColor } from '@/types/wiki'
+import VersionLanguageSelector from '@/components/wiki/VersionLanguageSelector'
 import { OpenInNewIcon } from '../icons'
 
 /**
@@ -291,28 +291,11 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
             </div>
 
             {/* Version + Language 선택 옵션 */}
-            <div className="flex flex-wrap gap-1">
-              {allPages.map((page) => (
-                <button
-                  key={`${page.id}-${page.language}-${page.version}`}
-                  onClick={() => handlePageSelect(page)}
-                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
-                    selectedPage?.id === page.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{page.version || 'Unknown'}</span>
-                  {page.language && (
-                    <span
-                      className={`px-1 py-0 rounded text-xs font-medium border ${getLanguageBadgeColor(page.language)}`}
-                    >
-                      {page.language}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+            <VersionLanguageSelector
+              pages={allPages}
+              selectedPageId={selectedPage?.id}
+              onPageSelect={handlePageSelect}
+            />
           </div>
 
           {/* 프리뷰 내용 영역 */}
@@ -333,7 +316,7 @@ export function WikiPreview({ title, position, onClose, onMouseEnter }: WikiPrev
           {/* 액션 */}
           <div className="flex justify-end border-t border-gray-100 pt-1">
             <a
-              href={`/wiki/${encodeURIComponent(data.title)}?version=${data.version ? encodeURIComponent(data.version) : ''}&language=${data.language ? data.language : ''}`}
+              href={`/wiki/${encodeURIComponent(data.title)}?version=${data.version ? encodeURIComponent(data.version) : ''}&language=${data.language}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"

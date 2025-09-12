@@ -4,6 +4,8 @@ import Header from '@/components/Header.astro'
 import Footer from '@/components/Footer.astro'
 import TableOfContents from '@/components/blog/TableOfContents.astro'
 import { WikiLinkProcessor } from '@/components/blog/WikiLinkProcessor'
+import VersionLanguageSelector from '@/components/wiki/VersionLanguageSelector'
+import type { NotionPage } from '@/client/wiki'
 import '@/styles/markdown.css'
 
 export interface Props {
@@ -14,11 +16,9 @@ export interface Props {
   tags?: string[]
   createdDate?: Date
   updatedDate?: Date
-  availableVersions?: string[]
-  availableLanguages?: string[]
-  currentVersion?: string
-  currentLanguage?: string
   notionUrl?: string
+  pages?: NotionPage[]
+  selectedPageId?: string
 }
 
 const {
@@ -29,11 +29,9 @@ const {
   tags = [],
   createdDate,
   updatedDate,
-  availableVersions = [],
-  availableLanguages = [],
-  currentVersion,
-  currentLanguage = 'ko',
   notionUrl,
+  pages = [],
+  selectedPageId,
 } = Astro.props
 
 // SEO를 위한 메타 정보 구성
@@ -106,51 +104,7 @@ const seo = {
               {description && <p class="text-lg text-gray-600 leading-relaxed">{description}</p>}
 
               <!-- 버전 및 언어 선택 -->
-              {
-                (availableVersions.length > 0 || availableLanguages.length > 1) && (
-                  <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div class="flex flex-wrap gap-4 items-center">
-                      {availableVersions.length > 0 && (
-                        <div class="flex items-center gap-2">
-                          <label class="text-sm font-medium text-blue-800">버전:</label>
-                          <select
-                            id="version-select"
-                            class="px-3 py-1 text-sm border border-blue-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            onchange="updateWikiVersion(this.value)"
-                          >
-                            {availableVersions.map((version) => (
-                              <option value={version} selected={version === currentVersion}>
-                                {version}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      {availableLanguages.length > 1 && (
-                        <div class="flex items-center gap-2">
-                          <label class="text-sm font-medium text-blue-800">언어:</label>
-                          <select
-                            id="language-select"
-                            class="px-3 py-1 text-sm border border-blue-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            onchange="updateWikiLanguage(this.value)"
-                          >
-                            {availableLanguages.map((language) => (
-                              <option value={language} selected={language === currentLanguage}>
-                                {language === 'ko'
-                                  ? '한국어'
-                                  : language === 'en'
-                                    ? 'English'
-                                    : language}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              }
+              <VersionLanguageSelector client:load pages={pages} selectedPageId={selectedPageId} />
             </div>
           </header>
 
@@ -212,27 +166,4 @@ const seo = {
   </main>
 
   <Footer />
-
-  <!-- 버전/언어 변경을 위한 JavaScript -->
-  <script>
-    function updateWikiVersion(version: string) {
-      const url = new URL(window.location.href)
-      if (version) {
-        url.searchParams.set('version', version)
-      } else {
-        url.searchParams.delete('version')
-      }
-      window.location.href = url.toString()
-    }
-
-    function updateWikiLanguage(language: string) {
-      const url = new URL(window.location.href)
-      url.searchParams.set('language', language)
-      window.location.href = url.toString()
-    }
-
-    // 전역 함수로 등록
-    ;(window as any).updateWikiVersion = updateWikiVersion
-    ;(window as any).updateWikiLanguage = updateWikiLanguage
-  </script>
 </Layout>

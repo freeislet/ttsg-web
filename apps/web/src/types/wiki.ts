@@ -72,7 +72,7 @@ export interface WikiPreviewResponse {
 /**
  * 언어별 배지 색상 반환
  */
-export const getLanguageBadgeColor = (language: string) => {
+export const getLanguageChipColor = (language: string) => {
   switch (language) {
     case 'ko':
       return 'bg-blue-100 text-blue-800 border-blue-200'

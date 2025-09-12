@@ -1,7 +1,7 @@
 ---
 import { marked, Renderer } from 'marked'
 import WikiLayout from '@/layouts/WikiLayout.astro'
-import { getPageContentAsMarkdown, searchWikiPages } from '@/lib/notion'
+import { getPageContentAsMarkdown, searchWikiPages, type NotionPage } from '@/lib/notion'
 
 export async function getStaticPaths() {
   // 동적 라우팅을 위해 빈 배열 반환 (SSR 모드에서 처리)
@@ -13,18 +13,15 @@ const url = new URL(Astro.request.url)
 const version = url.searchParams.get('version') || undefined
 const language = url.searchParams.get('language') || 'ko'
 
+let title = ''
 let content = ''
 let headings: any[] = []
-let title = ''
 let tags: string[] = []
 let createdDate: Date | undefined
 let updatedDate: Date | undefined
-let availableVersions: string[] = []
-let availableLanguages: string[] = []
-let currentPageId = ''
 let notionUrl = ''
-let currentVersion: string | undefined = undefined
-let currentLanguage: string = 'ko'
+let pages: NotionPage[] = []
+let currentPageId = ''
 
 try {
   // slug(제목)로 위키 페이지 검색
@@ -32,24 +29,14 @@ try {
     exactMatch: true,
   })
 
-  if (searchResult.pages.length === 0) {
+  pages = searchResult.pages
+
+  if (pages.length === 0) {
     throw new Error('위키 페이지를 찾을 수 없습니다.')
   }
 
-  // 모든 버전과 언어 수집
-  const allVersions = new Set<string>()
-  const allLanguages = new Set<string>()
-
-  searchResult.pages.forEach((page) => {
-    if (page.version) allVersions.add(page.version)
-    if (page.language) allLanguages.add(page.language)
-  })
-
-  availableVersions = Array.from(allVersions).sort()
-  availableLanguages = Array.from(allLanguages).sort()
-
   // 현재 요청된 version과 language에 맞는 페이지 찾기
-  let targetPage = searchResult.pages.find((page) => {
+  let targetPage = pages.find((page) => {
     const versionMatch = version ? page.version === version : !page.version || page.version === ''
     const languageMatch = page.language === language
     return versionMatch && languageMatch
@@ -58,11 +45,11 @@ try {
   // 정확히 일치하는 페이지가 없으면 기본값 사용
   if (!targetPage) {
     // 언어만 맞는 페이지 찾기
-    targetPage = searchResult.pages.find((page) => page.language === language)
+    targetPage = pages.find((page) => page.language === language)
 
     // 그것도 없으면 첫 번째 페이지 사용
     if (!targetPage) {
-      targetPage = searchResult.pages[0]
+      targetPage = pages[0]
     }
   }
 
@@ -72,8 +59,6 @@ try {
   createdDate = targetPage.created ? new Date(targetPage.created) : undefined
   updatedDate = targetPage.lastEdited ? new Date(targetPage.lastEdited) : undefined
   notionUrl = targetPage.url
-  currentVersion = targetPage.version
-  currentLanguage = targetPage.language
 
   // 노션 페이지 콘텐츠를 마크다운으로 가져오기
   const markdownContent = await getPageContentAsMarkdown(currentPageId)
@@ -120,11 +105,9 @@ try {
   tags={tags}
   createdDate={createdDate}
   updatedDate={updatedDate}
-  availableVersions={availableVersions}
-  availableLanguages={availableLanguages}
-  currentVersion={currentVersion}
-  currentLanguage={currentLanguage}
   notionUrl={notionUrl}
+  pages={pages}
+  selectedPageId={currentPageId}
 >
   <div set:html={content} />
 </WikiLayout>
