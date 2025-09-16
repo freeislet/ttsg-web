@@ -7,8 +7,8 @@ const WeightVisualizer: React.FC = () => {
   const snap = useSnapshot(modelState)
 
   // 선택된 노드 찾기
-  const selectedNode = snap.nodes.find(node => node.id === snap.selectedNode)
-  
+  const selectedNode = snap.nodes.find((node) => node.id === snap.selectedNode)
+
   // 레이어 노드가 아니거나 가중치가 없으면 기본 메시지 표시
   if (!selectedNode || selectedNode.data.type === 'model' || selectedNode.data.type === 'data') {
     return (
@@ -16,7 +16,12 @@ const WeightVisualizer: React.FC = () => {
         <div className="text-center text-gray-500">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
             </svg>
           </div>
           <p className="text-sm">레이어 노드를 선택하면</p>
@@ -35,7 +40,12 @@ const WeightVisualizer: React.FC = () => {
         <div className="text-center text-gray-500">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
           </div>
           <p className="text-sm">모델을 학습하면</p>
@@ -73,8 +83,12 @@ const WeightVisualizer: React.FC = () => {
         <h3 className="text-lg font-semibold text-gray-800">가중치 매트릭스</h3>
         <p className="text-sm text-gray-600">{selectedNode.data.label}</p>
         <div className="mt-2 text-xs text-gray-500">
-          <span>크기: {rows} × {cols}</span>
-          <span className="ml-4">범위: {minWeight.toFixed(3)} ~ {maxWeight.toFixed(3)}</span>
+          <span>
+            크기: {rows} × {cols}
+          </span>
+          <span className="ml-4">
+            범위: {minWeight.toFixed(3)} ~ {maxWeight.toFixed(3)}
+          </span>
         </div>
       </div>
 
@@ -86,9 +100,12 @@ const WeightVisualizer: React.FC = () => {
             <span>0</span>
             <span>양수 (파랑)</span>
           </div>
-          <div className="h-4 rounded" style={{
-            background: 'linear-gradient(to right, rgb(255,0,0), rgb(255,255,255), rgb(0,0,255))'
-          }} />
+          <div
+            className="h-4 rounded"
+            style={{
+              background: 'linear-gradient(to right, rgb(255,0,0), rgb(255,255,255), rgb(0,0,255))',
+            }}
+          />
         </div>
 
         {/* 가중치 매트릭스 시각화 */}
@@ -105,10 +122,10 @@ const WeightVisualizer: React.FC = () => {
                   if (ctx) {
                     const cellWidth = canvas.width / cols
                     const cellHeight = canvas.height / rows
-                    
+
                     for (let i = 0; i < rows; i++) {
                       for (let j = 0; j < cols; j++) {
-                        const weight = layerData.weights[i][j]
+                        const weight = layerData.weights?.[i][j] ?? 0
                         ctx.fillStyle = weightToColor(weight, minWeight, maxWeight)
                         ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight)
                       }
@@ -119,17 +136,20 @@ const WeightVisualizer: React.FC = () => {
             />
           ) : (
             // 작은 매트릭스는 격자로 표시
-            <div className="grid gap-1" style={{
-              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-              maxWidth: '400px'
-            }}>
+            <div
+              className="grid gap-1"
+              style={{
+                gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                maxWidth: '400px',
+              }}
+            >
               {layerData.weights.map((row, i) =>
                 row.map((weight, j) => (
                   <div
                     key={`${i}-${j}`}
                     className="w-4 h-4 border border-gray-300 rounded-sm"
                     style={{
-                      backgroundColor: weightToColor(weight, minWeight, maxWeight)
+                      backgroundColor: weightToColor(weight, minWeight, maxWeight),
                     }}
                     title={`[${i},${j}]: ${weight.toFixed(4)}`}
                   />
@@ -143,15 +163,19 @@ const WeightVisualizer: React.FC = () => {
         <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
           <div className="bg-gray-50 p-3 rounded">
             <div className="font-medium text-gray-700">평균</div>
-            <div className="text-gray-900">{(allWeights.reduce((a, b) => a + b, 0) / allWeights.length).toFixed(4)}</div>
+            <div className="text-gray-900">
+              {(allWeights.reduce((a, b) => a + b, 0) / allWeights.length).toFixed(4)}
+            </div>
           </div>
           <div className="bg-gray-50 p-3 rounded">
             <div className="font-medium text-gray-700">표준편차</div>
             <div className="text-gray-900">
-              {Math.sqrt(allWeights.reduce((acc, val) => {
-                const mean = allWeights.reduce((a, b) => a + b, 0) / allWeights.length
-                return acc + Math.pow(val - mean, 2)
-              }, 0) / allWeights.length).toFixed(4)}
+              {Math.sqrt(
+                allWeights.reduce((acc, val) => {
+                  const mean = allWeights.reduce((a, b) => a + b, 0) / allWeights.length
+                  return acc + Math.pow(val - mean, 2)
+                }, 0) / allWeights.length
+              ).toFixed(4)}
             </div>
           </div>
         </div>

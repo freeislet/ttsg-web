@@ -1,75 +1,24 @@
 import React from 'react'
 import { Plus, Brain, Database, Layers } from 'lucide-react'
 import { modelActions } from '@/stores/modelStore'
-import { FlowNode, LayerNodeData, ModelNodeData, DataNodeData } from '@/types'
 
 const Sidebar: React.FC = () => {
   const addLayerNode = (type: 'input' | 'hidden' | 'output') => {
-    const id = `${type}-${Date.now()}`
-    const node: FlowNode = {
-      id,
-      type: 'layer',
-      position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: {
-        label: `${type.charAt(0).toUpperCase() + type.slice(1)} Layer`,
-        type,
-        neurons: type === 'input' ? 784 : type === 'output' ? 10 : 128,
-        activation: type === 'output' ? 'softmax' : 'relu',
-        weights: [],
-        biases: [],
-        activations: [],
-        gradients: [],
-      } as LayerNodeData,
-    }
-    modelActions.addNode(node)
+    modelActions.addNode(type, { x: Math.random() * 400, y: Math.random() * 400 })
   }
 
   const addModelNode = () => {
-    const id = `model-${Date.now()}`
-    const node: FlowNode = {
-      id,
-      type: 'model',
-      position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: {
-        label: 'Neural Network',
-        type: 'model',
-        modelType: 'neural-network',
-        hyperparameters: {
-          learningRate: 0.001,
-          epochs: 100,
-          batchSize: 32,
-          optimizer: 'adam',
-          loss: 'categorical-crossentropy',
-        },
-        isCompiled: false,
-        isTrained: false,
-      } as ModelNodeData,
-    }
-    modelActions.addNode(node)
+    modelActions.addNode('model', { x: Math.random() * 400, y: Math.random() * 400 })
   }
 
   const addDataNode = () => {
-    const id = `data-${Date.now()}`
-    const node: FlowNode = {
-      id,
-      type: 'data',
-      position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: {
-        label: 'Training Data',
-        type: 'data',
-        dataType: 'training',
-        shape: [1000, 784],
-        samples: 1000,
-        features: 784,
-      } as DataNodeData,
-    }
-    modelActions.addNode(node)
+    modelActions.addNode('data', { x: Math.random() * 400, y: Math.random() * 400 })
   }
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 p-4">
       <h2 className="text-lg font-semibold mb-4 text-gray-800">노드 팔레트</h2>
-      
+
       {/* 레이어 노드들 */}
       <div className="mb-6">
         <h3 className="text-sm font-medium text-gray-600 mb-2">레이어</h3>
@@ -81,7 +30,7 @@ const Sidebar: React.FC = () => {
             <Layers className="w-4 h-4 text-green-600" />
             <span className="text-sm text-green-800">입력 레이어</span>
           </button>
-          
+
           <button
             onClick={() => addLayerNode('hidden')}
             className="w-full flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
@@ -89,7 +38,7 @@ const Sidebar: React.FC = () => {
             <Layers className="w-4 h-4 text-blue-600" />
             <span className="text-sm text-blue-800">은닉 레이어</span>
           </button>
-          
+
           <button
             onClick={() => addLayerNode('output')}
             className="w-full flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"

@@ -28,12 +28,9 @@ const nodeTypes: NodeTypes = {
 const FlowEditor: React.FC = () => {
   const snap = useSnapshot(modelState)
 
-  const onNodeClick = useCallback(
-    (event: React.MouseEvent, node: any) => {
-      modelActions.setSelectedNode(node.id)
-    },
-    []
-  )
+  const onNodeClick = useCallback((event: React.MouseEvent, node: any) => {
+    modelActions.setSelectedNode(node.id)
+  }, [])
 
   const onPaneClick = useCallback(() => {
     modelActions.setSelectedNode(null)
@@ -42,8 +39,8 @@ const FlowEditor: React.FC = () => {
   return (
     <div className="flex-1 bg-gray-50">
       <ReactFlow
-        nodes={snap.nodes}
-        edges={snap.edges}
+        nodes={snap.nodes as any}
+        edges={snap.edges as any}
         onNodesChange={modelActions.onNodesChange}
         onEdgesChange={modelActions.onEdgesChange}
         onConnect={modelActions.onConnect}
