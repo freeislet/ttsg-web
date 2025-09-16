@@ -11,26 +11,27 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^4.21.0",
+    "@tensorflow/tfjs-vis": "^1.5.1",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.294.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "reactflow": "^11.11.4",
-    "@tensorflow/tfjs": "^4.21.0",
-    "@tensorflow/tfjs-vis": "^1.5.1",
-    "valtio": "^1.11.2",
-    "lucide-react": "^0.294.0",
-    "clsx": "^2.0.0",
+    "shared": "workspace:*",
     "tailwind-merge": "^2.0.0",
-    "shared": "workspace:*"
+    "valtio": "^1.11.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.6.2",
-    "vite": "^5.4.6",
-    "tailwindcss": "^3.4.10",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.45",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.6",
     "wrangler": "^3.78.2"
   }
 }
