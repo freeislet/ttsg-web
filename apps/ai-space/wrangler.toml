@@ -1,0 +1,10 @@
+name = "ai-space"
+compatibility_date = "2024-09-16"
+
+[env.production]
+routes = [
+  { pattern = "ai-space.ttsg.space/*", zone_name = "ttsg.space" }
+]
+
+[[env.production.pages_build_output_dir]]
+name = "dist"
