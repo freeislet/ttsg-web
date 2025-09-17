@@ -7,8 +7,8 @@ import SettingsPanel from './SettingsPanel'
 import 'react-tabs/style/react-tabs.css'
 
 interface BottomPanelProps {
-  /** 패널의 높이 (픽셀 단위) */
-  height: number
+  /** 패널의 높이 (픽셀 단위) - react-resizable-panels 사용 시 선택적 */
+  height?: number
 }
 
 /**
@@ -17,7 +17,10 @@ interface BottomPanelProps {
  */
 const BottomPanel: React.FC<BottomPanelProps> = ({ height }) => {
   return (
-    <div className="bg-gray-800 border-t border-gray-700" style={{ height }}>
+    <div 
+      className="bg-gray-800 border-t border-gray-700 h-full" 
+      style={height ? { height } : undefined}
+    >
       <Tabs className="h-full flex flex-col">
         <TabList className="flex bg-gray-800 border-b border-gray-700 m-0 p-0">
           <Tab className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 cursor-pointer hover:text-gray-300 hover:bg-gray-700 border-none bg-transparent outline-none">
