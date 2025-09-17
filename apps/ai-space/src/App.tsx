@@ -10,11 +10,10 @@ import {
   PanelResizeHandleHorizontal,
   PanelResizeHandleVertical,
 } from '@/components/PanelResize'
-import { useSnapshot } from 'valtio'
-import { modelState } from '@/stores/modelStore'
+import { useModelSnapshot } from '@/stores/modelStore'
 
 function App() {
-  const snap = useSnapshot(modelState)
+  const snap = useModelSnapshot()
 
   return (
     <ReactFlowProvider>

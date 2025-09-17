@@ -1,11 +1,10 @@
 import React from 'react'
-import { useSnapshot } from 'valtio'
 import { Settings, Info, Layers } from 'lucide-react'
-import { modelState } from '@/stores/modelStore'
+import { useModelSnapshot } from '@/stores/modelStore'
 import { LayerNodeData, ModelNodeData, DataNodeData } from '@/types'
 
 const NodeProperties: React.FC = () => {
-  const { selectedNode, nodes } = useSnapshot(modelState)
+  const { selectedNode, nodes } = useModelSnapshot()
 
   const selectedNodeData = selectedNode ? nodes.find((node) => node.id === selectedNode) : null
 

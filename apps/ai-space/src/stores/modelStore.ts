@@ -1,4 +1,4 @@
-import { proxy } from 'valtio'
+import { proxy, useSnapshot } from 'valtio'
 import * as tf from '@tensorflow/tfjs'
 import {
   NodeChange,
@@ -409,4 +409,9 @@ export const modelActions = {
     }
     modelState.compiledModel = null
   },
+}
+
+// 커스텀 훅: 모델 상태 스냅샷 사용
+export const useModelSnapshot = () => {
+  return useSnapshot(modelState)
 }

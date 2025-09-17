@@ -1,10 +1,9 @@
 import React from 'react'
-import { useSnapshot } from 'valtio'
-import { modelState } from '@/stores/modelStore'
+import { useModelSnapshot } from '@/stores/modelStore'
 import { LayerNodeData } from '@/types'
 
 const WeightVisualizer: React.FC = () => {
-  const snap = useSnapshot(modelState)
+  const snap = useModelSnapshot()
 
   // 선택된 노드 찾기
   const selectedNode = snap.nodes.find((node) => node.id === snap.selectedNode)

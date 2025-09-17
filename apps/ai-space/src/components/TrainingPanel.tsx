@@ -1,10 +1,9 @@
 import React from 'react'
-import { useSnapshot } from 'valtio'
 import { Play, Square, RotateCcw, Settings } from 'lucide-react'
-import { modelState, modelActions } from '@/stores/modelStore'
+import { useModelSnapshot, modelActions } from '@/stores/modelStore'
 
 const TrainingPanel: React.FC = () => {
-  const snap = useSnapshot(modelState)
+  const snap = useModelSnapshot()
 
   const handleCompile = async () => {
     try {

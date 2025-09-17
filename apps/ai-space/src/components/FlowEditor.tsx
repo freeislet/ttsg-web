@@ -12,8 +12,7 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 
-import { useSnapshot } from 'valtio'
-import { modelState, modelActions } from '@/stores/modelStore'
+import { useModelSnapshot, modelActions } from '@/stores/modelStore'
 import LayerNode from './nodes/LayerNode'
 import ModelNode from './nodes/ModelNode'
 import DataNode from './nodes/DataNode'
@@ -26,7 +25,7 @@ const nodeTypes: NodeTypes = {
 }
 
 const FlowEditor: React.FC = () => {
-  const snap = useSnapshot(modelState)
+  const snap = useModelSnapshot()
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: any) => {
     modelActions.setSelectedNode(node.id)
