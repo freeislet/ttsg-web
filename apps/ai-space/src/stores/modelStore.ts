@@ -1,5 +1,4 @@
 import { proxy, useSnapshot } from 'valtio'
-import * as tf from '@tensorflow/tfjs'
 import {
   NodeChange,
   EdgeChange,
@@ -8,22 +7,35 @@ import {
   applyEdgeChanges,
   addEdge,
 } from 'reactflow'
-import { FlowNode, LayerNodeData, ModelNodeData, DataNodeData, ModelState, NodeData } from '@/types'
 import {
-  createModelFromNodes,
-  compileModel as compileModelTF,
-  trainModel as trainModelTF,
-  generateSampleData,
-  extractLayerWeights,
-  disposeModel,
-  disposeTensors,
-  getMemoryInfo,
+  FlowNode,
+  ModelState,
+  NodeData,
+  ModelDefinitionNodeData,
+  TrainingNodeData,
+  TrainedModelNodeData,
+  TrainingDataNodeData,
+  NodeType,
+} from '@/types'
+import {
+  createModelFromDefinition,
+  compileModelFromTrainingNode,
+  trainModelFromTrainingNode,
+  generateTrainingData,
+  executeTrainingPipeline,
 } from '@/utils/tensorflow'
+import {
+  createModelDefinitionNode,
+  createTrainingNode,
+  createTrainedModelNode,
+  createTrainingDataNode,
+  createModelTrainingGroup,
+} from '@/utils/nodeFactory'
 import { logInfo, logWarn, logError, logDebug } from '@/store/logStore'
 
-// TensorFlow.js 모델 인스턴스 저장
-let currentModel: tf.Sequential | null = null
-let currentTrainingData: { x: tf.Tensor; y: tf.Tensor } | null = null
+/**
+ * AI Space 모델 상태 관리 (Valtio 기반)
+ */
 
 // valtio 프록시 상태
 export const modelState = proxy<ModelState>({
@@ -38,79 +50,170 @@ export const modelState = proxy<ModelState>({
     currentAccuracy: undefined,
     history: [],
   },
-  compiledModel: null,
+  modelDefinitions: {},
+  trainingSessions: {},
+  trainedModels: {},
+  trainingDatasets: {},
+  nodeGroups: [],
+  activeGroupId: undefined,
 })
 
 // 액션 함수들
 export const modelActions = {
-  // 노드 추가
-  addNode: (
-    type: 'input' | 'hidden' | 'output' | 'model' | 'data',
-    position: { x: number; y: number }
-  ) => {
-    const id = `${type}-${Date.now()}`
-    let data: NodeData
+  // === 새로운 노드 생성 함수들 ===
+
+  // 개별 노드 생성
+  addNode: (type: NodeType, position: { x: number; y: number }, config?: any) => {
+    let newNode: FlowNode
 
     switch (type) {
-      case 'input':
-      case 'hidden':
-      case 'output':
-        data = {
-          type,
-          neurons: type === 'input' ? 784 : type === 'output' ? 10 : 128,
-          activation: type === 'input' ? undefined : 'relu',
-          label:
-            type === 'input' ? '입력 레이어' : type === 'output' ? '출력 레이어' : '히든 레이어',
-        } as LayerNodeData
-        logInfo(`${data.label} 노드가 추가되었습니다 (뉴런: ${data.neurons})`, 'node')
+      case 'model-definition':
+        newNode = createModelDefinitionNode(position, config)
+        modelState.modelDefinitions[newNode.id] = newNode.data as ModelDefinitionNodeData
+        logInfo('모델 정의 노드가 추가되었습니다', 'node')
         break
-      case 'model':
-        data = {
-          type: 'model',
-          modelType: 'neural-network',
-          hyperparameters: {
-            learningRate: 0.001,
-            epochs: 100,
-            batchSize: 32,
-            optimizer: 'adam',
-            loss: 'mse',
-          },
-          label: '모델',
-          isCompiled: false,
-          isTrained: false,
-        } as ModelNodeData
-        logInfo('모델 노드가 추가되었습니다', 'node')
-        break
-      case 'data':
-        data = {
-          type: 'data',
-          dataType: 'training',
-          shape: [1000, 784],
-          samples: 1000,
-          features: 784,
-          label: '데이터',
-        } as DataNodeData
-        logInfo(`데이터 노드가 추가되었습니다 (샘플: ${data.samples})`, 'node')
-        break
-      default:
-        return
-    }
 
-    const newNode: FlowNode = {
-      id,
-      type,
-      position,
-      data,
+      case 'training':
+        if (!config?.modelNodeId) {
+          logError('학습 노드 생성에는 모델 노드 ID가 필요합니다', 'node')
+          return
+        }
+        newNode = createTrainingNode(position, config.modelNodeId, config)
+        modelState.trainingSessions[newNode.id] = newNode.data as TrainingNodeData
+        logInfo('모델 학습 노드가 추가되었습니다', 'node')
+        break
+
+      case 'trained-model':
+        if (!config?.modelId || !config?.trainingId) {
+          logError('학습된 모델 노드 생성에는 모델 ID와 학습 ID가 필요합니다', 'node')
+          return
+        }
+        newNode = createTrainedModelNode(position, config.modelId, config.trainingId, config)
+        modelState.trainedModels[newNode.id] = newNode.data as TrainedModelNodeData
+        logInfo('학습된 모델 노드가 추가되었습니다', 'node')
+        break
+
+      case 'training-data':
+        newNode = createTrainingDataNode(position, config)
+        modelState.trainingDatasets[newNode.id] = newNode.data as TrainingDataNodeData
+        logInfo(
+          `훈련 데이터 노드가 추가되었습니다 (샘플: ${(newNode.data as TrainingDataNodeData).samples})`,
+          'node'
+        )
+        break
+
+      default:
+        logError(`알 수 없는 노드 타입: ${type}`, 'node')
+        return
     }
 
     modelState.nodes.push(newNode)
   },
 
+  // 모델 학습 그룹 생성 (4개 노드 한 번에)
+  addModelTrainingGroup: (position: { x: number; y: number }, config?: any) => {
+    try {
+      const group = createModelTrainingGroup({
+        position,
+        dataConfig: {
+          samples: config?.samples || 1000,
+          inputFeatures: config?.inputFeatures || 4,
+          outputFeatures: config?.outputFeatures || 1,
+          dataType: config?.dataType || 'training',
+        },
+        modelConfig: {
+          modelType: config?.modelType || 'neural-network',
+          layers: config?.layers || [
+            { type: 'dense', units: 64, activation: 'relu' },
+            { type: 'dense', units: 32, activation: 'relu' },
+          ],
+        },
+        trainingConfig: {
+          optimizer: config?.optimizer || 'adam',
+          learningRate: config?.learningRate || 0.001,
+          loss: config?.loss || 'mse',
+          epochs: config?.epochs || 50,
+          batchSize: config?.batchSize || 32,
+        },
+      })
+
+      // 노드들을 상태에 추가
+      group.nodes.forEach((node) => {
+        modelState.nodes.push(node)
+
+        // 각 노드를 해당 상태 객체에도 저장
+        switch (node.data.type) {
+          case 'model-definition':
+            modelState.modelDefinitions[node.id] = node.data as ModelDefinitionNodeData
+            break
+          case 'training':
+            modelState.trainingSessions[node.id] = node.data as TrainingNodeData
+            break
+          case 'trained-model':
+            modelState.trainedModels[node.id] = node.data as TrainedModelNodeData
+            break
+          case 'training-data':
+            modelState.trainingDatasets[node.id] = node.data as TrainingDataNodeData
+            break
+        }
+      })
+
+      // 엣지들을 상태에 추가
+      group.edges.forEach((edge) => {
+        modelState.edges.push(edge)
+      })
+
+      // 노드 그룹 저장
+      modelState.nodeGroups.push(group)
+      modelState.activeGroupId = group.id
+
+      logInfo(`모델 학습 그룹이 생성되었습니다 (${group.nodes.length}개 노드)`, 'node')
+    } catch (error) {
+      logError(`모델 학습 그룹 생성 실패: ${error}`, 'node')
+    }
+  },
+
+  // === 기본 노드 관리 함수들 ===
+
   // 노드 업데이트
   updateNode: <T extends NodeData>(nodeId: string, data: Partial<T>) => {
     const nodeIndex = modelState.nodes.findIndex((node) => node.id === nodeId)
     if (nodeIndex !== -1) {
-      modelState.nodes[nodeIndex].data = { ...modelState.nodes[nodeIndex].data, ...data }
+      const node = modelState.nodes[nodeIndex]
+      modelState.nodes[nodeIndex].data = { ...node.data, ...data }
+
+      // 해당 상태 객체도 업데이트
+      switch (node.data.type) {
+        case 'model-definition':
+          if (modelState.modelDefinitions[nodeId]) {
+            modelState.modelDefinitions[nodeId] = {
+              ...modelState.modelDefinitions[nodeId],
+              ...data,
+            }
+          }
+          break
+        case 'training':
+          if (modelState.trainingSessions[nodeId]) {
+            modelState.trainingSessions[nodeId] = {
+              ...modelState.trainingSessions[nodeId],
+              ...data,
+            }
+          }
+          break
+        case 'trained-model':
+          if (modelState.trainedModels[nodeId]) {
+            modelState.trainedModels[nodeId] = { ...modelState.trainedModels[nodeId], ...data }
+          }
+          break
+        case 'training-data':
+          if (modelState.trainingDatasets[nodeId]) {
+            modelState.trainingDatasets[nodeId] = {
+              ...modelState.trainingDatasets[nodeId],
+              ...data,
+            }
+          }
+          break
+      }
     }
   },
 
@@ -119,6 +222,22 @@ export const modelActions = {
     const node = modelState.nodes.find((n) => n.id === nodeId)
     if (node) {
       logWarn(`${node.data.label} 노드가 삭제되었습니다`, 'node')
+
+      // 해당 상태 객체에서도 제거
+      switch (node.data.type) {
+        case 'model-definition':
+          delete modelState.modelDefinitions[nodeId]
+          break
+        case 'training':
+          delete modelState.trainingSessions[nodeId]
+          break
+        case 'trained-model':
+          delete modelState.trainedModels[nodeId]
+          break
+        case 'training-data':
+          delete modelState.trainingDatasets[nodeId]
+          break
+      }
     }
 
     modelState.nodes = modelState.nodes.filter((node) => node.id !== nodeId)
@@ -129,6 +248,8 @@ export const modelActions = {
       modelState.selectedNode = null
     }
   },
+
+  // === React Flow 이벤트 핸들러들 ===
 
   // 노드 변경 처리
   onNodesChange: (changes: NodeChange[]) => {
@@ -143,6 +264,7 @@ export const modelActions = {
   // 연결 처리
   onConnect: (connection: Connection) => {
     modelState.edges = addEdge(connection, modelState.edges)
+    logDebug(`노드 연결: ${connection.source} → ${connection.target}`, 'connection')
   },
 
   // 노드 선택
@@ -150,248 +272,108 @@ export const modelActions = {
     modelState.selectedNode = nodeId
   },
 
-  // 모델 컴파일
-  compileModel: async () => {
-    try {
-      logInfo('모델 컴파일을 시작합니다...', 'model')
-
-      const modelNode = modelState.nodes.find((node) => node.data.type === 'model')
-      const layerNodes = modelState.nodes
-        .filter((node) => ['input', 'hidden', 'output'].includes(node.data.type))
-        .map((node) => node.data as LayerNodeData)
-        .sort((a, b) => {
-          const order = { input: 0, hidden: 1, output: 2 }
-          return order[a.type] - order[b.type]
-        })
-
-      if (!modelNode || modelNode.data.type !== 'model' || layerNodes.length === 0) {
-        const errorMsg = '모델 노드 또는 레이어 노드가 없습니다'
-        logError(errorMsg, 'model')
-        throw new Error(errorMsg)
-      }
-
-      logDebug(
-        `레이어 구성: ${layerNodes.map((l) => `${l.type}(${l.neurons})`).join(' → ')}`,
-        'model'
-      )
-
-      // 기존 모델 정리
-      if (currentModel) {
-        logDebug('기존 모델을 정리합니다', 'model')
-        disposeModel(currentModel)
-      }
-
-      // 새 모델 생성
-      currentModel = createModelFromNodes(layerNodes)
-      compileModelTF(currentModel, (modelNode.data as ModelNodeData).hyperparameters)
-
-      modelActions.updateNode(modelNode.id, { isCompiled: true })
-      const memInfo = getMemoryInfo()
-      logInfo(
-        `모델 컴파일 완료 (메모리: ${memInfo.numTensors}개 텐서, ${Math.round(memInfo.numBytes / 1024)}KB)`,
-        'model'
-      )
-    } catch (error) {
-      logError(`모델 컴파일 실패: ${error}`, 'model')
-      throw error
+  // 훈련 데이터 생성
+  generateTrainingData: (
+    nodeId: string,
+    dataType: 'linear' | 'classification' | 'polynomial' = 'linear'
+  ) => {
+    const dataNode = modelState.trainingDatasets[nodeId]
+    if (!dataNode) {
+      logError('훈련 데이터 노드를 찾을 수 없습니다', 'data')
+      return
     }
-  },
 
-  // 모델 학습
-  trainModel: async () => {
     try {
-      logInfo('모델 학습을 시작합니다...', 'training')
-
-      const modelNode = modelState.nodes.find((node) => node.data.type === 'model')
-      const dataNode = modelState.nodes.find((node) => node.data.type === 'data')
-
-      if (
-        !modelNode ||
-        modelNode.data.type !== 'model' ||
-        !(modelNode.data as ModelNodeData).isCompiled
-      ) {
-        const errorMsg = '모델이 컴파일되지 않았습니다'
-        logError(errorMsg, 'training')
-        throw new Error(errorMsg)
-      }
-
-      if (!currentModel) {
-        const errorMsg = 'TensorFlow.js 모델이 없습니다'
-        logError(errorMsg, 'training')
-        throw new Error(errorMsg)
-      }
-
-      const hyperparams = (modelNode.data as ModelNodeData).hyperparameters
-      logInfo(
-        `학습 설정: ${hyperparams.epochs}에포크, 배치크기 ${hyperparams.batchSize}, 학습률 ${hyperparams.learningRate}`,
-        'training'
+      const generatedData = generateTrainingData(
+        dataNode.samples,
+        dataNode.inputFeatures,
+        dataNode.outputFeatures,
+        dataType
       )
 
-      modelState.trainingState.isTraining = true
-      modelState.trainingState.totalEpochs = hyperparams.epochs
-      modelState.trainingState.currentEpoch = 0
-      modelState.trainingState.history = []
-
-      // 훈련 데이터 준비
-      if (!currentTrainingData) {
-        const inputNode = modelState.nodes.find((n) => n.data.type === 'input')
-        const outputNode = modelState.nodes.find((n) => n.data.type === 'output')
-        const inputSize = inputNode ? (inputNode.data as LayerNodeData).neurons : 784
-        const outputSize = outputNode ? (outputNode.data as LayerNodeData).neurons : 10
-        const samples = (dataNode?.data as DataNodeData)?.samples || 1000
-
-        logDebug(
-          `훈련 데이터 생성: ${samples}개 샘플, 입력 ${inputSize}차원, 출력 ${outputSize}차원`,
-          'training'
-        )
-        currentTrainingData = generateSampleData(samples, inputSize, outputSize)
-      }
-
-      // 실제 TensorFlow.js 학습
-      await trainModelTF(
-        currentModel,
-        currentTrainingData.x,
-        currentTrainingData.y,
-        hyperparams,
-        (epoch, logs) => {
-          if (!modelState.trainingState.isTraining) return
-
-          modelState.trainingState.currentEpoch = epoch + 1
-          modelState.trainingState.currentLoss = logs?.loss || 0
-          modelState.trainingState.currentAccuracy = logs?.acc || logs?.accuracy || undefined
-
-          modelState.trainingState.history.push({
-            epoch: epoch + 1,
-            loss: logs?.loss || 0,
-            accuracy: logs?.acc || logs?.accuracy || 0,
-          })
-
-          // 10에포크마다 로그 출력
-          if ((epoch + 1) % 10 === 0) {
-            const loss = (logs?.loss || 0).toFixed(4)
-            const acc = logs?.acc || logs?.accuracy
-            const accStr = acc ? `, 정확도: ${(acc * 100).toFixed(1)}%` : ''
-            logInfo(
-              `에포크 ${epoch + 1}/${hyperparams.epochs} - 손실: ${loss}${accStr}`,
-              'training'
-            )
-          }
-
-          // 가중치 추출 및 업데이트
-          modelState.nodes.forEach((node, nodeIndex) => {
-            if (['input', 'hidden', 'output'].includes(node.data.type)) {
-              const layerIndex = Math.floor(nodeIndex / 2)
-              const weights = extractLayerWeights(currentModel!, layerIndex)
-              if (weights) {
-                modelActions.updateNode(node.id, {
-                  weights: weights.weights,
-                  biases: weights.biases,
-                  isActive: true,
-                })
-              }
-            }
-          })
-        }
-      )
-
-      modelState.trainingState.isTraining = false
-      modelActions.updateNode(modelNode.id, { isTrained: true })
-
-      // 모든 레이어 비활성화
-      modelState.nodes.forEach((node) => {
-        if (['input', 'hidden', 'output'].includes(node.data.type)) {
-          modelActions.updateNode(node.id, { isActive: false })
-        }
+      modelActions.updateNode(nodeId, {
+        data: generatedData,
+        dataStats: {
+          inputMean: generatedData.inputs[0]?.map(() => 0), // 간단한 통계 계산
+          inputStd: generatedData.inputs[0]?.map(() => 1),
+        },
       })
 
-      const memInfo = getMemoryInfo()
-      logInfo(
-        `모델 학습 완료 (메모리: ${memInfo.numTensors}개 텐서, ${Math.round(memInfo.numBytes / 1024)}KB)`,
-        'training'
-      )
+      logInfo(`훈련 데이터가 생성되었습니다 (${generatedData.inputs.length}개 샘플)`, 'data')
     } catch (error) {
-      modelState.trainingState.isTraining = false
-      logError(`모델 학습 실패: ${error}`, 'training')
-      throw error
+      logError(`훈련 데이터 생성 실패: ${error}`, 'data')
     }
   },
 
-  // 학습 중단
-  stopTraining: () => {
-    logWarn('사용자가 학습을 중단했습니다', 'training')
-    modelState.trainingState.isTraining = false
-  },
-
-  // 모델 리셋
-  resetModel: () => {
-    logInfo('모델을 리셋합니다...', 'model')
-
-    // TensorFlow.js 모델 정리
-    if (currentModel) {
-      disposeModel(currentModel)
-      currentModel = null
-    }
-
-    if (currentTrainingData) {
-      disposeTensors(currentTrainingData.x, currentTrainingData.y)
-      currentTrainingData = null
-    }
-
-    modelState.trainingState = {
-      isTraining: false,
-      currentEpoch: 0,
-      totalEpochs: 0,
-      currentLoss: 0,
-      currentAccuracy: undefined,
-      history: [],
-    }
-
-    // 모든 노드의 학습 관련 상태 리셋
-    modelState.nodes.forEach((node) => {
-      if (node.data.type === 'model') {
-        modelActions.updateNode(node.id, {
-          isCompiled: false,
-          isTrained: false,
-          trainingProgress: undefined,
-        })
-      } else if (['input', 'hidden', 'output'].includes(node.data.type)) {
-        modelActions.updateNode(node.id, {
-          weights: undefined,
-          biases: undefined,
-          activations: undefined,
-          gradients: undefined,
-          isActive: false,
-          isTraining: false,
-        })
-      }
-    })
-
-    const memInfo = getMemoryInfo()
-    logInfo(
-      `모델 리셋 완료 (메모리: ${memInfo.numTensors}개 텐서, ${Math.round(memInfo.numBytes / 1024)}KB)`,
-      'model'
-    )
-  },
-
-  // 예측 실행
-  predict: async (inputData: number[]) => {
-    if (!currentModel) {
-      throw new Error('모델이 컴파일되지 않았습니다')
+  // 전체 학습 파이프라인 실행
+  executeTrainingPipeline: async (groupId: string) => {
+    const group = modelState.nodeGroups.find((g) => g.id === groupId)
+    if (!group) {
+      logError('노드 그룹을 찾을 수 없습니다', 'training')
+      return
     }
 
     try {
-      const inputTensor = tf.tensor2d([inputData])
-      const prediction = currentModel.predict(inputTensor) as tf.Tensor
-      const result = await prediction.data()
+      // 그룹에서 필요한 노드들 찾기
+      const dataNode = group.nodes.find((n) => n.data.type === 'training-data')
+      const modelDefNode = group.nodes.find((n) => n.data.type === 'model-definition')
+      const trainingNode = group.nodes.find((n) => n.data.type === 'training')
+      const trainedModelNode = group.nodes.find((n) => n.data.type === 'trained-model')
 
-      // 메모리 정리
-      inputTensor.dispose()
-      prediction.dispose()
+      if (!dataNode || !modelDefNode || !trainingNode || !trainedModelNode) {
+        logError('필요한 노드들을 찾을 수 없습니다', 'training')
+        return
+      }
 
-      return Array.from(result)
+      logInfo('전체 학습 파이프라인을 시작합니다...', 'training')
+
+      // 학습 상태 업데이트
+      modelState.trainingState.isTraining = true
+      modelActions.updateNode(trainingNode.id, { isTraining: true })
+
+      const result = await executeTrainingPipeline(
+        modelDefNode.data as ModelDefinitionNodeData,
+        dataNode.data as TrainingDataNodeData,
+        trainingNode.data as TrainingNodeData,
+        (epoch: number, logs: any) => {
+          // 실시간 진행 상황 업데이트
+          modelActions.updateNode(trainingNode.id, {
+            trainingProgress: {
+              epoch,
+              totalEpochs: (trainingNode.data as TrainingNodeData).epochs,
+              loss: logs?.loss || 0,
+              accuracy: logs?.accuracy,
+              valLoss: logs?.val_loss,
+              valAccuracy: logs?.val_accuracy,
+            },
+          })
+
+          modelState.trainingState.currentEpoch = epoch
+          modelState.trainingState.currentLoss = logs?.loss || 0
+          modelState.trainingState.currentAccuracy = logs?.accuracy
+        }
+      )
+
+      // 학습 완료 후 상태 업데이트
+      modelState.trainingState.isTraining = false
+      modelActions.updateNode(trainingNode.id, { isTraining: false })
+      modelActions.updateNode(trainedModelNode.id, {
+        isReady: true,
+        finalLoss: result.finalMetrics.loss,
+        finalAccuracy: result.finalMetrics.accuracy,
+        trainingHistory: {
+          epochs: Array.from({ length: result.history.history.loss.length }, (_, i) => i + 1),
+          loss: result.history.history.loss as number[],
+          accuracy: (result.history.history.acc as number[]) || [],
+          valLoss: (result.history.history.val_loss as number[]) || [],
+          valAccuracy: (result.history.history.val_acc as number[]) || [],
+        },
+      })
+
+      logInfo('전체 학습 파이프라인이 완료되었습니다', 'training')
     } catch (error) {
-      console.error('예측 실패:', error)
-      throw error
+      modelState.trainingState.isTraining = false
+      logError(`학습 파이프라인 실패: ${error}`, 'training')
     }
   },
 
@@ -405,9 +387,17 @@ export const modelActions = {
       currentEpoch: 0,
       totalEpochs: 0,
       currentLoss: 0,
+      currentAccuracy: undefined,
       history: [],
     }
-    modelState.compiledModel = null
+    modelState.modelDefinitions = {}
+    modelState.trainingSessions = {}
+    modelState.trainedModels = {}
+    modelState.trainingDatasets = {}
+    modelState.nodeGroups = []
+    modelState.activeGroupId = undefined
+
+    logInfo('모든 상태가 초기화되었습니다', 'system')
   },
 }
 
