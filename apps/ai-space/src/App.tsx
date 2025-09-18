@@ -1,3 +1,4 @@
+import React from 'react'
 import { ReactFlowProvider } from 'reactflow'
 import { AppHeader } from 'shared'
 import FlowEditor from '@/components/FlowEditor'
@@ -12,8 +13,18 @@ import {
 } from '@/components/PanelResize'
 import { useModelStore } from '@/stores/modelStore'
 
+// 모델 및 노드 자동 등록을 위한 import
+import '@/models/nn'
+
 function App() {
-  const { isLoading, selectedNodeId } = useModelStore()
+  const { isLoading, selectedNodeId, getDebugInfo } = useModelStore()
+
+  // 디버그: 등록된 모델 타입 확인
+  React.useEffect(() => {
+    const debugInfo = getDebugInfo()
+    console.log('🔍 등록된 모델 타입:', debugInfo.registeredModelTypes)
+    console.log('🔍 등록된 노드 타입:', debugInfo.registeredNodeTypes)
+  }, [])
 
   return (
     <ReactFlowProvider>

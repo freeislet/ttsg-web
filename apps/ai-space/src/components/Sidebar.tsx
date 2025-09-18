@@ -1,6 +1,5 @@
 import React from 'react'
 import { useModelStore } from '@/stores/modelStore'
-import { ModelRegistry } from '@/models/ModelRegistry'
 import { 
   Brain, 
   Database, 
@@ -8,7 +7,6 @@ import {
   Trash2, 
   Info,
   Layers,
-  Zap,
   Target
 } from 'lucide-react'
 
@@ -18,14 +16,12 @@ import {
 const Sidebar: React.FC = () => {
   const {
     nodes,
-    edges,
     selectedNodeId,
     addModelNode,
     addTrainingNode,
     addDataNode,
     removeNode,
     clearAll,
-    getAvailableModelTypes,
     getDebugInfo
   } = useModelStore()
 
@@ -35,7 +31,7 @@ const Sidebar: React.FC = () => {
   /**
    * 노드 추가 핸들러
    */
-  const handleAddNode = (type: 'data' | 'model', modelType?: string) => {
+  const handleAddNode = (type: 'data' | 'model' | 'training' | 'trained-model', modelType?: string) => {
     const position = {
       x: Math.random() * 400 + 100,
       y: Math.random() * 300 + 100
@@ -47,6 +43,19 @@ const Sidebar: React.FC = () => {
         break
       case 'model':
         if (modelType) {
+          addModelNode(modelType, position)
+        }
+        break
+      case 'training':
+        if (modelType) {
+          // 임시 모델 ID로 학습 노드 생성
+          const tempModelId = `model-${Date.now()}`
+          addTrainingNode(modelType, position, tempModelId)
+        }
+        break
+      case 'trained-model':
+        if (modelType) {
+          // 임시 모델 ID로 훈련된 모델 노드 생성 (현재는 모델 노드와 동일하게 처리)
           addModelNode(modelType, position)
         }
         break
@@ -88,7 +97,7 @@ const Sidebar: React.FC = () => {
         </h3>
 
         <div className="space-y-2">
-          {/* 데이터 노드 */}
+          {/* 1. 훈련 데이터 노드 */}
           <button
             onClick={() => handleAddNode('data')}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-lg transition-colors"
@@ -97,20 +106,32 @@ const Sidebar: React.FC = () => {
             훈련 데이터
           </button>
 
-          {/* 모델 노드들 */}
-          {getAvailableModelTypes().map(modelType => {
-            const displayName = ModelRegistry.getDisplayName(modelType)
-            return (
-              <button
-                key={modelType}
-                onClick={() => handleAddNode('model', modelType)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
-              >
-                <Brain className="w-4 h-4 text-blue-600" />
-                {displayName}
-              </button>
-            )
-          })}
+          {/* 2. 신경망 모델 노드 */}
+          <button
+            onClick={() => handleAddNode('model', 'neural-network')}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+          >
+            <Brain className="w-4 h-4 text-blue-600" />
+            신경망 모델
+          </button>
+
+          {/* 3. 모델 학습 노드 */}
+          <button
+            onClick={() => handleAddNode('training', 'neural-network')}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
+          >
+            <Play className="w-4 h-4 text-green-600" />
+            모델 학습
+          </button>
+
+          {/* 4. 훈련된 모델 노드 */}
+          <button
+            onClick={() => handleAddNode('trained-model', 'neural-network')}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors"
+          >
+            <Target className="w-4 h-4 text-purple-600" />
+            훈련된 모델
+          </button>
         </div>
       </div>
 
