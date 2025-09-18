@@ -1,44 +1,14 @@
 import { Node, Edge } from 'reactflow'
 
-// 노드 타입 정의
-export type NodeType =
-  | 'model' // 모델 정의 노드
-  | 'training' // 모델 학습 노드
-  | 'trained-model' // 학습된 모델 노드
-  | 'training-data' // 훈련 데이터 노드
+// React Flow 타입 확장
+export type FlowNode = Node<any>
+export type FlowEdge = Edge
 
-// AI 모델 타입
-export type ModelType =
-  | 'neural-network'
-  | 'cnn'
-  | 'rnn'
-  | 'linear-regression'
-  | 'logistic-regression'
-  | 'decision-tree'
-
-// 레이어 타입
-export type LayerType = 'dense' | 'conv2d' | 'lstm' | 'dropout' | 'flatten'
-
-// 활성화 함수 타입 (TensorFlow.js 호환)
-export type ActivationType = 'relu' | 'sigmoid' | 'tanh' | 'linear' | 'softmax'
-
-// 손실 함수 타입
-export type LossType =
-  | 'mse'
-  | 'mae'
-  | 'categorical-crossentropy'
-  | 'binary-crossentropy'
-  | 'sparse-categorical-crossentropy'
-
-// 옵티마이저 타입
-export type OptimizerType = 'adam' | 'sgd' | 'rmsprop' | 'adagrad' | 'adamax'
-
-// 노드 데이터 인터페이스
+// 기본 노드 데이터 인터페이스 (간소화)
 export interface BaseNodeData {
   label: string
-  type: NodeType
-  isTraining?: boolean
-  isActive?: boolean
+  type: string
+  id: string
 }
 
 // 레이어 구성 정보
