@@ -4,10 +4,6 @@
 /* @source "../../../packages/shared/src"; */
 @source "../../../packages/shared/dist";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -57,25 +53,4 @@ body {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
-}
-
-/* 노드 타입별 색상 */
-.node-input {
-  @apply bg-green-100 border-green-300;
-}
-
-.node-hidden {
-  @apply bg-blue-100 border-blue-300;
-}
-
-.node-output {
-  @apply bg-red-100 border-red-300;
-}
-
-.node-model {
-  @apply bg-purple-100 border-purple-300;
-}
-
-.node-data {
-  @apply bg-yellow-100 border-yellow-300;
 }

@@ -63,6 +63,7 @@ const ModelDefinitionNode: React.FC<NodeProps<ModelDefinitionNodeData>> = ({
         px-4 py-3 rounded-lg border-2 min-w-[320px] bg-blue-50 border-blue-300
         ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
         transition-all duration-200
+        text-blue-800
       `}
     >
       {/* 입력 핸들 - 데이터 연결용 */}
@@ -78,7 +79,7 @@ const ModelDefinitionNode: React.FC<NodeProps<ModelDefinitionNodeData>> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-sm text-blue-800">{data.label}</h3>
+          <h3 className="font-semibold text-sm">{data.label}</h3>
         </div>
         <div className="flex items-center gap-1">
           <span className={`text-xs px-2 py-1 rounded-full bg-white ${getModelTypeColor()}`}>

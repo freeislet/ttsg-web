@@ -74,6 +74,7 @@ const TrainedModelNode: React.FC<NodeProps<TrainedModelNodeData>> = ({ id, data,
         px-4 py-3 rounded-lg border-2 min-w-[280px] bg-purple-50 border-purple-300
         ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
         transition-all duration-200
+        text-purple-800
       `}
     >
       {/* 입력 핸들 - 학습 노드에서 연결 */}
@@ -89,7 +90,7 @@ const TrainedModelNode: React.FC<NodeProps<TrainedModelNodeData>> = ({ id, data,
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <CheckCircle className="w-5 h-5 text-purple-600" />
-          <h3 className="font-semibold text-sm text-purple-800">{data.label}</h3>
+          <h3 className="font-semibold text-sm">{data.label}</h3>
         </div>
         <div className="flex items-center gap-1">
           {data.isReady ? (

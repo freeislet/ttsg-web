@@ -50,6 +50,7 @@ const TrainingNode: React.FC<NodeProps<TrainingNodeData>> = ({ id, data, selecte
         ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
         ${data.isTraining ? 'animate-pulse' : ''}
         transition-all duration-200
+        text-green-800
       `}
     >
       {/* 입력 핸들들 */}
@@ -72,7 +73,7 @@ const TrainingNode: React.FC<NodeProps<TrainingNodeData>> = ({ id, data, selecte
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-green-600" />
-          <h3 className="font-semibold text-sm text-green-800">{data.label}</h3>
+          <h3 className="font-semibold text-sm">{data.label}</h3>
         </div>
         <div className="flex items-center gap-1">
           {data.isTraining ? (
