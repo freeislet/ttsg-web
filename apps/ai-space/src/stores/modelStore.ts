@@ -1,7 +1,6 @@
 import { proxy, useSnapshot } from 'valtio'
 import { NodeChange, EdgeChange, Connection, applyNodeChanges, applyEdgeChanges, addEdge } from 'reactflow'
 import { FlowNode, FlowEdge } from '@/types'
-import { ModelRegistry } from '@/models/ModelRegistry'
 import { NodeRegistry } from '@/components/nodes/NodeRegistry'
 
 /**
@@ -175,7 +174,7 @@ export const newModelStore = {
    * 등록된 모델 타입 가져오기
    */
   getAvailableModelTypes: () => {
-    return ModelRegistry.getRegisteredTypes()
+    return NodeRegistry.getRegisteredTypes()
   },
   
   /**
@@ -266,7 +265,7 @@ export const newModelStore = {
     nodeCount: newModelState.nodes.length,
     edgeCount: newModelState.edges.length,
     modelInstanceCount: newModelState.modelInstances.size,
-    registeredModelTypes: ModelRegistry.getRegisteredTypes(),
+    registeredModelTypes: NodeRegistry.getRegisteredTypes(),
     registeredNodeTypes: NodeRegistry.getRegisteredTypes()
   })
 }

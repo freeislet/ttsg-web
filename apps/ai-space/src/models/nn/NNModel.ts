@@ -1,5 +1,4 @@
 import * as tf from '@tensorflow/tfjs'
-import { ModelBase, ModelFactory } from '../ModelBase'
 
 /**
  * 레이어 설정 인터페이스
@@ -50,43 +49,51 @@ export interface TrainingResult {
 }
 
 /**
- * 신경망 모델 클래스
- * 기본적인 Dense 레이어 기반 신경망을 구현
+ * 신경망 모델 정의 클래스
+ * 모델 구조만 정의하고, 실제 tf.Sequential 인스턴스는 학습 시점에 생성
  */
-export class NNModel extends ModelBase {
+export class NNModel {
+  readonly id: string
   readonly modelType = 'neural-network'
   readonly displayName = '신경망 모델'
+  readonly createdAt: Date
   
-  private config: NNModelConfig
-  private trainingConfig?: NNTrainingConfig
-  private trainingResult?: TrainingResult
+  public inputShapes: number[] | 'auto'
+  public layers: LayerConfig[]
+  public outputUnits: number
+  public name?: string
   
   constructor(config: NNModelConfig, id?: string) {
-    super(id)
-    this.config = config
+    this.id = id || `nn_model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    this.createdAt = new Date()
+    this.inputShapes = config.inputShape
+    this.layers = config.layers
+    this.outputUnits = config.outputUnits
+    this.name = config.name
   }
   
   /**
-   * 모델 생성
+   * TensorFlow.js 모델 생성
+   * 매번 새로운 인스턴스를 생성하여 반환
    */
-  async createModel(): Promise<tf.Sequential> {
+  createTFModel(): tf.Sequential {
     const model = tf.sequential({
-      name: this.config.name || `nn_model_${this.id}`
+      name: this.name || `nn_model_${this.id}`
     })
     
     // 첫 번째 레이어 (입력 형태 지정)
-    const firstLayer = this.config.layers[0]
+    const firstLayer = this.layers[0]
     if (firstLayer && firstLayer.type === 'dense') {
       model.add(tf.layers.dense({
-        inputShape: this.config.inputShape,
+        inputShape: this.inputShapes as number[],
         units: firstLayer.units || 32,
         activation: firstLayer.activation || 'relu'
       }))
     }
     
     // 나머지 레이어들 추가
-    for (let i = 1; i < this.config.layers.length; i++) {
-      const layerConfig = this.config.layers[i]
+    for (let i = 1; i < this.layers.length; i++) {
+      const layerConfig = this.layers[i]
       
       switch (layerConfig.type) {
         case 'dense':
@@ -110,82 +117,68 @@ export class NNModel extends ModelBase {
     
     // 출력 레이어 추가
     model.add(tf.layers.dense({
-      units: this.config.outputUnits,
-      activation: this.config.outputUnits === 1 ? 'sigmoid' : 'softmax'
+      units: this.outputUnits,
+      activation: this.outputUnits === 1 ? 'sigmoid' : 'softmax'
     }))
     
-    this.model = model
     console.log(`🧠 Neural Network model created: ${this.id}`)
     return model
   }
   
   /**
-   * 모델 컴파일
-   */
-  async compile(config: NNTrainingConfig): Promise<void> {
-    if (!this.model) {
-      throw new Error('Model must be created before compilation')
-    }
-    
-    this.trainingConfig = config
-    
-    // 옵티마이저 설정
-    let optimizer: tf.Optimizer
-    switch (config.optimizer) {
-      case 'adam':
-        optimizer = tf.train.adam(config.learningRate)
-        break
-      case 'sgd':
-        optimizer = tf.train.sgd(config.learningRate)
-        break
-      case 'rmsprop':
-        optimizer = tf.train.rmsprop(config.learningRate)
-        break
-      default:
-        optimizer = tf.train.adam(config.learningRate)
-    }
-    
-    // 모델 컴파일
-    this.model.compile({
-      optimizer,
-      loss: config.loss,
-      metrics: config.metrics || ['accuracy']
-    })
-    
-    this._isCompiled = true
-    console.log(`⚙️ Model compiled: ${this.id}`)
-  }
-  
-  /**
-   * 모델 학습
+   * 모델 학습 실행
+   * 새로운 tf.Sequential 인스턴스를 생성하고 학습하여 반환
    */
   async train(
     trainX: tf.Tensor, 
     trainY: tf.Tensor, 
-    config?: Partial<NNTrainingConfig>
-  ): Promise<TrainingResult> {
-    if (!this.model || !this._isCompiled) {
-      throw new Error('Model must be created and compiled before training')
-    }
-    
-    const finalConfig = { ...this.trainingConfig, ...config } as NNTrainingConfig
-    
+    trainingConfig: NNTrainingConfig,
+    onProgress?: (epoch: number, logs: any) => void
+  ): Promise<{ model: tf.Sequential; result: TrainingResult }> {
     console.log(`🏃 Starting training: ${this.id}`)
     
-    const history = await this.model.fit(trainX, trainY, {
-      epochs: finalConfig.epochs,
-      batchSize: finalConfig.batchSize,
-      validationSplit: finalConfig.validationSplit || 0.2,
+    // 새로운 모델 인스턴스 생성
+    const model = this.createTFModel()
+    
+    // 옵티마이저 설정
+    let optimizer: tf.Optimizer
+    switch (trainingConfig.optimizer) {
+      case 'adam':
+        optimizer = tf.train.adam(trainingConfig.learningRate)
+        break
+      case 'sgd':
+        optimizer = tf.train.sgd(trainingConfig.learningRate)
+        break
+      case 'rmsprop':
+        optimizer = tf.train.rmsprop(trainingConfig.learningRate)
+        break
+      default:
+        optimizer = tf.train.adam(trainingConfig.learningRate)
+    }
+    
+    // 모델 컴파일
+    model.compile({
+      optimizer,
+      loss: trainingConfig.loss,
+      metrics: trainingConfig.metrics || ['accuracy']
+    })
+    
+    // 학습 실행
+    const history = await model.fit(trainX, trainY, {
+      epochs: trainingConfig.epochs,
+      batchSize: trainingConfig.batchSize,
+      validationSplit: trainingConfig.validationSplit || 0.2,
       verbose: 1,
       callbacks: {
-        onEpochEnd: (epoch, logs) => {
-          console.log(`Epoch ${epoch + 1}/${finalConfig.epochs} - loss: ${logs?.loss?.toFixed(4)} - accuracy: ${logs?.accuracy?.toFixed(4)}`)
+        onEpochEnd: (epoch: number, logs: any) => {
+          console.log(`Epoch ${epoch + 1}/${trainingConfig.epochs} - loss: ${logs?.loss?.toFixed(4)} - accuracy: ${logs?.accuracy?.toFixed(4)}`)
+          onProgress?.(epoch, logs)
         }
       }
     })
     
-    // 학습 결과 저장
-    this.trainingResult = {
+    // 학습 결과 생성
+    const result: TrainingResult = {
       history: {
         loss: history.history.loss as number[],
         accuracy: history.history.accuracy as number[],
@@ -194,78 +187,56 @@ export class NNModel extends ModelBase {
       },
       finalLoss: (history.history.loss as number[]).slice(-1)[0],
       finalAccuracy: (history.history.accuracy as number[])?.slice(-1)[0],
-      epochs: finalConfig.epochs
+      epochs: trainingConfig.epochs
     }
     
-    this._isTrained = true
     console.log(`✅ Training completed: ${this.id}`)
     
-    return this.trainingResult
-  }
-  
-  /**
-   * 예측 수행
-   */
-  async predict(input: tf.Tensor): Promise<tf.Tensor> {
-    if (!this.model || !this._isTrained) {
-      throw new Error('Model must be trained before prediction')
-    }
-    
-    return this.model.predict(input) as tf.Tensor
+    return { model, result }
   }
   
   /**
    * 모델 설정 반환
    */
   getConfig(): NNModelConfig {
-    return { ...this.config }
+    return {
+      inputShape: this.inputShapes as number[],
+      outputUnits: this.outputUnits,
+      layers: [...this.layers],
+      name: this.name
+    }
   }
   
   /**
-   * 학습 설정 반환
-   */
-  getTrainingConfig(): NNTrainingConfig | undefined {
-    return this.trainingConfig ? { ...this.trainingConfig } : undefined
-  }
-  
-  /**
-   * 학습 결과 반환
-   */
-  getTrainingResult(): TrainingResult | undefined {
-    return this.trainingResult ? { ...this.trainingResult } : undefined
-  }
-  
-  /**
-   * 모델 직렬화 (확장)
+   * 모델 정의 직렬화
    */
   serialize(): any {
     return {
-      ...super.serialize(),
-      config: this.config,
-      trainingConfig: this.trainingConfig,
-      trainingResult: this.trainingResult
+      id: this.id,
+      modelType: this.modelType,
+      displayName: this.displayName,
+      createdAt: this.createdAt.toISOString(),
+      inputShapes: this.inputShapes,
+      layers: this.layers,
+      outputUnits: this.outputUnits,
+      name: this.name
     }
   }
 }
 
 /**
- * 신경망 모델 팩토리
+ * 신경망 모델 팩토리 함수
  */
-export const NNModelFactory: ModelFactory<NNModel> = {
-  modelType: 'neural-network',
-  displayName: '신경망 모델',
-  
-  create(config?: Partial<NNModelConfig>): NNModel {
-    const defaultConfig: NNModelConfig = {
-      inputShape: [10],
-      outputUnits: 1,
-      layers: [
-        { type: 'dense', units: 64, activation: 'relu' },
-        { type: 'dense', units: 32, activation: 'relu' }
-      ],
-      ...config
-    }
-    
-    return new NNModel(defaultConfig)
+export const createNNModel = (config?: Partial<NNModelConfig>): NNModel => {
+  const defaultConfig: NNModelConfig = {
+    inputShape: [10],
+    outputUnits: 1,
+    layers: [
+      { type: 'dense', units: 64, activation: 'relu' },
+      { type: 'dense', units: 32, activation: 'relu' }
+    ],
+    ...config
   }
+  
+  return new NNModel(defaultConfig)
 }

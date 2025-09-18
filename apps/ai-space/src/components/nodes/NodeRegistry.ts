@@ -1,11 +1,10 @@
 import React from 'react'
 import { NodeProps } from 'reactflow'
-import { ModelBase } from '@/models/ModelBase'
 
 /**
- * 노드 컴포넌트 팩토리 인터페이스
+ * 노드 컴포넌트 팩토리 인터페이스 (레거시)
  */
-export interface NodeComponentFactory<T extends ModelBase = ModelBase> {
+export interface NodeComponentFactory {
   modelType: string
   displayName: string
   
@@ -19,16 +18,39 @@ export interface NodeComponentFactory<T extends ModelBase = ModelBase> {
 }
 
 /**
+ * 개별 노드 팩토리 인터페이스들
+ */
+export interface ModelNodeFactory {
+  nodeType: string
+  displayName: string
+  ModelNodeComponent: React.ComponentType<NodeProps<any>>
+  createModelNode: (position: { x: number; y: number }, config?: any) => any
+}
+
+export interface TrainingNodeFactory {
+  nodeType: string
+  displayName: string
+  TrainingNodeComponent: React.ComponentType<NodeProps<any>>
+  createTrainingNode: (position: { x: number; y: number }, modelId: string, config?: any) => any
+}
+
+export interface TrainedModelNodeFactory {
+  nodeType: string
+  displayName: string
+  createTrainedModelNode: (position: { x: number; y: number }, ...args: any[]) => any
+}
+
+/**
  * 노드 레지스트리
  * 모든 노드 컴포넌트와 팩토리를 등록하고 관리
  */
 export class NodeRegistry {
-  private static factories = new Map<string, NodeComponentFactory<any>>()
+  private static factories = new Map<string, NodeComponentFactory>()
   
   /**
    * 노드 컴포넌트 팩토리 등록
    */
-  static register<T extends ModelBase>(factory: NodeComponentFactory<T>): void {
+  static register(factory: NodeComponentFactory): void {
     if (this.factories.has(factory.modelType)) {
       console.warn(`Node factory for '${factory.modelType}' is already registered. Overwriting...`)
     }
