@@ -1,14 +1,6 @@
 import React from 'react'
 import { useModelStore } from '@/stores/modelStore'
-import { 
-  Brain, 
-  Database, 
-  Play, 
-  Trash2, 
-  Info,
-  Layers,
-  Target
-} from 'lucide-react'
+import { Brain, Database, Play, Trash2, Info, Layers, Target } from 'lucide-react'
 
 /**
  * 사이드바 컴포넌트
@@ -22,19 +14,22 @@ const Sidebar: React.FC = () => {
     addDataNode,
     removeNode,
     clearAll,
-    getDebugInfo
+    getDebugInfo,
   } = useModelStore()
 
   const debugInfo = getDebugInfo()
-  const selectedNode = nodes.find(node => node.id === selectedNodeId)
+  const selectedNode = nodes.find((node) => node.id === selectedNodeId)
 
   /**
    * 노드 추가 핸들러
    */
-  const handleAddNode = (type: 'data' | 'model' | 'training' | 'trained-model', modelType?: string) => {
+  const handleAddNode = (
+    type: 'data' | 'model' | 'training' | 'trained-model',
+    modelType?: string
+  ) => {
     const position = {
       x: Math.random() * 400 + 100,
-      y: Math.random() * 300 + 100
+      y: Math.random() * 300 + 100,
     }
 
     switch (type) {
@@ -70,7 +65,7 @@ const Sidebar: React.FC = () => {
 
     const position = {
       x: selectedNode.position.x + 350,
-      y: selectedNode.position.y
+      y: selectedNode.position.y,
     }
 
     // 모델 타입 추출
@@ -100,36 +95,36 @@ const Sidebar: React.FC = () => {
           {/* 1. 훈련 데이터 노드 */}
           <button
             onClick={() => handleAddNode('data')}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-lg transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-yellow-600 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-lg transition-colors"
           >
-            <Database className="w-4 h-4 text-yellow-600" />
+            <Database className="w-4 h-4" />
             훈련 데이터
           </button>
 
           {/* 2. 신경망 모델 노드 */}
           <button
             onClick={() => handleAddNode('model', 'neural-network')}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
           >
-            <Brain className="w-4 h-4 text-blue-600" />
+            <Brain className="w-4 h-4" />
             신경망 모델
           </button>
 
           {/* 3. 모델 학습 노드 */}
           <button
             onClick={() => handleAddNode('training', 'neural-network')}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
           >
-            <Play className="w-4 h-4 text-green-600" />
+            <Play className="w-4 h-4" />
             모델 학습
           </button>
 
           {/* 4. 훈련된 모델 노드 */}
           <button
             onClick={() => handleAddNode('trained-model', 'neural-network')}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors"
           >
-            <Target className="w-4 h-4 text-purple-600" />
+            <Target className="w-4 h-4" />
             훈련된 모델
           </button>
         </div>
