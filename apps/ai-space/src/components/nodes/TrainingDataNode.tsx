@@ -237,6 +237,40 @@ const TrainingDataNode: React.FC<NodeProps<TrainingDataNodeData>> = ({ id, data,
         </button>
       </div>
 
+      {/* 데이터 형태 출력 - 모델 정의의 inputShape로 연결 */}
+      <div className="relative">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-yellow-700">데이터 형태:</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-mono">[{data.shape.join(', ')}]</span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="dataShape"
+              className="w-2 h-2 bg-yellow-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 출력 클래스 수 - 모델 정의의 outputUnits로 연결 */}
+      <div className="relative mt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-yellow-700">출력 클래스:</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-mono">{data.outputClasses || 10}</span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="outputClasses"
+              className="w-2 h-2 bg-yellow-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* 출력 핸들 */}
       <Handle
         type="source"

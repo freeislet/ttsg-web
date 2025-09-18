@@ -135,6 +135,8 @@ export const createTrainingDataNode = (
     dataType: 'training',
     inputShape: [1000, 4],
     outputShape: [1000, 1],
+    shape: [1000, 4], // inputShape와 동일
+    outputClasses: 10, // 기본 10개 클래스
     samples: 1000,
     inputFeatures: 4,
     outputFeatures: 1,

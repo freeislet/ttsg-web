@@ -53,21 +53,43 @@ const TrainingNode: React.FC<NodeProps<TrainingNodeData>> = ({ id, data, selecte
         text-green-800
       `}
     >
-      {/* 입력 핸들들 */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="model-input"
-        style={{ top: '30%' }}
-        className="w-3 h-3 bg-blue-400 border-2 border-white"
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="data-input"
-        style={{ top: '70%' }}
-        className="w-3 h-3 bg-yellow-400 border-2 border-white"
-      />
+      {/* 모델 구성 입력 - 모델 정의 노드에서 */}
+      <div className="relative mb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="modelConfig"
+              className="w-2 h-2 bg-green-500 border border-white relative"
+              style={{ position: 'relative', left: -8, top: 0 }}
+            />
+            <span className="text-xs text-green-700">모델 구성:</span>
+          </div>
+          <span className="text-xs font-mono">
+            {data.connectedModelNodeId ? '연결됨' : '대기 중'}
+          </span>
+        </div>
+      </div>
+
+      {/* 데이터 입력 - 훈련 데이터 노드에서 */}
+      <div className="relative mb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="trainingData"
+              className="w-2 h-2 bg-green-500 border border-white relative"
+              style={{ position: 'relative', left: -8, top: 0 }}
+            />
+            <span className="text-xs text-green-700">훈련 데이터:</span>
+          </div>
+          <span className="text-xs font-mono">
+            {data.connectedDataNodeId ? '연결됨' : '대기 중'}
+          </span>
+        </div>
+      </div>
 
       {/* 노드 헤더 */}
       <div className="flex items-center justify-between mb-3">
@@ -248,6 +270,44 @@ const TrainingNode: React.FC<NodeProps<TrainingNodeData>> = ({ id, data, selecte
             <Square className="w-3 h-3" />
           </button>
         )}
+      </div>
+
+      {/* 학습된 모델 출력 - 학습된 모델 노드로 */}
+      <div className="relative mt-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-green-700">학습된 모델:</span>
+          <div className="flex items-center gap-1">
+            <span className={`text-xs ${data.isTraining ? 'text-orange-600' : data.trainingProgress ? 'text-green-600' : 'text-gray-500'}`}>
+              {data.isTraining ? '학습 중' : data.trainingProgress ? '완료' : '대기'}
+            </span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="trainedModel"
+              className="w-2 h-2 bg-green-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 학습 메트릭 출력 - 분석용 */}
+      <div className="relative mt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-green-700">학습 메트릭:</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-mono">
+              {data.trainingProgress ? `${data.trainingProgress.loss.toFixed(4)}` : 'N/A'}
+            </span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="trainingMetrics"
+              className="w-2 h-2 bg-green-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* 출력 핸들 - 학습된 모델로 연결 */}

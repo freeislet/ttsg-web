@@ -77,14 +77,43 @@ const TrainedModelNode: React.FC<NodeProps<TrainedModelNodeData>> = ({ id, data,
         text-purple-800
       `}
     >
-      {/* 입력 핸들 - 학습 노드에서 연결 */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="training-input"
-        className="w-3 h-3 bg-green-400 border-2 border-white"
-        style={{ top: '50%' }}
-      />
+      {/* 학습된 모델 입력 - 학습 노드에서 */}
+      <div className="relative mb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="trainedModel"
+              className="w-2 h-2 bg-purple-500 border border-white relative"
+              style={{ position: 'relative', left: -8, top: 0 }}
+            />
+            <span className="text-xs text-purple-700">학습된 모델:</span>
+          </div>
+          <span className="text-xs font-mono">
+            {data.modelId ? data.modelId.slice(-8) : 'N/A'}
+          </span>
+        </div>
+      </div>
+
+      {/* 학습 메트릭 입력 - 학습 노드에서 */}
+      <div className="relative mb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="trainingMetrics"
+              className="w-2 h-2 bg-purple-500 border border-white relative"
+              style={{ position: 'relative', left: -8, top: 0 }}
+            />
+            <span className="text-xs text-purple-700">학습 메트릭:</span>
+          </div>
+          <span className="text-xs font-mono">
+            {data.finalLoss ? data.finalLoss.toFixed(4) : 'N/A'}
+          </span>
+        </div>
+      </div>
 
       {/* 노드 헤더 */}
       <div className="flex items-center justify-between mb-3">
@@ -202,14 +231,43 @@ const TrainedModelNode: React.FC<NodeProps<TrainedModelNodeData>> = ({ id, data,
         </div>
       </div>
 
-      {/* 출력 핸들 - 추가 분석이나 배포용 */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="model-output"
-        className="w-3 h-3 bg-purple-400 border-2 border-white"
-        style={{ top: '50%' }}
-      />
+      {/* 예측 결과 출력 - 외부 시스템으로 */}
+      <div className="relative mt-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-purple-700">예측 결과:</span>
+          <div className="flex items-center gap-1">
+            <span className={`text-xs ${data.isReady ? 'text-green-600' : 'text-gray-500'}`}>
+              {data.isReady ? '사용 가능' : '대기 중'}
+            </span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="predictions"
+              className="w-2 h-2 bg-purple-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 모델 내보내기 출력 - 배포용 */}
+      <div className="relative mt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-purple-700">모델 파일:</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-mono">
+              {data.isReady ? 'TF.js' : 'N/A'}
+            </span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="modelExport"
+              className="w-2 h-2 bg-purple-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

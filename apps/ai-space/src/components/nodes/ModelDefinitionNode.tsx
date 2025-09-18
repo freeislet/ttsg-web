@@ -66,14 +66,43 @@ const ModelDefinitionNode: React.FC<NodeProps<ModelDefinitionNodeData>> = ({
         text-blue-800
       `}
     >
-      {/* 입력 핸들 - 데이터 연결용 */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="data-input"
-        className="w-3 h-3 bg-yellow-400 border-2 border-white"
-        style={{ top: '50%' }}
-      />
+      {/* 입력 형태 연결 - 훈련 데이터의 dataShape에서 */}
+      <div className="relative mb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="inputShape"
+              className="w-2 h-2 bg-blue-500 border border-white relative"
+              style={{ position: 'relative', left: -8, top: 0 }}
+            />
+            <span className="text-xs text-blue-700">입력 형태:</span>
+          </div>
+          <span className="text-xs font-mono">
+            {Array.isArray(data.inputShape) ? `[${data.inputShape.join(', ')}]` : data.inputShape}
+          </span>
+        </div>
+      </div>
+
+      {/* 출력 유닛 연결 - 훈련 데이터의 outputClasses에서 */}
+      <div className="relative mb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="outputUnits"
+              className="w-2 h-2 bg-blue-500 border border-white relative"
+              style={{ position: 'relative', left: -8, top: 0 }}
+            />
+            <span className="text-xs text-blue-700">출력 유닛:</span>
+          </div>
+          <span className="text-xs font-mono">
+            {typeof data.outputUnits === 'number' ? data.outputUnits : data.outputUnits}
+          </span>
+        </div>
+      </div>
 
       {/* 노드 헤더 */}
       <div className="flex items-center justify-between mb-3">
@@ -183,14 +212,41 @@ const ModelDefinitionNode: React.FC<NodeProps<ModelDefinitionNodeData>> = ({
         모델 학습 노드 생성
       </button>
 
-      {/* 출력 핸들 - 학습 노드로 연결 */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="model-output"
-        className="w-3 h-3 bg-blue-400 border-2 border-white"
-        style={{ top: '50%' }}
-      />
+      {/* 모델 구성 출력 - 학습 노드의 modelDefinition으로 */}
+      <div className="relative mt-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-blue-700">모델 구성:</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-mono">{data.layers.length}개 레이어</span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="modelConfig"
+              className="w-2 h-2 bg-blue-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 컴파일 상태 출력 - 학습 노드로 */}
+      <div className="relative mt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-blue-700">컴파일 상태:</span>
+          <div className="flex items-center gap-1">
+            <span className={`text-xs ${data.isCompiled ? 'text-green-600' : 'text-gray-500'}`}>
+              {data.isCompiled ? '완료' : '대기'}
+            </span>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id="compiledModel"
+              className="w-2 h-2 bg-blue-500 border border-white relative"
+              style={{ position: 'relative', right: -8, top: 0 }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

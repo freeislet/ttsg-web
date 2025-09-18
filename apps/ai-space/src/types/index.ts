@@ -121,6 +121,8 @@ export interface TrainingDataNodeData extends BaseNodeData {
   // 데이터 형태
   inputShape: number[] // [samples, features]
   outputShape: number[] // [samples, labels]
+  shape: number[] // 호환성을 위한 별칭 (inputShape와 동일)
+  outputClasses: number // 출력 클래스 수
   // 실제 데이터
   data?: {
     inputs: number[][]
