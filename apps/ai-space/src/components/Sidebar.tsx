@@ -1,146 +1,217 @@
 import React from 'react'
-import { Brain, Database, TrendingUp, CheckCircle, Zap } from 'lucide-react'
-import { modelActions } from '@/stores/modelStore'
+import { useModelStore } from '@/stores/modelStore'
+import { ModelRegistry } from '@/models/ModelRegistry'
+import { 
+  Brain, 
+  Database, 
+  Play, 
+  Trash2, 
+  Info,
+  Layers,
+  Zap,
+  Target
+} from 'lucide-react'
 
+/**
+ * 사이드바 컴포넌트
+ */
 const Sidebar: React.FC = () => {
-  // 개별 노드 추가 함수들
-  const addTrainingDataNode = () => {
-    modelActions.addNode('training-data', { x: Math.random() * 400, y: Math.random() * 400 })
+  const {
+    nodes,
+    edges,
+    selectedNodeId,
+    addModelNode,
+    addTrainingNode,
+    addDataNode,
+    removeNode,
+    clearAll,
+    getAvailableModelTypes,
+    getDebugInfo
+  } = useModelStore()
+
+  const debugInfo = getDebugInfo()
+  const selectedNode = nodes.find(node => node.id === selectedNodeId)
+
+  /**
+   * 노드 추가 핸들러
+   */
+  const handleAddNode = (type: 'data' | 'model', modelType?: string) => {
+    const position = {
+      x: Math.random() * 400 + 100,
+      y: Math.random() * 300 + 100
+    }
+
+    switch (type) {
+      case 'data':
+        addDataNode(position)
+        break
+      case 'model':
+        if (modelType) {
+          addModelNode(modelType, position)
+        }
+        break
+    }
   }
 
-  const addModelNode = () => {
-    modelActions.addNode('model', { x: Math.random() * 400, y: Math.random() * 400 })
-  }
+  /**
+   * 학습 노드 추가 (선택된 모델 노드 기준)
+   */
+  const handleAddTrainingNode = () => {
+    if (!selectedNode || !selectedNode.data?.modelId) return
 
-  const addTrainingNode = () => {
-    // 학습 노드는 모델 정의 노드가 필요하므로 기본 모델 ID 생성
-    const modelNodeId = `model_def_${Date.now()}`
-    modelActions.addNode(
-      'training',
-      { x: Math.random() * 400, y: Math.random() * 400 },
-      { modelNodeId }
-    )
-  }
+    const position = {
+      x: selectedNode.position.x + 350,
+      y: selectedNode.position.y
+    }
 
-  const addTrainedModelNode = () => {
-    // 학습된 모델 노드는 모델 ID와 학습 ID가 필요하므로 기본값 생성
-    const modelId = `model_${Date.now()}`
-    const trainingId = `training_${Date.now()}`
-    modelActions.addNode(
-      'trained-model',
-      { x: Math.random() * 400, y: Math.random() * 400 },
-      { modelId, trainingId }
-    )
-  }
-
-  // 모델 학습 그룹 생성 (4개 노드 한 번에)
-  const addModelTrainingGroup = () => {
-    modelActions.addModelTrainingGroup({ x: 100, y: 100 })
+    // 모델 타입 추출
+    const modelType = selectedNode.data.modelType || 'neural-network'
+    addTrainingNode(modelType, position, selectedNode.data.modelId)
   }
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 p-4">
-      <h2 className="text-lg font-semibold mb-4 text-gray-800">노드 팔레트</h2>
-
-      {/* 빠른 시작 - 모델 학습 그룹 */}
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-600 mb-2">빠른 시작</h3>
-        <button
-          onClick={addModelTrainingGroup}
-          className="w-full flex items-center gap-2 p-3 bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg hover:from-blue-100 hover:to-green-100 transition-all"
-        >
-          <Zap className="w-4 h-4 text-blue-600" />
-          <div className="text-left">
-            <div className="text-sm font-medium text-blue-800">모델 학습 그룹</div>
-            <div className="text-xs text-blue-600">4개 노드 자동 생성</div>
-          </div>
-        </button>
+    <div className="w-80 h-full bg-white border-r border-gray-200 flex flex-col">
+      {/* 헤더 */}
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <Brain className="w-5 h-5 text-blue-500" />
+          AI Space v2
+        </h2>
+        <p className="text-sm text-gray-600 mt-1">새로운 아키텍처</p>
       </div>
 
-      {/* 개별 노드들 */}
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-600 mb-2">개별 노드</h3>
+      {/* 노드 추가 섹션 */}
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <Layers className="w-4 h-4" />
+          노드 추가
+        </h3>
+
         <div className="space-y-2">
-          {/* 훈련 데이터 노드 */}
+          {/* 데이터 노드 */}
           <button
-            onClick={addTrainingDataNode}
-            className="w-full flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors"
+            onClick={() => handleAddNode('data')}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-lg transition-colors"
           >
             <Database className="w-4 h-4 text-yellow-600" />
-            <div className="text-left">
-              <div className="text-sm text-yellow-800">훈련 데이터</div>
-              <div className="text-xs text-yellow-600">데이터 생성 및 관리</div>
-            </div>
+            훈련 데이터
           </button>
 
-          {/* 모델 정의 노드 */}
-          <button
-            onClick={addModelNode}
-            className="w-full flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-          >
-            <Brain className="w-4 h-4 text-blue-600" />
-            <div className="text-left">
-              <div className="text-sm text-blue-800">모델 정의</div>
-              <div className="text-xs text-blue-600">구조 및 레이어 설정</div>
-            </div>
-          </button>
+          {/* 모델 노드들 */}
+          {getAvailableModelTypes().map(modelType => {
+            const displayName = ModelRegistry.getDisplayName(modelType)
+            return (
+              <button
+                key={modelType}
+                onClick={() => handleAddNode('model', modelType)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+              >
+                <Brain className="w-4 h-4 text-blue-600" />
+                {displayName}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-          {/* 모델 학습 노드 */}
-          <button
-            onClick={addTrainingNode}
-            className="w-full flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
-          >
-            <TrendingUp className="w-4 h-4 text-green-600" />
-            <div className="text-left">
-              <div className="text-sm text-green-800">모델 학습</div>
-              <div className="text-xs text-green-600">컴파일 및 학습 실행</div>
-            </div>
-          </button>
+      {/* 선택된 노드 정보 */}
+      {selectedNode && (
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            선택된 노드
+          </h3>
 
-          {/* 학습된 모델 노드 */}
-          <button
-            onClick={addTrainedModelNode}
-            className="w-full flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
-          >
-            <CheckCircle className="w-4 h-4 text-purple-600" />
-            <div className="text-left">
-              <div className="text-sm text-purple-800">학습된 모델</div>
-              <div className="text-xs text-purple-600">성능 표시 및 예측</div>
+          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-gray-600">타입:</span>
+              <span className="font-mono">{selectedNode.type}</span>
             </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-gray-600">ID:</span>
+              <span className="font-mono">{selectedNode.id.slice(0, 12)}...</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-gray-600">라벨:</span>
+              <span>{selectedNode.data?.label || 'N/A'}</span>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              {/* 학습 노드 추가 (모델 노드인 경우) */}
+              {selectedNode.data?.modelId && (
+                <button
+                  onClick={handleAddTrainingNode}
+                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                >
+                  <Play className="w-3 h-3" />
+                  학습 노드
+                </button>
+              )}
+
+              {/* 노드 삭제 */}
+              <button
+                onClick={() => removeNode(selectedNode.id)}
+                className="flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 상태 정보 */}
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+          <Info className="w-4 h-4" />
+          상태 정보
+        </h3>
+
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between">
+            <span className="text-gray-600">노드 수:</span>
+            <span className="font-mono">{debugInfo.nodeCount}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">연결 수:</span>
+            <span className="font-mono">{debugInfo.edgeCount}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">모델 인스턴스:</span>
+            <span className="font-mono">{debugInfo.modelInstanceCount}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">등록된 모델:</span>
+            <span className="font-mono">{debugInfo.registeredModelTypes.length}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 액션 버튼들 */}
+      <div className="p-4 mt-auto">
+        <div className="space-y-2">
+          <button
+            onClick={clearAll}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            모두 삭제
           </button>
         </div>
       </div>
 
-      {/* 워크플로우 안내 */}
-      <div className="mb-6 p-3 bg-gray-50 rounded-lg">
-        <h4 className="text-xs font-medium text-gray-700 mb-2">워크플로우</h4>
-        <div className="text-xs text-gray-600 space-y-1">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-            <span>1. 훈련 데이터</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-            <span>2. 모델 정의</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span>3. 모델 학습</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-            <span>4. 학습된 모델</span>
-          </div>
+      {/* 디버그 정보 (개발 모드) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <details className="text-xs">
+            <summary className="cursor-pointer text-gray-600 mb-2">디버그 정보</summary>
+            <pre className="text-xs text-gray-500 overflow-auto max-h-32">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </details>
         </div>
-      </div>
-
-      {/* 도움말 */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-        <h4 className="text-xs font-medium text-blue-700 mb-1">💡 팁</h4>
-        <p className="text-xs text-blue-600">
-          "모델 학습 그룹"을 사용하면 전체 워크플로우가 자동으로 생성되고 연결됩니다.
-        </p>
-      </div>
+      )}
     </div>
   )
 }

@@ -1,32 +1,84 @@
-import React from 'react'
+import { ReactFlowProvider } from 'reactflow'
 import { AppHeader } from 'shared'
-import NewApp from '@/components/NewApp'
-import { useNewModelStore } from '@/stores/newModelStore'
+import FlowEditor from '@/components/FlowEditor'
+import Sidebar from '@/components/Sidebar'
+import NodeProperties from '@/components/NodeProperties'
+import BottomPanel from '@/components/BottomPanel'
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandleHorizontal,
+  PanelResizeHandleVertical,
+} from '@/components/PanelResize'
+import { useModelStore } from '@/stores/modelStore'
 
 function App() {
-  const { isLoading } = useNewModelStore()
+  const { isLoading, selectedNodeId } = useModelStore()
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* 헤더 */}
-      <AppHeader title="AI SPACE v2" homeUrl="https://ttsg.space">
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
-            }`}
-          />
-          <span className="text-sm text-gray-600">
-            {isLoading ? '로딩 중' : '새로운 아키텍처'}
-          </span>
-        </div>
-      </AppHeader>
+    <ReactFlowProvider>
+      <div className="h-screen flex flex-col bg-gray-50">
+        {/* 헤더 */}
+        <AppHeader title="AI SPACE" homeUrl="https://ttsg.space">
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
+              }`}
+            />
+            <span className="text-sm text-gray-600">
+              {isLoading ? '로딩 중' : '준비 완료'}
+            </span>
+          </div>
+        </AppHeader>
 
-      {/* 메인 콘텐츠 */}
-      <div className="flex-1 overflow-hidden">
-        <NewApp />
+        {/* 메인 콘텐츠 - Resizable Panels */}
+        <div className="flex-1 overflow-hidden">
+          <PanelGroup direction="horizontal">
+            <Panel defaultSize={75} minSize={50}>
+              <PanelGroup direction="vertical">
+                {/* 상단 패널 (노드 에디터 영역) */}
+                <Panel defaultSize={75} minSize={50}>
+                  <PanelGroup direction="horizontal">
+                    {/* 좌측 사이드바 */}
+                    <Panel defaultSize={20} minSize={15} maxSize={30}>
+                      <Sidebar />
+                    </Panel>
+
+                    <PanelResizeHandleHorizontal />
+
+                    {/* 중앙 플로우 에디터 */}
+                    <Panel defaultSize={60} minSize={40}>
+                      <div className="h-full flex flex-col">
+                        <FlowEditor />
+                      </div>
+                    </Panel>
+                  </PanelGroup>
+                </Panel>
+
+                <PanelResizeHandleVertical />
+
+                {/* 하단 패널 (로그창 등) */}
+                <Panel defaultSize={25} minSize={15} maxSize={50}>
+                  <BottomPanel />
+                </Panel>
+              </PanelGroup>
+            </Panel>
+
+            <PanelResizeHandleHorizontal />
+
+            {/* 우측 속성 패널 */}
+            <Panel defaultSize={20} minSize={15} maxSize={35}>
+              <div className="h-full bg-white border-l border-gray-200 flex flex-col">
+                <div className="flex-1 p-4">
+                  <NodeProperties />
+                </div>
+              </div>
+            </Panel>
+          </PanelGroup>
+        </div>
       </div>
-    </div>
+    </ReactFlowProvider>
   )
 }
 
