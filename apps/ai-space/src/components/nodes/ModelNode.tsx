@@ -1,18 +1,14 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { ModelDefinitionNodeData, LayerConfig } from '@/types'
+import { ModelNodeData, LayerConfig } from '@/types'
 import { Brain, Plus, Trash2, Settings } from 'lucide-react'
 
 /**
  * 모델 정의 노드 컴포넌트
  * 신경망 모델의 구조를 정의하고 레이어를 구성하는 노드
  */
-const ModelDefinitionNode: React.FC<NodeProps<ModelDefinitionNodeData>> = ({
-  id,
-  data,
-  selected,
-}) => {
-  const [showLayerEditor, setShowLayerEditor] = useState(false)
+const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) => {
+  const [showLayerEditor, setShowLayerEditor] = React.useState(false)
 
   // 레이어 추가
   const addLayer = () => {
@@ -251,4 +247,4 @@ const ModelDefinitionNode: React.FC<NodeProps<ModelDefinitionNodeData>> = ({
   )
 }
 
-export default ModelDefinitionNode
+export default ModelNode

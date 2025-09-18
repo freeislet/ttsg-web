@@ -2,7 +2,7 @@ import { Node, Edge } from 'reactflow'
 
 // 노드 타입 정의
 export type NodeType =
-  | 'model-definition' // 모델 정의 노드
+  | 'model' // 모델 정의 노드
   | 'training' // 모델 학습 노드
   | 'trained-model' // 학습된 모델 노드
   | 'training-data' // 훈련 데이터 노드
@@ -54,8 +54,8 @@ export interface LayerConfig {
 }
 
 // 모델 정의 노드 데이터
-export interface ModelDefinitionNodeData extends BaseNodeData {
-  type: 'model-definition'
+export interface ModelNodeData extends BaseNodeData {
+  type: 'model'
   modelType: ModelType
   inputShape: number[] | 'auto' // 직접 입력 또는 데이터에서 자동 추론
   outputUnits: number | 'auto' // 직접 입력 또는 데이터에서 자동 추론
@@ -142,7 +142,7 @@ export interface TrainingDataNodeData extends BaseNodeData {
 
 // 통합 노드 데이터 타입
 export type NodeData =
-  | ModelDefinitionNodeData
+  | ModelNodeData
   | TrainingNodeData
   | TrainedModelNodeData
   | TrainingDataNodeData
@@ -172,7 +172,7 @@ export interface ModelState {
   selectedNode: string | null
   trainingState: TrainingState
   // 새로운 노드들을 위한 상태
-  modelDefinitions: { [id: string]: ModelDefinitionNodeData }
+  modelDefinitions: { [id: string]: ModelNodeData }
   trainingSessions: { [id: string]: TrainingNodeData }
   trainedModels: { [id: string]: TrainedModelNodeData }
   trainingDatasets: { [id: string]: TrainingDataNodeData }

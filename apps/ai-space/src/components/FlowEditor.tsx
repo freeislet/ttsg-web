@@ -8,16 +8,18 @@ import ReactFlow, {
   addEdge,
   Connection,
   Edge,
-  NodeTypes,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 
 import { useModelSnapshot, modelActions } from '@/stores/modelStore'
-import { ModelDefinitionNode, TrainingNode, TrainedModelNode, TrainingDataNode } from './nodes'
+import ModelNode from './nodes/ModelNode'
+import TrainingNode from './nodes/TrainingNode'
+import TrainedModelNode from './nodes/TrainedModelNode'
+import TrainingDataNode from './nodes/TrainingDataNode'
 
 // 노드 타입 정의
-const nodeTypes: NodeTypes = {
-  'model-definition': ModelDefinitionNode,
+const nodeTypes = {
+  model: ModelNode,
   training: TrainingNode,
   'trained-model': TrainedModelNode,
   'training-data': TrainingDataNode,

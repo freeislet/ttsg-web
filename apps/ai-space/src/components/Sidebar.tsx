@@ -8,8 +8,8 @@ const Sidebar: React.FC = () => {
     modelActions.addNode('training-data', { x: Math.random() * 400, y: Math.random() * 400 })
   }
 
-  const addModelDefinitionNode = () => {
-    modelActions.addNode('model-definition', { x: Math.random() * 400, y: Math.random() * 400 })
+  const addModelNode = () => {
+    modelActions.addNode('model', { x: Math.random() * 400, y: Math.random() * 400 })
   }
 
   const addTrainingNode = () => {
@@ -75,7 +75,7 @@ const Sidebar: React.FC = () => {
 
           {/* 모델 정의 노드 */}
           <button
-            onClick={addModelDefinitionNode}
+            onClick={addModelNode}
             className="w-full flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
           >
             <Brain className="w-4 h-4 text-blue-600" />

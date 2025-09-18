@@ -9,9 +9,10 @@ import {
 } from 'reactflow'
 import {
   FlowNode,
+  FlowEdge,
   ModelState,
   NodeData,
-  ModelDefinitionNodeData,
+  ModelNodeData,
   TrainingNodeData,
   TrainedModelNodeData,
   TrainingDataNodeData,
@@ -25,7 +26,7 @@ import {
   executeTrainingPipeline,
 } from '@/utils/tensorflow'
 import {
-  createModelDefinitionNode,
+  createModelNode,
   createTrainingNode,
   createTrainedModelNode,
   createTrainingDataNode,
@@ -67,9 +68,9 @@ export const modelActions = {
     let newNode: FlowNode
 
     switch (type) {
-      case 'model-definition':
-        newNode = createModelDefinitionNode(position, config)
-        modelState.modelDefinitions[newNode.id] = newNode.data as ModelDefinitionNodeData
+      case 'model':
+        newNode = createModelNode(position, config)
+        modelState.modelDefinitions[newNode.id] = newNode.data as ModelNodeData
         logInfo('모델 정의 노드가 추가되었습니다', 'node')
         break
 
@@ -138,13 +139,13 @@ export const modelActions = {
       })
 
       // 노드들을 상태에 추가
-      group.nodes.forEach((node) => {
+      group.nodes.forEach((node: FlowNode) => {
         modelState.nodes.push(node)
 
         // 각 노드를 해당 상태 객체에도 저장
         switch (node.data.type) {
-          case 'model-definition':
-            modelState.modelDefinitions[node.id] = node.data as ModelDefinitionNodeData
+          case 'model':
+            modelState.modelDefinitions[node.id] = node.data as ModelNodeData
             break
           case 'training':
             modelState.trainingSessions[node.id] = node.data as TrainingNodeData
@@ -159,7 +160,7 @@ export const modelActions = {
       })
 
       // 엣지들을 상태에 추가
-      group.edges.forEach((edge) => {
+      group.edges.forEach((edge: FlowEdge) => {
         modelState.edges.push(edge)
       })
 
@@ -184,7 +185,7 @@ export const modelActions = {
 
       // 해당 상태 객체도 업데이트
       switch (node.data.type) {
-        case 'model-definition':
+        case 'model':
           if (modelState.modelDefinitions[nodeId]) {
             modelState.modelDefinitions[nodeId] = {
               ...modelState.modelDefinitions[nodeId],
@@ -225,7 +226,7 @@ export const modelActions = {
 
       // 해당 상태 객체에서도 제거
       switch (node.data.type) {
-        case 'model-definition':
+        case 'model':
           delete modelState.modelDefinitions[nodeId]
           break
         case 'training':
@@ -316,7 +317,7 @@ export const modelActions = {
     try {
       // 그룹에서 필요한 노드들 찾기
       const dataNode = group.nodes.find((n) => n.data.type === 'training-data')
-      const modelDefNode = group.nodes.find((n) => n.data.type === 'model-definition')
+      const modelDefNode = group.nodes.find((n) => n.data.type === 'model')
       const trainingNode = group.nodes.find((n) => n.data.type === 'training')
       const trainedModelNode = group.nodes.find((n) => n.data.type === 'trained-model')
 
@@ -332,7 +333,7 @@ export const modelActions = {
       modelActions.updateNode(trainingNode.id, { isTraining: true })
 
       const result = await executeTrainingPipeline(
-        modelDefNode.data as ModelDefinitionNodeData,
+        modelDefNode.data as ModelNodeData,
         dataNode.data as TrainingDataNodeData,
         trainingNode.data as TrainingNodeData,
         (epoch: number, logs: any) => {

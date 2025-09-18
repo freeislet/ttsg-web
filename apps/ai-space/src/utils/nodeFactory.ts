@@ -1,13 +1,13 @@
 import {
   FlowNode,
   FlowEdge,
-  ModelDefinitionNodeData,
+  ModelNodeData,
   TrainingNodeData,
   TrainedModelNodeData,
   TrainingDataNodeData,
+  LayerConfig,
   NodeGroup,
   ModelTrainingGroupConfig,
-  LayerConfig,
   NodeConnectionInfo,
 } from '@/types'
 
@@ -23,15 +23,15 @@ const generateNodeId = (prefix: string): string => {
 /**
  * 모델 정의 노드 생성
  */
-export const createModelDefinitionNode = (
+export const createModelNode = (
   position: { x: number; y: number },
-  config?: Partial<ModelDefinitionNodeData>
+  config?: Partial<ModelNodeData>
 ): FlowNode => {
   const id = generateNodeId('model_def')
 
-  const defaultData: ModelDefinitionNodeData = {
+  const defaultData: ModelNodeData = {
     label: '모델 정의',
-    type: 'model-definition',
+    type: 'model',
     modelType: 'neural-network',
     inputShape: 'auto',
     outputUnits: 'auto',
@@ -45,7 +45,7 @@ export const createModelDefinitionNode = (
 
   return {
     id,
-    type: 'model-definition',
+    type: 'model',
     position,
     data: defaultData,
   }
@@ -194,14 +194,12 @@ export const createModelTrainingGroup = (config: ModelTrainingGroupConfig): Node
   )
 
   // 2. 모델 정의 노드 생성
-  const modelDefNode = createModelDefinitionNode(
-    { x: position.x + 300, y: position.y },
+  const modelDefNode = createModelNode({ x: position.x + 300, y: position.y },
     {
       modelType: modelConfig.modelType,
       layers: modelConfig.layers,
       inputShape: 'auto', // 데이터 노드에서 자동 설정
       outputUnits: 'auto',
-      connectedDataNodeId: dataNode.id,
     }
   )
 

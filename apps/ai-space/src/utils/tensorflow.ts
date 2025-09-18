@@ -1,10 +1,5 @@
 import * as tf from '@tensorflow/tfjs'
-import {
-  ModelDefinitionNodeData,
-  TrainingDataNodeData,
-  TrainingNodeData,
-  LayerConfig,
-} from '@/types'
+import { ModelNodeData, TrainingDataNodeData, TrainingNodeData, LayerConfig } from '@/types'
 
 /**
  * TensorFlow.js 모델 생성 및 관리 유틸리티
@@ -14,7 +9,7 @@ import {
  * 모델 정의 노드로부터 TensorFlow.js 모델 생성
  */
 export const createModelFromDefinition = (
-  modelDef: ModelDefinitionNodeData,
+  modelDef: ModelNodeData,
   trainingData?: TrainingDataNodeData
 ): tf.Sequential => {
   const model = tf.sequential()
@@ -313,9 +308,9 @@ export const generateTrainingData = (
  * 전체 파이프라인 실행
  */
 export const executeTrainingPipeline = async (
-  modelDef: ModelDefinitionNodeData,
+  modelData: ModelNodeData,
   trainingData: TrainingDataNodeData,
-  trainingNode: TrainingNodeData,
+  trainingNodeData: TrainingNodeData,
   onProgress?: (epoch: number, logs: any) => void
 ): Promise<{
   model: tf.Sequential
@@ -323,13 +318,18 @@ export const executeTrainingPipeline = async (
   finalMetrics: { loss: number; accuracy?: number }
 }> => {
   // 1. 모델 생성
-  const model = createModelFromDefinition(modelDef, trainingData)
+  const model = createModelFromDefinition(modelData, trainingData)
 
   // 2. 모델 컴파일
-  compileModelFromTrainingNode(model, trainingNode)
+  compileModelFromTrainingNode(model, trainingNodeData)
 
   // 3. 모델 학습
-  const history = await trainModelFromTrainingNode(model, trainingData, trainingNode, onProgress)
+  const history = await trainModelFromTrainingNode(
+    model,
+    trainingData,
+    trainingNodeData,
+    onProgress
+  )
 
   // 4. 최종 성능 지표 추출
   const finalLoss = history.history.loss[history.history.loss.length - 1] as number
