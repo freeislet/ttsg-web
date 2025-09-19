@@ -1,4 +1,4 @@
-import { NNTrainingConfig } from '@/models/nn/NNModel'
+import { NNTrainingConfig } from '@/models/NNModel'
 import NNTrainingNode from './NNTrainingNode'
 
 /**
@@ -17,7 +17,7 @@ export const createNNTrainingNode = (
   config?: Partial<NNTrainingConfig>
 ) => {
   const nodeId = generateNodeId('nn_training')
-  
+
   const defaultTrainingConfig: NNTrainingConfig = {
     optimizer: 'adam',
     learningRate: 0.001,
@@ -25,9 +25,9 @@ export const createNNTrainingNode = (
     epochs: 100,
     batchSize: 32,
     validationSplit: 0.2,
-    ...config
+    ...config,
   }
-  
+
   return {
     id: nodeId,
     type: 'neural-network-training',
@@ -37,8 +37,8 @@ export const createNNTrainingNode = (
       modelId, // 연결된 모델 노드의 ID
       isTraining: false,
       trainingProgress: undefined,
-      trainingConfig: defaultTrainingConfig
-    }
+      trainingConfig: defaultTrainingConfig,
+    },
   }
 }
 
@@ -49,5 +49,5 @@ export const NNTrainingNodeFactory = {
   nodeType: 'neural-network-training',
   displayName: '신경망 학습',
   TrainingNodeComponent: NNTrainingNode,
-  createTrainingNode: createNNTrainingNode
+  createTrainingNode: createNNTrainingNode,
 }

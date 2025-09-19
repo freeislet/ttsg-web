@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs'
-import { TrainingResult } from '@/models/nn/NNModel'
+import { TrainingResult } from '@/models/NNModel'
 
 /**
  * 고유 ID 생성 함수
@@ -31,7 +31,7 @@ export const createNNTrainedModelNode = (
   trainingNodeId: string
 ) => {
   const nodeId = generateNodeId('nn_trained_model')
-  
+
   return {
     id: nodeId,
     type: 'neural-network-trained-model',
@@ -42,8 +42,8 @@ export const createNNTrainedModelNode = (
       trainingNodeId,
       trainedModel,
       trainingResult,
-      createdAt: new Date()
-    } as TrainedModelNodeData
+      createdAt: new Date(),
+    } as TrainedModelNodeData,
   }
 }
 
@@ -53,5 +53,5 @@ export const createNNTrainedModelNode = (
 export const NNTrainedModelNodeFactory = {
   nodeType: 'neural-network-trained-model',
   displayName: '훈련된 모델',
-  createTrainedModelNode: createNNTrainedModelNode
+  createTrainedModelNode: createNNTrainedModelNode,
 }

@@ -1,39 +1,38 @@
 import React from 'react'
 import { BaseModelNode, BaseModelNodeProps } from './BaseModelNode'
-import { NNModel, LayerConfig } from '@/models/nn/NNModel'
+import { NNModel, LayerConfig } from '@/models/NNModel'
 import { Plus, Trash2, Settings } from 'lucide-react'
 
 /**
  * 신경망 모델 노드 컴포넌트
  */
 export class NNModelNode extends BaseModelNode<NNModel> {
-  
   /**
    * 레이어 추가
    */
   private handleAddLayer = (): void => {
     const { model } = this.props
     if (!model) return
-    
+
     const config = model.getConfig()
     const newLayer: LayerConfig = {
       type: 'dense',
       units: 32,
-      activation: 'relu'
+      activation: 'relu',
     }
-    
+
     config.layers.push(newLayer)
     // TODO: 모델 설정 업데이트 로직
     this.forceUpdate()
   }
-  
+
   /**
    * 레이어 제거
    */
   private handleRemoveLayer = (index: number): void => {
     const { model } = this.props
     if (!model) return
-    
+
     const config = model.getConfig()
     if (config.layers.length > 1) {
       config.layers.splice(index, 1)
@@ -41,20 +40,20 @@ export class NNModelNode extends BaseModelNode<NNModel> {
       this.forceUpdate()
     }
   }
-  
+
   /**
    * 레이어 설정 변경
    */
   private handleLayerChange = (index: number, field: keyof LayerConfig, value: any): void => {
     const { model } = this.props
     if (!model) return
-    
+
     const config = model.getConfig()
     config.layers[index] = { ...config.layers[index], [field]: value }
     // TODO: 모델 설정 업데이트 로직
     this.forceUpdate()
   }
-  
+
   /**
    * 모델 상태 정보 렌더링
    */
@@ -63,9 +62,9 @@ export class NNModelNode extends BaseModelNode<NNModel> {
     if (!model) {
       return <div className="text-xs text-gray-500">모델이 연결되지 않음</div>
     }
-    
+
     const config = model.getConfig()
-    
+
     return (
       <div className="space-y-2 text-xs">
         <div className="flex justify-between">
@@ -87,7 +86,7 @@ export class NNModelNode extends BaseModelNode<NNModel> {
       </div>
     )
   }
-  
+
   /**
    * 모델별 컨트롤 렌더링
    */
@@ -96,9 +95,9 @@ export class NNModelNode extends BaseModelNode<NNModel> {
     if (!model) {
       return <div className="text-xs text-gray-500">모델 설정을 불러올 수 없음</div>
     }
-    
+
     const config = model.getConfig()
-    
+
     return (
       <div className="space-y-3">
         {/* 기본 설정 */}
@@ -117,7 +116,7 @@ export class NNModelNode extends BaseModelNode<NNModel> {
             />
           </div>
         </div>
-        
+
         {/* 레이어 설정 */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -130,7 +129,7 @@ export class NNModelNode extends BaseModelNode<NNModel> {
               <Plus className="w-3 h-3" />
             </button>
           </div>
-          
+
           <div className="space-y-2 max-h-32 overflow-y-auto">
             {config.layers.map((layer, index) => (
               <div key={index} className="bg-gray-50 p-2 rounded border">
@@ -146,7 +145,7 @@ export class NNModelNode extends BaseModelNode<NNModel> {
                     </button>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <select
@@ -159,14 +158,16 @@ export class NNModelNode extends BaseModelNode<NNModel> {
                       <option value="batchNormalization">BatchNorm</option>
                     </select>
                   </div>
-                  
+
                   {layer.type === 'dense' && (
                     <>
                       <div>
                         <input
                           type="number"
                           value={layer.units || 32}
-                          onChange={(e) => this.handleLayerChange(index, 'units', parseInt(e.target.value) || 32)}
+                          onChange={(e) =>
+                            this.handleLayerChange(index, 'units', parseInt(e.target.value) || 32)
+                          }
                           placeholder="Units"
                           className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-blue-500"
                           min="1"
@@ -175,7 +176,9 @@ export class NNModelNode extends BaseModelNode<NNModel> {
                       <div className="col-span-2">
                         <select
                           value={layer.activation || 'relu'}
-                          onChange={(e) => this.handleLayerChange(index, 'activation', e.target.value)}
+                          onChange={(e) =>
+                            this.handleLayerChange(index, 'activation', e.target.value)
+                          }
                           className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-blue-500"
                         >
                           <option value="relu">ReLU</option>
@@ -187,13 +190,15 @@ export class NNModelNode extends BaseModelNode<NNModel> {
                       </div>
                     </>
                   )}
-                  
+
                   {layer.type === 'dropout' && (
                     <div className="col-span-2">
                       <input
                         type="number"
                         value={layer.rate || 0.2}
-                        onChange={(e) => this.handleLayerChange(index, 'rate', parseFloat(e.target.value) || 0.2)}
+                        onChange={(e) =>
+                          this.handleLayerChange(index, 'rate', parseFloat(e.target.value) || 0.2)
+                        }
                         placeholder="Dropout Rate"
                         className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-blue-500"
                         min="0"
@@ -215,9 +220,11 @@ export class NNModelNode extends BaseModelNode<NNModel> {
 /**
  * 함수형 컴포넌트로 내보내기
  */
-const NNModelNodeComponent = React.forwardRef<NNModelNode, BaseModelNodeProps<NNModel>>((props, ref) => {
-  return <NNModelNode {...props} ref={ref} />
-})
+const NNModelNodeComponent = React.forwardRef<NNModelNode, BaseModelNodeProps<NNModel>>(
+  (props, ref) => {
+    return <NNModelNode {...props} ref={ref} />
+  }
+)
 
 NNModelNodeComponent.displayName = 'NNModelNode'
 

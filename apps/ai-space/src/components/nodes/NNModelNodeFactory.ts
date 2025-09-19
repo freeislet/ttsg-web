@@ -1,4 +1,4 @@
-import { NNModel, NNModelConfig, createNNModel } from '@/models/nn/NNModel'
+import { NNModel, NNModelConfig, createNNModel } from '@/models/NNModel'
 import NNModelNode from './NNModelNode'
 
 /**
@@ -16,10 +16,10 @@ export const createNNModelNode = (
   config?: Partial<NNModelConfig>
 ) => {
   const nodeId = generateNodeId('nn_model')
-  
+
   // 모델 정의 인스턴스 생성
   const model = createNNModel(config)
-  
+
   return {
     id: nodeId,
     type: 'neural-network-model',
@@ -28,8 +28,8 @@ export const createNNModelNode = (
       label: '신경망 모델',
       modelId: model.id,
       modelType: 'neural-network',
-      model // 모델 정의를 노드 데이터에 직접 저장
-    }
+      model, // 모델 정의를 노드 데이터에 직접 저장
+    },
   }
 }
 
@@ -40,5 +40,5 @@ export const NNModelNodeFactory = {
   nodeType: 'neural-network-model',
   displayName: '신경망 모델',
   ModelNodeComponent: NNModelNode,
-  createModelNode: createNNModelNode
+  createModelNode: createNNModelNode,
 }

@@ -37,9 +37,7 @@ function App() {
                 isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
               }`}
             />
-            <span className="text-sm text-gray-600">
-              {isLoading ? '로딩 중' : '준비 완료'}
-            </span>
+            <span className="text-sm text-gray-600">{isLoading ? '로딩 중' : '준비 완료'}</span>
           </div>
         </AppHeader>
 
