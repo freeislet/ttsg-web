@@ -31,6 +31,9 @@ export {
 export {
   BaseDataset,
   loadMNIST,
+  loadIris,
+  loadCarMPG,
+  IRIS_CLASSES,
   COMPUTED_FUNCTIONS,
   createComputedDataLoader,
   loadLinearData,

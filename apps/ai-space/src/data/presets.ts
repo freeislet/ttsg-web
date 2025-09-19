@@ -1,5 +1,7 @@
 import { DataPreset } from './types'
 import { loadMNIST } from './datasets/sample/mnist'
+import { loadIris } from './datasets/sample/iris'
+import { loadCarMPG } from './datasets/sample/car-mpg'
 import { loadLinearData, loadSineData, createComputedDataLoader } from './datasets/computed'
 
 /**
@@ -16,6 +18,28 @@ export const DATA_PRESETS: DataPreset[] = [
     tags: ['classification', 'computer-vision', 'beginner'],
     difficulty: 'beginner',
     estimatedSize: '11MB'
+  },
+  
+  {
+    id: 'iris',
+    name: 'Iris Flower Classification',
+    description: '붓꽃 분류 데이터셋 (꽃잎/꽃받침 크기 → 품종 분류)',
+    category: 'sample',
+    loader: loadIris,
+    tags: ['classification', 'tabular', 'beginner'],
+    difficulty: 'beginner',
+    estimatedSize: '5KB'
+  },
+  
+  {
+    id: 'car-mpg',
+    name: 'Car MPG Prediction',
+    description: '자동차 연비 예측 데이터셋 (마력 → MPG 예측)',
+    category: 'sample',
+    loader: loadCarMPG,
+    tags: ['regression', 'tabular', 'beginner'],
+    difficulty: 'beginner',
+    estimatedSize: '15KB'
   },
   
   // Computed 데이터 (프로그래밍 방식으로 생성)

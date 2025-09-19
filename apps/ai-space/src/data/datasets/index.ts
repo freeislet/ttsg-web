@@ -7,7 +7,10 @@ export { BaseDataset } from './BaseDataset'
 
 // Sample 데이터셋들 (외부 다운로드)
 export {
-  loadMNIST
+  loadMNIST,
+  loadIris,
+  loadCarMPG,
+  IRIS_CLASSES
 } from './sample'
 
 // Computed 데이터셋들 (프로그래밍 생성)
