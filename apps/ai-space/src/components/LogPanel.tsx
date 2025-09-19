@@ -1,6 +1,6 @@
 import React from 'react'
 import { useSnapshot } from 'valtio'
-import { logState, clearLogs, type LogEntry } from '../store/logStore'
+import { logState, clearLogs, type LogEntry } from '@/stores/logStore'
 
 /**
  * 로그 패널 컴포넌트
@@ -16,11 +16,16 @@ const LogPanel: React.FC = () => {
    */
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'error': return 'text-red-400'
-      case 'warn': return 'text-yellow-400'
-      case 'info': return 'text-blue-400'
-      case 'debug': return 'text-gray-400'
-      default: return 'text-gray-300'
+      case 'error':
+        return 'text-red-400'
+      case 'warn':
+        return 'text-yellow-400'
+      case 'info':
+        return 'text-blue-400'
+      case 'debug':
+        return 'text-gray-400'
+      default:
+        return 'text-gray-300'
     }
   }
 
@@ -34,7 +39,7 @@ const LogPanel: React.FC = () => {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     })
   }
 
@@ -50,7 +55,7 @@ const LogPanel: React.FC = () => {
           지우기
         </button>
       </div>
-      
+
       {/* 로그 내용 영역 */}
       <div className="flex-1 overflow-auto p-2 font-mono text-xs">
         {logs.length === 0 ? (
@@ -59,20 +64,12 @@ const LogPanel: React.FC = () => {
           <div className="space-y-1">
             {logs.map((log: LogEntry) => (
               <div key={log.id} className="flex items-start gap-2">
-                <span className="text-gray-500 shrink-0">
-                  {formatTime(log.timestamp)}
-                </span>
+                <span className="text-gray-500 shrink-0">{formatTime(log.timestamp)}</span>
                 <span className={`shrink-0 uppercase font-semibold ${getLevelColor(log.level)}`}>
                   [{log.level}]
                 </span>
-                {log.category && (
-                  <span className="text-purple-400 shrink-0">
-                    [{log.category}]
-                  </span>
-                )}
-                <span className="text-gray-300 break-all">
-                  {log.message}
-                </span>
+                {log.category && <span className="text-purple-400 shrink-0">[{log.category}]</span>}
+                <span className="text-gray-300 break-all">{log.message}</span>
               </div>
             ))}
           </div>
