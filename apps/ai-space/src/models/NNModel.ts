@@ -7,6 +7,7 @@ import {
   createNeuralNetworkConfig,
   createDefaultCallbacks
 } from './training'
+import { IDataset } from '../data/types'
 
 // 기존 LayerConfig와의 호환성을 위한 re-export
 export type { LayerConfig } from './layers'
@@ -168,8 +169,8 @@ export class NNModel {
   }
 
   /**
-   * 모델 학습 실행
-   * 새로운 tf.Sequential 인스턴스를 생성하고 학습하여 반환
+   * 모델 학습 실행 (개선된 버전)
+   * 외부에서 생성된 모델과 데이터셋을 받아 학습 수행
    * 
    * 새로운 training 모듈을 사용하여 개선된 훈련 기능 제공:
    * - 조기 종료 (Early Stopping)
@@ -178,12 +179,59 @@ export class NNModel {
    * - 더 나은 진행 상황 추적
    */
   async train(
+    model: tf.Sequential,
+    dataset: IDataset,
+    trainingConfig: ModelTrainingConfig,
+    onProgress?: (epoch: number, logs: any) => void
+  ): Promise<{ model: tf.Sequential; result: NewTrainingResult }> {
+    console.log(`🏃 Starting training with modern system: ${this.id}`)
+
+    // 콜백 설정
+    const callbacks = createDefaultCallbacks(onProgress)
+
+    try {
+      // 훈련 데이터 추출 (훈련용 데이터가 있으면 사용, 없으면 전체 데이터 사용)
+      const trainX = dataset.trainInputs || dataset.inputs
+      const trainY = dataset.trainLabels || dataset.labels
+
+      console.log(`📊 Training data shape: inputs ${trainX.shape}, labels ${trainY.shape}`)
+      
+      // 새로운 훈련 시스템으로 학습 실행
+      const result = await this.trainer.train(
+        model,
+        trainX,
+        trainY,
+        trainingConfig,
+        callbacks
+      )
+
+      console.log(`✅ Training completed: ${this.id}`)
+      console.log(`📊 Final metrics:`, result.finalMetrics)
+      
+      // 과적합 경고 표시
+      if (result.stoppedReason === 'early_stopping') {
+        console.log(`⏹️ Training stopped early at epoch ${result.epochs} (best: ${result.bestEpoch! + 1})`)
+      }
+
+      return { model, result }
+      
+    } catch (error) {
+      console.error(`❌ Training failed for ${this.id}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * 레거시 train 메서드 (하위 호환성)
+   * @deprecated 새로운 train(model, dataset, config) 메서드 사용 권장
+   */
+  async trainLegacy(
     trainX: tf.Tensor,
     trainY: tf.Tensor,
     trainingConfig: NNTrainingConfig,
     onProgress?: (epoch: number, logs: any) => void
   ): Promise<{ model: tf.Sequential; result: TrainingResult }> {
-    console.log(`🏃 Starting training with new training system: ${this.id}`)
+    console.log(`🏃 Starting legacy training: ${this.id}`)
 
     // 새로운 모델 인스턴스 생성
     const model = this.createTFModel()
@@ -224,8 +272,28 @@ export class NNModel {
   }
 
   /**
-   * 새로운 훈련 시스템을 직접 사용하는 메서드
-   * 더 많은 고급 기능과 설정 옵션 제공
+   * 편의 메서드: 모델 생성과 함께 훈련 실행
+   * 노드에서 간편하게 사용할 수 있는 원스톱 메서드
+   */
+  async createAndTrain(
+    dataset: IDataset,
+    trainingConfig: ModelTrainingConfig,
+    onProgress?: (epoch: number, logs: any) => void
+  ): Promise<{ model: tf.Sequential; result: NewTrainingResult }> {
+    console.log(`🚀 Creating model and starting training: ${this.id}`)
+
+    // 모델 생성
+    const model = this.createTFModel()
+    
+    // 훈련 실행
+    const result = await this.train(model, dataset, trainingConfig, onProgress)
+    
+    return result
+  }
+
+  /**
+   * 새로운 훈련 시스템을 직접 사용하는 메서드 (레거시)
+   * @deprecated createAndTrain 또는 train 메서드 사용 권장
    */
   async trainWithModernConfig(
     trainX: tf.Tensor,
@@ -233,7 +301,7 @@ export class NNModel {
     config: ModelTrainingConfig,
     callbacks?: any
   ): Promise<{ model: tf.Sequential; result: NewTrainingResult }> {
-    console.log(`🚀 Starting modern training: ${this.id}`)
+    console.log(`🚀 Starting modern training (legacy): ${this.id}`)
 
     const model = this.createTFModel()
     const result = await this.trainer.train(model, trainX, trainY, config, callbacks)
