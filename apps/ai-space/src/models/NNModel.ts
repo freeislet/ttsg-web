@@ -1,5 +1,12 @@
 import * as tf from '@tensorflow/tfjs'
 import { LayerConfig, createLayer, validateLayerConfig } from './layers'
+import { 
+  ModelTrainer, 
+  ModelTrainingConfig, 
+  TrainingResult as NewTrainingResult,
+  createNeuralNetworkConfig,
+  createDefaultCallbacks
+} from './training'
 
 // 기존 LayerConfig와의 호환성을 위한 re-export
 export type { LayerConfig } from './layers'
@@ -16,6 +23,7 @@ export interface NNModelConfig {
 
 /**
  * 신경망 학습 설정 인터페이스
+ * @deprecated 새로운 training 모듈의 ModelTrainingConfig 사용 권장
  */
 export interface NNTrainingConfig {
   optimizer: 'adam' | 'sgd' | 'rmsprop'
@@ -29,6 +37,7 @@ export interface NNTrainingConfig {
 
 /**
  * 학습 결과 인터페이스
+ * @deprecated 새로운 training 모듈의 TrainingResult 사용 권장
  */
 export interface TrainingResult {
   history: {
@@ -40,6 +49,38 @@ export interface TrainingResult {
   finalLoss: number
   finalAccuracy?: number
   epochs: number
+}
+
+/**
+ * 기존 NNTrainingConfig를 새로운 ModelTrainingConfig로 변환
+ */
+function convertToModelTrainingConfig(config: NNTrainingConfig): ModelTrainingConfig {
+  return createNeuralNetworkConfig({
+    optimizer: config.optimizer,
+    learningRate: config.learningRate,
+    loss: config.loss,
+    metrics: config.metrics,
+    epochs: config.epochs,
+    batchSize: config.batchSize,
+    validationSplit: config.validationSplit
+  })
+}
+
+/**
+ * 새로운 TrainingResult를 기존 형식으로 변환 (하위 호환성)
+ */
+function convertToLegacyTrainingResult(result: NewTrainingResult): TrainingResult {
+  return {
+    history: {
+      loss: result.history.loss || [],
+      accuracy: result.history.accuracy,
+      valLoss: result.history.valLoss,
+      valAccuracy: result.history.valAccuracy
+    },
+    finalLoss: result.finalMetrics.loss || 0,
+    finalAccuracy: result.finalMetrics.accuracy,
+    epochs: result.epochs
+  }
 }
 
 /**
@@ -56,6 +97,9 @@ export class NNModel {
   public layers: LayerConfig[]
   public outputUnits: number
   public name?: string
+  
+  // 새로운 훈련 시스템
+  private trainer: ModelTrainer
 
   constructor(config: NNModelConfig, id?: string) {
     this.id = id || `nn_model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -64,6 +108,9 @@ export class NNModel {
     this.layers = config.layers
     this.outputUnits = config.outputUnits
     this.name = config.name
+    
+    // 새로운 훈련 시스템 초기화
+    this.trainer = new ModelTrainer()
   }
 
   /**
@@ -123,6 +170,12 @@ export class NNModel {
   /**
    * 모델 학습 실행
    * 새로운 tf.Sequential 인스턴스를 생성하고 학습하여 반환
+   * 
+   * 새로운 training 모듈을 사용하여 개선된 훈련 기능 제공:
+   * - 조기 종료 (Early Stopping)
+   * - 과적합 감지 (Overfitting Detection)
+   * - 향상된 메트릭 수집 및 분석
+   * - 더 나은 진행 상황 추적
    */
   async train(
     trainX: tf.Tensor,
@@ -130,66 +183,124 @@ export class NNModel {
     trainingConfig: NNTrainingConfig,
     onProgress?: (epoch: number, logs: any) => void
   ): Promise<{ model: tf.Sequential; result: TrainingResult }> {
-    console.log(`🏃 Starting training: ${this.id}`)
+    console.log(`🏃 Starting training with new training system: ${this.id}`)
 
     // 새로운 모델 인스턴스 생성
     const model = this.createTFModel()
 
-    // 옵티마이저 설정
-    let optimizer: tf.Optimizer
-    switch (trainingConfig.optimizer) {
-      case 'adam':
-        optimizer = tf.train.adam(trainingConfig.learningRate)
-        break
-      case 'sgd':
-        optimizer = tf.train.sgd(trainingConfig.learningRate)
-        break
-      case 'rmsprop':
-        optimizer = tf.train.rmsprop(trainingConfig.learningRate)
-        break
-      default:
-        optimizer = tf.train.adam(trainingConfig.learningRate)
+    // 기존 설정을 새로운 형식으로 변환
+    const modernConfig = convertToModelTrainingConfig(trainingConfig)
+    
+    // 콜백 설정 (기존 onProgress와 호환)
+    const callbacks = createDefaultCallbacks(onProgress)
+
+    try {
+      // 새로운 훈련 시스템으로 학습 실행
+      const newResult = await this.trainer.train(
+        model,
+        trainX,
+        trainY,
+        modernConfig,
+        callbacks
+      )
+
+      // 기존 형식으로 결과 변환 (하위 호환성)
+      const legacyResult = convertToLegacyTrainingResult(newResult)
+
+      console.log(`✅ Training completed with new system: ${this.id}`)
+      console.log(`📊 Final metrics:`, newResult.finalMetrics)
+      
+      // 과적합 경고 표시
+      if (newResult.stoppedReason === 'early_stopping') {
+        console.log(`⏹️ Training stopped early at epoch ${newResult.epochs} (best: ${newResult.bestEpoch! + 1})`)
+      }
+
+      return { model, result: legacyResult }
+      
+    } catch (error) {
+      console.error(`❌ Training failed for ${this.id}:`, error)
+      throw error
     }
+  }
 
-    // 모델 컴파일
-    model.compile({
-      optimizer,
-      loss: trainingConfig.loss,
-      metrics: trainingConfig.metrics || ['accuracy'],
-    })
+  /**
+   * 새로운 훈련 시스템을 직접 사용하는 메서드
+   * 더 많은 고급 기능과 설정 옵션 제공
+   */
+  async trainWithModernConfig(
+    trainX: tf.Tensor,
+    trainY: tf.Tensor,
+    config: ModelTrainingConfig,
+    callbacks?: any
+  ): Promise<{ model: tf.Sequential; result: NewTrainingResult }> {
+    console.log(`🚀 Starting modern training: ${this.id}`)
 
-    // 학습 실행
-    const history = await model.fit(trainX, trainY, {
-      epochs: trainingConfig.epochs,
-      batchSize: trainingConfig.batchSize,
-      validationSplit: trainingConfig.validationSplit || 0.2,
-      verbose: 1,
-      callbacks: {
-        onEpochEnd: (epoch: number, logs: any) => {
-          console.log(
-            `Epoch ${epoch + 1}/${trainingConfig.epochs} - loss: ${logs?.loss?.toFixed(4)} - accuracy: ${logs?.accuracy?.toFixed(4)}`
-          )
-          onProgress?.(epoch, logs)
-        },
-      },
-    })
-
-    // 학습 결과 생성
-    const result: TrainingResult = {
-      history: {
-        loss: history.history.loss as number[],
-        accuracy: history.history.accuracy as number[],
-        valLoss: history.history.val_loss as number[],
-        valAccuracy: history.history.val_accuracy as number[],
-      },
-      finalLoss: (history.history.loss as number[]).slice(-1)[0],
-      finalAccuracy: (history.history.accuracy as number[])?.slice(-1)[0],
-      epochs: trainingConfig.epochs,
-    }
-
-    console.log(`✅ Training completed: ${this.id}`)
+    const model = this.createTFModel()
+    const result = await this.trainer.train(model, trainX, trainY, config, callbacks)
 
     return { model, result }
+  }
+
+  /**
+   * 모델 평가
+   * 새로운 training 모듈의 evaluate 기능 사용
+   */
+  async evaluate(
+    model: tf.Sequential,
+    testX: tf.Tensor,
+    testY: tf.Tensor
+  ): Promise<Record<string, number>> {
+    console.log(`📊 Evaluating model: ${this.id}`)
+    return this.trainer.evaluate(model, testX, testY)
+  }
+
+  /**
+   * 모델 예측
+   * 새로운 training 모듈의 predict 기능 사용
+   */
+  predict(
+    model: tf.Sequential,
+    inputData: tf.Tensor
+  ): tf.Tensor | tf.Tensor[] {
+    console.log(`🔮 Making prediction: ${this.id}`)
+    return this.trainer.predict(model, inputData)
+  }
+
+  /**
+   * 모델 메모리 사용량 추정
+   */
+  getMemoryUsage(): number {
+    // 레이어별 파라미터 수 계산
+    let totalParams = 0
+    
+    // 입력 레이어 파라미터
+    if (this.layers.length > 0 && this.layers[0].type === 'dense') {
+      const firstLayer = this.layers[0] as any
+      const inputSize = Array.isArray(this.inputShapes) ? this.inputShapes.reduce((a, b) => a * b, 1) : 1
+      totalParams += inputSize * (firstLayer.units || 32) + (firstLayer.units || 32) // weights + bias
+    }
+    
+    // 히든 레이어들
+    for (let i = 0; i < this.layers.length - 1; i++) {
+      const currentLayer = this.layers[i] as any
+      const nextLayer = this.layers[i + 1] as any
+      
+      if (currentLayer.type === 'dense' && nextLayer.type === 'dense') {
+        const currentUnits = currentLayer.units || 32
+        const nextUnits = nextLayer.units || 32
+        totalParams += currentUnits * nextUnits + nextUnits
+      }
+    }
+    
+    // 출력 레이어
+    if (this.layers.length > 0) {
+      const lastLayer = this.layers[this.layers.length - 1] as any
+      const lastUnits = lastLayer.units || 32
+      totalParams += lastUnits * this.outputUnits + this.outputUnits
+    }
+    
+    // 4바이트(float32) * 파라미터 수
+    return totalParams * 4
   }
 
   /**
