@@ -1,19 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Database, RefreshCw } from 'lucide-react'
-import * as tf from '@tensorflow/tfjs'
+import { Database, RefreshCw, Eye } from 'lucide-react'
+import { DataNodeState, DataSourceType, Dataset } from '@/types/DataTypes'
+import { getDataPresets } from '@/data/presets'
+import { loadPresetDataset, loadURLDataset } from '@/data/dataLoader'
+import { generateComputedDataset, COMPUTED_FUNCTIONS, getFunctionsByCategory } from '@/data/computedDataGenerator'
 
 /**
- * 훈련 데이터 노드 데이터 인터페이스
+ * 통합 데이터 노드 데이터 인터페이스
  */
 export interface DataNodeData {
   label: string
-  samples: number
-  inputFeatures: number
-  outputFeatures: number
-  dataType: 'training' | 'validation' | 'test'
-  inputShape: number[]
-  outputShape: number[]
+  state: DataNodeState
 }
 
 /**
@@ -24,215 +22,284 @@ export interface DataNodeProps extends NodeProps<DataNodeData> {
 }
 
 /**
- * 훈련 데이터 노드 컴포넌트
+ * 기본 데이터 노드 상태 생성
  */
-export class DataNode extends React.Component<DataNodeProps> {
-  private trainX?: tf.Tensor
-  private trainY?: tf.Tensor
-  
-  /**
-   * 데이터 생성
-   */
-  private handleGenerateData = (): void => {
-    const { data } = this.props
+const createDefaultDataNodeState = (): DataNodeState => ({
+  config: {
+    sourceType: 'preset'
+  },
+  isLoading: false,
+  viewMode: 'table'
+})
+
+/**
+ * 통합 데이터 노드 컴포넌트
+ */
+const DataNode: React.FC<DataNodeProps> = ({ data, selected }) => {
+  const [localState, setLocalState] = useState<DataNodeState>(
+    data.state || createDefaultDataNodeState()
+  )
+  const [showDataViewer, setShowDataViewer] = useState(false)
+
+  // 데이터 소스 타입 변경 핸들러
+  const handleSourceTypeChange = (sourceType: DataSourceType) => {
+    setLocalState(prev => ({
+      ...prev,
+      config: {
+        ...(prev.config || {}),
+        sourceType
+      }
+    }))
+  }
+
+  // 데이터 로드 핸들러
+  const handleLoadData = async () => {
+    setLocalState(prev => ({ ...prev, isLoading: true, error: undefined }))
     
     try {
-      // 기존 데이터 정리
-      this.disposeData()
+      let dataset: Dataset
       
-      // 새 데이터 생성
-      this.trainX = tf.randomNormal([data.samples, ...data.inputShape])
-      this.trainY = tf.randomNormal([data.samples, ...data.outputShape])
+      if (!localState.config) {
+        throw new Error('데이터 설정이 없습니다')
+      }
       
-      console.log(`✅ Data generated: ${data.samples} samples`)
-      this.forceUpdate()
+      switch (localState.config.sourceType) {
+        case 'preset':
+          if (localState.config.presetConfig) {
+            dataset = await loadPresetDataset(localState.config.presetConfig)
+          } else {
+            throw new Error('프리셋 설정이 없습니다')
+          }
+          break
+          
+        case 'url':
+          if (localState.config.urlConfig) {
+            dataset = await loadURLDataset(localState.config.urlConfig)
+          } else {
+            throw new Error('URL 설정이 없습니다')
+          }
+          break
+          
+        case 'computed':
+          if (localState.config.computedConfig) {
+            dataset = generateComputedDataset(localState.config.computedConfig)
+          } else {
+            throw new Error('계산 설정이 없습니다')
+          }
+          break
+          
+        default:
+          throw new Error('알 수 없는 데이터 소스 타입입니다')
+      }
+      
+      setLocalState(prev => ({
+        ...prev,
+        dataset,
+        isLoading: false
+      }))
+      
+      console.log(`✅ Data loaded: ${dataset.sampleCount} samples`)
       
     } catch (error) {
-      console.error(`❌ Failed to generate data: ${error}`)
+      console.error('❌ Failed to load data:', error)
+      setLocalState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : '데이터 로드 실패'
+      }))
     }
   }
-  
-  /**
-   * 데이터 정리
-   */
-  private disposeData = (): void => {
-    if (this.trainX) {
-      this.trainX.dispose()
-      this.trainX = undefined
-    }
-    if (this.trainY) {
-      this.trainY.dispose()
-      this.trainY = undefined
-    }
-  }
-  
-  /**
-   * 설정 변경 핸들러
-   */
-  private handleConfigChange = (field: keyof DataNodeData, value: any): void => {
-    // TODO: 상태 관리 시스템과 연결
-    console.log(`Config changed: ${field} = ${value}`)
-  }
-  
-  /**
-   * 컴포넌트 언마운트 시 메모리 정리
-   */
-  componentWillUnmount(): void {
-    this.disposeData()
-  }
-  
-  render(): React.ReactNode {
-    const { data, selected } = this.props
-    const hasData = !!(this.trainX && this.trainY)
-    
-    return (
-      <div className={`
-        bg-white border-2 rounded-lg shadow-lg min-w-[280px] max-w-[380px]
-        ${selected ? 'border-yellow-500 shadow-yellow-200' : 'border-gray-300'}
-        transition-all duration-200
-      `}>
-        {/* 헤더 */}
-        <div className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white p-3 rounded-t-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Database className="w-4 h-4" />
-              <h3 className="font-semibold text-sm">{data.label}</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${
-                hasData ? 'bg-green-400' : 'bg-gray-400'
-              }`} />
-              <span className="text-xs opacity-80">{data.dataType}</span>
-            </div>
+
+  const hasData = !!localState.dataset
+  const dataPresets = getDataPresets()
+  const functionCategories = getFunctionsByCategory()
+
+  return (
+    <div className={`
+      bg-white border-2 rounded-lg shadow-lg min-w-[320px] max-w-[400px]
+      ${selected ? 'border-blue-500 shadow-blue-200' : 'border-gray-300'}
+      transition-all duration-200
+    `}>
+      {/* 헤더 */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-t-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            <h3 className="font-semibold text-sm">{data.label}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${
+              hasData ? 'bg-green-400' : localState.isLoading ? 'bg-yellow-400' : 'bg-gray-400'
+            }`} />
+            <span className="text-xs opacity-80">
+              {localState.config?.sourceType === 'preset' ? '프리셋' :
+               localState.config?.sourceType === 'url' ? 'URL' : '계산됨'}
+            </span>
           </div>
         </div>
-        
-        {/* 본문 */}
-        <div className="p-4 space-y-4">
-          {/* 데이터 상태 */}
-          <div className="bg-yellow-50 p-3 rounded-lg">
+      </div>
+      
+      {/* 본문 */}
+      <div className="p-4 space-y-4">
+        {/* 데이터 소스 선택 */}
+        <div>
+          <h4 className="text-xs font-medium text-gray-700 mb-2">데이터 소스</h4>
+          <div className="flex gap-1">
+            {(['preset', 'url', 'computed'] as DataSourceType[]).map(type => (
+              <button
+                key={type}
+                onClick={() => handleSourceTypeChange(type)}
+                className={`px-3 py-1 text-xs rounded transition-colors ${
+                  localState.config?.sourceType === type
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {type === 'preset' ? '프리셋' : type === 'url' ? 'URL' : '계산됨'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 소스별 설정 UI */}
+        {localState.config?.sourceType === 'preset' && (
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">데이터셋 선택</h4>
+            <select
+              className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-blue-500"
+              onChange={(e) => {
+                const preset = dataPresets.find(p => p.id === e.target.value)
+                if (preset) {
+                  setLocalState(prev => ({
+                    ...prev,
+                    config: { ...(prev.config || {}), presetConfig: preset }
+                  }))
+                }
+              }}
+            >
+              <option value="">데이터셋을 선택하세요</option>
+              {dataPresets.map(preset => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {localState.config?.sourceType === 'computed' && (
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">함수 선택</h4>
+            <div className="space-y-2">
+              {Object.entries(functionCategories).map(([category, functions]) => (
+                <div key={category}>
+                  <div className="text-xs text-gray-500 mb-1 capitalize">{category}</div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {functions.map(func => (
+                      <button
+                        key={func}
+                        onClick={() => {
+                          const funcInfo = COMPUTED_FUNCTIONS[func]
+                          setLocalState(prev => ({
+                            ...prev,
+                            config: {
+                              ...(prev.config || {}),
+                              computedConfig: {
+                                functionType: func,
+                                parameters: {
+                                  minX: -10,
+                                  maxX: 10,
+                                  numPoints: 100,
+                                  trainSplit: 80,
+                                  noiseAmount: 0.001,
+                                  ...funcInfo.defaultParams
+                                }
+                              }
+                            }
+                          }))
+                        }}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          localState.config?.computedConfig?.functionType === func
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {COMPUTED_FUNCTIONS[func].name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 데이터 상태 */}
+        {hasData && (
+          <div className="bg-blue-50 p-3 rounded-lg">
             <h4 className="text-xs font-medium text-gray-700 mb-2">데이터 정보</h4>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-600">샘플 수:</span>
-                <span className="font-mono">{data.samples.toLocaleString()}</span>
+                <span className="font-mono">{localState.dataset!.sampleCount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">입력 형태:</span>
-                <span className="font-mono">[{data.inputShape.join(', ')}]</span>
+                <span className="font-mono">[{localState.dataset!.inputShape.join(', ')}]</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">출력 형태:</span>
-                <span className="font-mono">[{data.outputShape.join(', ')}]</span>
+                <span className="font-mono">[{localState.dataset!.outputShape.join(', ')}]</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">상태:</span>
-                <span className={`font-medium ${hasData ? 'text-green-600' : 'text-gray-600'}`}>
-                  {hasData ? '생성됨' : '미생성'}
+                <span className="text-gray-600">훈련/테스트:</span>
+                <span className="font-mono">
+                  {localState.dataset!.trainCount}/{localState.dataset!.testCount}
                 </span>
               </div>
-              {hasData && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">메모리:</span>
-                  <span className="font-mono">
-                    {((this.trainX!.size + this.trainY!.size) * 4 / 1024 / 1024).toFixed(1)}MB
-                  </span>
-                </div>
-              )}
             </div>
           </div>
-          
-          {/* 데이터 설정 */}
-          <div>
-            <h4 className="text-xs font-medium text-gray-700 mb-2">데이터 설정</h4>
-            <div className="space-y-3">
-              {/* 샘플 수 */}
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">샘플 수</label>
-                <input
-                  type="number"
-                  value={data.samples}
-                  onChange={(e) => this.handleConfigChange('samples', parseInt(e.target.value) || 1000)}
-                  className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-yellow-500"
-                  min="10"
-                  max="100000"
-                />
-              </div>
-              
-              {/* 입력 특성 수 */}
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">입력 특성 수</label>
-                <input
-                  type="number"
-                  value={data.inputFeatures}
-                  onChange={(e) => this.handleConfigChange('inputFeatures', parseInt(e.target.value) || 10)}
-                  className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-yellow-500"
-                  min="1"
-                  max="1000"
-                />
-              </div>
-              
-              {/* 출력 특성 수 */}
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">출력 특성 수</label>
-                <input
-                  type="number"
-                  value={data.outputFeatures}
-                  onChange={(e) => this.handleConfigChange('outputFeatures', parseInt(e.target.value) || 1)}
-                  className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-yellow-500"
-                  min="1"
-                  max="1000"
-                />
-              </div>
-              
-              {/* 데이터 타입 */}
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">데이터 타입</label>
-                <select
-                  value={data.dataType}
-                  onChange={(e) => this.handleConfigChange('dataType', e.target.value)}
-                  className="w-full px-2 py-1 text-xs border rounded focus:outline-none focus:border-yellow-500"
-                >
-                  <option value="training">훈련 데이터</option>
-                  <option value="validation">검증 데이터</option>
-                  <option value="test">테스트 데이터</option>
-                </select>
-              </div>
-            </div>
+        )}
+
+        {/* 오류 표시 */}
+        {localState.error && (
+          <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
+            <div className="text-xs text-red-600">{localState.error}</div>
           </div>
-          
-          {/* 액션 버튼 */}
-          <div className="flex gap-2">
-            <button
-              onClick={this.handleGenerateData}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-medium bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
-            >
-              <RefreshCw className="w-3 h-3" />
-              {hasData ? '데이터 재생성' : '데이터 생성'}
-            </button>
-          </div>
-        </div>
+        )}
         
-        {/* 핸들 */}
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="data-output"
-          className="w-3 h-3 bg-yellow-500 border-2 border-white"
-          style={{ right: -6 }}
-        />
+        {/* 액션 버튼 */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleLoadData}
+            disabled={localState.isLoading}
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded text-xs font-medium bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`w-3 h-3 ${localState.isLoading ? 'animate-spin' : ''}`} />
+            {localState.isLoading ? '로딩 중...' : hasData ? '데이터 재로드' : '데이터 로드'}
+          </button>
+          
+          {hasData && (
+            <button
+              onClick={() => setShowDataViewer(true)}
+              className="px-3 py-2 rounded text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+            >
+              <Eye className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
-    )
-  }
+      
+      {/* 핸들 */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="data-output"
+        className="w-3 h-3 bg-blue-500 border-2 border-white"
+        style={{ right: -6 }}
+      />
+    </div>
+  )
 }
 
-/**
- * 함수형 컴포넌트로 내보내기
- */
-const DataNodeComponent = React.forwardRef<DataNode, DataNodeProps>((props, ref) => {
-  return <DataNode {...props} ref={ref} />
-})
-
-DataNodeComponent.displayName = 'DataNode'
-
-export default DataNodeComponent
+export default DataNode
