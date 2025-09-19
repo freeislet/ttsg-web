@@ -13,8 +13,8 @@ import {
 } from '@/components/PanelResize'
 import { useModelStore } from '@/stores/modelStore'
 
-// 모델 및 노드 자동 등록을 위한 import
-import '@/models/nn'
+// 노드 자동 등록을 위한 import
+import '@/components/nodes'
 
 function App() {
   const { isLoading, selectedNodeId, getDebugInfo } = useModelStore()
