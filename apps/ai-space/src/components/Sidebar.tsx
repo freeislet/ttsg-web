@@ -218,7 +218,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* 디버그 정보 (개발 모드) */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <details className="text-xs">
             <summary className="cursor-pointer text-gray-600 mb-2">디버그 정보</summary>
@@ -227,7 +227,7 @@ const Sidebar: React.FC = () => {
             </pre>
           </details>
         </div>
-      )}
+      )} */}
     </div>
   )
 }
