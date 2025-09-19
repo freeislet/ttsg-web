@@ -1,6 +1,6 @@
 import { proxy, useSnapshot } from 'valtio'
 import { NodeChange, EdgeChange, Connection, applyNodeChanges, applyEdgeChanges, addEdge } from 'reactflow'
-import { FlowNode, FlowEdge } from '@/types'
+import { FlowNode, FlowEdge } from '@/types/flow'
 import { NodeRegistry } from '@/components/nodes/NodeRegistry'
 
 /**

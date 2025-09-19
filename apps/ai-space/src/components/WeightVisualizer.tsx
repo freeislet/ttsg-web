@@ -1,6 +1,10 @@
 import React from 'react'
 import { useModelSnapshot } from '@/stores/modelStore'
-import { LayerNodeData } from '@/types'
+
+// TODO: LayerNodeData는 기존 아키텍처 - 새 아키텍처로 마이그레이션 필요
+interface LayerNodeData {
+  weights?: number[][]
+}
 
 const WeightVisualizer: React.FC = () => {
   const snap = useModelSnapshot()
