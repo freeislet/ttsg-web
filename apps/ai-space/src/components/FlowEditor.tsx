@@ -48,7 +48,6 @@ const FlowEditorInner: React.FC = () => {
     onEdgesChange,
     onConnect,
     onSelectionChange,
-    onNodeClick,
     addModelNode,
     addTrainingNode,
     addDataNode,
