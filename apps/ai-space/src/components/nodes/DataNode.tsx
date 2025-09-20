@@ -106,7 +106,7 @@ const DataNode: React.FC<DataNodeProps> = ({ data, selected }) => {
   return (
     <div
       className={`
-      bg-white border-2 rounded-lg shadow-lg min-w-[320px] max-w-[400px]
+      bg-white  text-gray-700 border-2 rounded-lg shadow-lg min-w-[320px] max-w-[400px]
       ${selected ? 'border-blue-500 shadow-blue-200' : 'border-gray-300'}
       transition-all duration-200
     `}
@@ -135,7 +135,7 @@ const DataNode: React.FC<DataNodeProps> = ({ data, selected }) => {
       <div className="p-4 space-y-4">
         {/* 데이터셋 선택 */}
         <div>
-          <h4 className="text-xs font-medium text-gray-700 mb-2">데이터셋 선택</h4>
+          <h4 className="text-xs font-medium mb-2">데이터셋 선택</h4>
           <select
             value={localState.selectedPresetId || ''}
             onChange={(e) => handlePresetSelect(e.target.value)}
