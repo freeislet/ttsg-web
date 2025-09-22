@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { Database, Eye, BarChart3, RefreshCw } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
-import { getDataPreset } from '@/data'
+import { getDataPreset, getDefaultVisualization } from '@/data'
 import DatasetSelector from '@/components/DatasetSelector'
 
 /**
@@ -37,11 +37,14 @@ const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => 
   const handleCreateVisualization = useCallback((event: React.MouseEvent) => {
     event.stopPropagation()
     console.log(`🔍 Creating visualization node for data node: ${id}`)
-    // TODO: 시각화 노드 생성 로직
+    
+    // 기본 시각화 설정 가져오기
+    const defaultVisualization = data.selectedPresetId ? getDefaultVisualization(data.selectedPresetId) : null
+    
     if (addVisualizationNode) {
-      addVisualizationNode(id, { x: 300, y: 0 })
+      addVisualizationNode(id, { x: 300, y: 0 }, defaultVisualization)
     }
-  }, [id, addVisualizationNode])
+  }, [id, data.selectedPresetId, addVisualizationNode])
 
   // 데이터셋 선택 핸들러
   const handleDatasetSelect = useCallback(async (presetId: string | null) => {

@@ -13,7 +13,12 @@ export type {
   DataViewMode,
   DataNodeState,
   FunctionInfo,
-  DatasetStats
+  DatasetStats,
+  VisualizationType,
+  ChartType,
+  AxisConfig,
+  ChartConfig,
+  VisualizationConfig
 } from './types'
 
 // 프리셋들
@@ -24,7 +29,9 @@ export {
   getPresetsByTag,
   getPresetsByDifficulty,
   getDataPresets,
-  getDataPreset
+  getDataPreset,
+  getDefaultVisualization,
+  getVisualizationConfigs
 } from './presets'
 
 // 데이터셋 로더들

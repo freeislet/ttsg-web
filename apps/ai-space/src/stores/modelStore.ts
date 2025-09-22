@@ -73,7 +73,7 @@ export const modelStore = {
   /**
    * 시각화 노드 추가
    */
-  addVisualizationNode: (sourceNodeId: string, position: { x: number; y: number }) => {
+  addVisualizationNode: (sourceNodeId: string, position: { x: number; y: number }, visualizationConfig?: any) => {
     const nodeId = `viz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     const edgeId = `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
@@ -89,10 +89,11 @@ export const modelStore = {
       type: 'visualization',
       position: calculatedPosition,
       data: {
-        label: '데이터 시각화',
+        label: visualizationConfig?.title || '데이터 시각화',
         sourceNodeId,
-        mode: 'table',
+        mode: visualizationConfig?.type || 'table',
         isExpanded: false,
+        visualizationConfig,
       },
     }
 

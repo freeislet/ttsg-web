@@ -55,6 +55,9 @@ export interface DataPreset {
   tags?: string[]
   difficulty?: 'beginner' | 'intermediate' | 'advanced'
   estimatedSize?: string // '1.2MB', '50KB' 등
+  
+  // 시각화 설정
+  visualizations?: VisualizationConfig[]
 }
 
 /**
@@ -90,6 +93,53 @@ export interface ComputedDataConfig {
  * 데이터 뷰어 모드
  */
 export type DataViewMode = 'table' | 'chart' | 'scatter' | 'histogram'
+
+/**
+ * 시각화 타입
+ */
+export type VisualizationType = 'table' | 'chart' | 'image' | 'scatter' | 'histogram' | 'heatmap' | 'distribution'
+
+/**
+ * 차트 타입
+ */
+export type ChartType = 'line' | 'bar' | 'scatter' | 'histogram' | 'pie' | 'area' | 'box'
+
+/**
+ * 축 데이터 설정
+ */
+export interface AxisConfig {
+  column: string
+  label?: string
+  type?: 'continuous' | 'categorical'
+}
+
+/**
+ * 차트 설정
+ */
+export interface ChartConfig {
+  type: ChartType
+  xAxis?: AxisConfig
+  yAxis?: AxisConfig
+  colorBy?: string
+  title?: string
+  description?: string
+}
+
+/**
+ * 시각화 설정
+ */
+export interface VisualizationConfig {
+  type: VisualizationType
+  title: string
+  description?: string
+  chartConfig?: ChartConfig
+  imageConfig?: {
+    width: number
+    height: number
+    channels?: number
+    colormap?: string
+  }
+}
 
 /**
  * 데이터 노드 상태
