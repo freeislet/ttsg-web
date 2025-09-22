@@ -4,6 +4,7 @@ import { AppHeader } from 'shared'
 import { useModelStore } from '@/stores/modelStore'
 import DataNode from '@/components/nodes/DataNode'
 import ModelNode from '@/components/nodes/ModelNode'
+import VisualizationNode from '@/components/nodes/VisualizationNode'
 import NodeProperties from '@/components/NodeProperties'
 import Dashboard from '@/components/Dashboard'
 import {
@@ -35,6 +36,7 @@ function AppInner() {
   const nodeTypes = useMemo(() => ({
     data: DataNode,
     model: ModelNode,
+    visualization: VisualizationNode,
   }), [])
 
   React.useEffect(() => {

@@ -70,6 +70,46 @@ export const modelStore = {
     console.log('🔍 Node selected manually:', nodeId)
   },
 
+  /**
+   * 시각화 노드 추가
+   */
+  addVisualizationNode: (sourceNodeId: string, position: { x: number; y: number }) => {
+    const nodeId = `viz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const edgeId = `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    // 소스 노드 위치 기준으로 시각화 노드 위치 계산
+    const sourceNode = modelState.nodes.find(node => node.id === sourceNodeId)
+    const calculatedPosition = sourceNode ? {
+      x: sourceNode.position.x + 350,
+      y: sourceNode.position.y
+    } : position
+    
+    const node: FlowNode = {
+      id: nodeId,
+      type: 'visualization',
+      position: calculatedPosition,
+      data: {
+        label: '데이터 시각화',
+        sourceNodeId,
+        mode: 'table',
+        isExpanded: false,
+      },
+    }
+
+    // 연결 엣지 추가
+    const edge: FlowEdge = {
+      id: edgeId,
+      source: sourceNodeId,
+      target: nodeId,
+      type: 'default',
+    }
+
+    modelState.nodes.push(node)
+    modelState.edges.push(edge)
+    console.log(`✅ Visualization node added: ${node.id} for source: ${sourceNodeId}`)
+    console.log(`✅ Edge added: ${sourceNodeId} -> ${nodeId}`)
+  },
+
   // === 노드 관리 ===
 
   /**
