@@ -235,6 +235,22 @@ export const modelStore = {
   },
 
   /**
+   * 노드 데이터 업데이트 (일반적인 노드용)
+   */
+  updateNodeData: (nodeId: string, updates: any) => {
+    const nodeIndex = modelState.nodes.findIndex(node => node.id === nodeId)
+    if (nodeIndex !== -1) {
+      modelState.nodes[nodeIndex] = {
+        ...modelState.nodes[nodeIndex],
+        data: {
+          ...modelState.nodes[nodeIndex].data,
+          ...updates
+        }
+      }
+    }
+  },
+
+  /**
    * 등록된 모델 타입 가져오기
    */
   getAvailableModelTypes: () => {

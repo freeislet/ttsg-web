@@ -1,29 +1,63 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useModelStore } from '@/stores/modelStore'
 import { Brain, Database, Trash2, Info, Settings, RefreshCw } from 'lucide-react'
-import { getDataPresets, getDataPreset } from '@/data'
+import { getDataPreset } from '@/data'
 import DataInspector from './DataInspector'
+import DatasetSelector from './DatasetSelector'
 
 /**
  * 데이터 노드 속성 컴포넌트
  */
 const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeId, nodeData }) => {
+  const { updateNodeData } = useModelStore()
   const [selectedPresetId, setSelectedPresetId] = useState(nodeData?.selectedPresetId || '')
   const [isLoading, setIsLoading] = useState(false)
   const [dataset, setDataset] = useState(nodeData?.dataset || null)
 
-  const dataPresets = getDataPresets()
+  // props 변경 감지하여 로컬 상태 동기화
+  useEffect(() => {
+    setSelectedPresetId(nodeData?.selectedPresetId || '')
+    setDataset(nodeData?.dataset || null)
+  }, [nodeData?.selectedPresetId, nodeData?.dataset])
 
-  // 데이터셋 로드 핸들러
-  const handleLoadDataset = async () => {
-    if (!selectedPresetId) return
+
+  // 데이터셋 선택 및 로드 핸들러
+  const handleDatasetSelect = async (presetId: string | null) => {
+    setSelectedPresetId(presetId || '')
+    
+    if (!presetId) {
+      // 데이터셋 선택 해제
+      setDataset(null)
+      updateNodeData(nodeId, {
+        ...nodeData,
+        selectedPresetId: null,
+        dataset: null,
+        samples: 0,
+        inputFeatures: 0,
+        outputFeatures: 0
+      })
+      return
+    }
 
     setIsLoading(true)
     try {
-      const preset = getDataPreset(selectedPresetId)
+      const preset = getDataPreset(presetId)
       if (preset) {
         const loadedDataset = await preset.loader()
         setDataset(loadedDataset)
+        
+        // 노드 데이터 업데이트
+        updateNodeData(nodeId, {
+          ...nodeData,
+          selectedPresetId: presetId,
+          dataset: loadedDataset,
+          samples: loadedDataset.sampleCount,
+          inputFeatures: loadedDataset.inputColumns.length,
+          outputFeatures: loadedDataset.outputColumns.length,
+          inputShape: loadedDataset.inputShape,
+          outputShape: loadedDataset.outputShape
+        })
+        
         console.log(`✅ Dataset loaded: ${preset.name}`)
       }
     } catch (error) {
@@ -40,31 +74,21 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
         <h4 className="text-sm font-semibold mb-3">데이터셋 선택</h4>
 
         <div className="space-y-3">
-          <select
-            value={selectedPresetId}
-            onChange={(e) => setSelectedPresetId(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-          >
-            <option value="">데이터셋을 선택하세요</option>
-            {dataPresets.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.name}
-              </option>
-            ))}
-          </select>
-
-          <button
-            onClick={handleLoadDataset}
-            disabled={!selectedPresetId || isLoading}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? (
+          <DatasetSelector
+            value={selectedPresetId || undefined}
+            onChange={handleDatasetSelect}
+            placeholder="데이터셋을 선택하세요"
+            isDisabled={isLoading}
+            className="text-sm nodrag"
+          />
+          
+          {/* 로딩 상태 */}
+          {isLoading && (
+            <div className="flex items-center justify-center gap-2 py-2 text-sm text-gray-600">
               <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <Database className="w-4 h-4" />
-            )}
-            {isLoading ? '로딩 중...' : '데이터 로드'}
-          </button>
+              데이터 로딩 중...
+            </div>
+          )}
         </div>
       </div>
 
