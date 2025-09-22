@@ -1,6 +1,6 @@
 import React from 'react'
 import { useModelStore } from '@/stores/modelStore'
-import { BarChart3, Brain, Database, Activity, Settings } from 'lucide-react'
+import { BarChart3, Brain, Database, Activity } from 'lucide-react'
 
 /**
  * 간단한 대시보드 컴포넌트
@@ -13,22 +13,9 @@ const Dashboard: React.FC = () => {
   const modelNodes = nodes.filter(node => node.type === 'model')
 
   return (
-    <div className="h-full flex flex-col">
-      {/* 대시보드 헤더 */}
-      <div className="p-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-blue-500" />
-            대시보드
-          </h2>
-          <div className="flex items-center gap-2">
-            <Settings className="w-4 h-4 text-gray-500" />
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-full">
       {/* 대시보드 콘텐츠 */}
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="p-4">
         <div className="grid grid-cols-1 gap-4">
           {/* 모델 학습 상태 위젯 */}
           <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-gray-200">

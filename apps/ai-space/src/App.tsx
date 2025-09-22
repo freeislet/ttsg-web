@@ -6,11 +6,12 @@ import DataNode from '@/components/nodes/DataNode'
 import ModelNode from '@/components/nodes/ModelNode'
 import VisualizationNode from '@/components/nodes/VisualizationNode'
 import NodeProperties from '@/components/NodeProperties'
-import Dashboard from '@/components/Dashboard'
+import BottomPanel from '@/components/BottomPanel'
 import {
   Panel as ResizablePanel,
   PanelGroup,
   PanelResizeHandleHorizontal,
+  PanelResizeHandleVertical,
 } from '@/components/PanelResize'
 import 'reactflow/dist/style.css'
 
@@ -75,11 +76,11 @@ function AppInner() {
         </div>
       </AppHeader>
       
-      {/* 메인 콘텐츠 - 3개 패널 구조 */}
+      {/* 메인 콘텐츠 - 세로 분할 구조 */}
       <div className="flex-1 overflow-hidden">
-        <PanelGroup direction="horizontal">
-          {/* 좌측: 플로우 에디터 + 노드 속성 패널 */}
-          <ResizablePanel defaultSize={60} minSize={40}>
+        <PanelGroup direction="vertical">
+          {/* 상단: 플로우 에디터 + 속성 패널 */}
+          <ResizablePanel defaultSize={70} minSize={50} maxSize={85}>
             <PanelGroup direction="horizontal">
               {/* 플로우 에디터 */}
               <ResizablePanel defaultSize={75} minSize={60}>
@@ -102,11 +103,9 @@ function AppInner() {
                       maskColor="rgba(0, 0, 0, 0.1)"
                       className="!bg-white !border !border-gray-300"
                     />
-                    
-                    {/* 노드 추가 패널 - ReactFlow Panel 사용 */}
-                    <Panel position="top-left" className="bg-white border border-gray-300 rounded-lg shadow-lg p-3">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-2">노드 추가</h3>
-                      <div className="flex gap-2">
+                    <Panel position="top-left" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200">
+                      <div className="p-3">
+                        <h3 className="text-sm font-semibold text-gray-800 mb-2">노드 추가</h3>
                         <button
                           onClick={handleAddDataNode}
                           className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
@@ -142,13 +141,11 @@ function AppInner() {
             </PanelGroup>
           </ResizablePanel>
 
-          <PanelResizeHandleHorizontal />
+          <PanelResizeHandleVertical />
 
-          {/* 우측: 대시보드 */}
-          <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
-            <div className="h-full bg-white border-l border-gray-200">
-              <Dashboard />
-            </div>
+          {/* 하단: 대시보드 + 로그 패널 */}
+          <ResizablePanel defaultSize={30} minSize={15} maxSize={50}>
+            <BottomPanel />
           </ResizablePanel>
         </PanelGroup>
       </div>

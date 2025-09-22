@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Terminal, Activity, Settings } from 'lucide-react'
+import { Terminal, Activity, Settings, BarChart3 } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
+import Dashboard from './Dashboard'
 
 interface BottomPanelProps {
   /** 패널의 높이 (픽셀 단위) - react-resizable-panels 사용 시 선택적 */
@@ -12,7 +13,7 @@ interface BottomPanelProps {
  * 로그, 성능 지표, 설정 등의 탭을 포함하는 하단 패널
  */
 const BottomPanel: React.FC<BottomPanelProps> = ({ height }) => {
-  const [activeTab, setActiveTab] = useState('logs')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const { getDebugInfo } = useModelStore()
 
   const debugInfo = getDebugInfo()
@@ -59,6 +60,12 @@ const BottomPanel: React.FC<BottomPanelProps> = ({ height }) => {
     </div>
   )
 
+  const renderDashboardPanel = () => (
+    <div className="h-full bg-white overflow-y-auto overflow-x-hidden">
+      <Dashboard />
+    </div>
+  )
+
   const renderSettingsPanel = () => (
     <div className="p-4 h-full overflow-auto">
       <div className="space-y-4">
@@ -95,6 +102,15 @@ const BottomPanel: React.FC<BottomPanelProps> = ({ height }) => {
         {/* 탭 헤더 */}
         <div className="flex bg-gray-800 border-b border-gray-700">
           <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer hover:text-gray-300 hover:bg-gray-700 border-none bg-transparent outline-none ${
+              activeTab === 'dashboard' ? 'text-white bg-gray-700' : 'text-gray-400'
+            }`}
+          >
+            <BarChart3 size={16} />
+            대시보드
+          </button>
+          <button
             onClick={() => setActiveTab('logs')}
             className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer hover:text-gray-300 hover:bg-gray-700 border-none bg-transparent outline-none ${
               activeTab === 'logs' ? 'text-white bg-gray-700' : 'text-gray-400'
@@ -124,7 +140,8 @@ const BottomPanel: React.FC<BottomPanelProps> = ({ height }) => {
         </div>
 
         {/* 탭 내용 */}
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
+          {activeTab === 'dashboard' && renderDashboardPanel()}
           {activeTab === 'logs' && renderLogPanel()}
           {activeTab === 'metrics' && renderMetricsPanel()}
           {activeTab === 'settings' && renderSettingsPanel()}
