@@ -59,44 +59,41 @@ export const modelStore = {
 
   onSelectionChange: (params: { nodes: FlowNode[] }) => {
     modelState.selectedNodeId = params.nodes[0]?.id || null
+    console.log('🔍 Node selected:', modelState.selectedNodeId)
+  },
+
+  /**
+   * 노드 선택
+   */
+  selectNode: (nodeId: string) => {
+    modelState.selectedNodeId = nodeId
+    console.log('🔍 Node selected manually:', nodeId)
   },
 
   // === 노드 관리 ===
 
   /**
-   * 모델 노드 추가
+   * 통합 모델 노드 추가
    */
   addModelNode: (modelType: string, position: { x: number; y: number }) => {
-    try {
-      const node = NodeRegistry.createModelNode(modelType, position)
-      modelState.nodes.push(node)
-
-      // 모델 인스턴스 저장
-      if (node.model) {
-        modelState.modelInstances.set(node.data.modelId, node.model)
-      }
-
-      console.log(`✅ Model node added: ${node.id}`)
-    } catch (error) {
-      console.error(`❌ Failed to add model node: ${error}`)
-      modelState.error = `Failed to add model node: ${error}`
+    console.log(`🔧 Adding model node: ${modelType}`)
+    const nodeId = `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    const node: FlowNode = {
+      id: nodeId,
+      type: 'model',
+      position,
+      data: {
+        label: '신경망 모델',
+        modelType,
+        state: 'definition'
+      },
     }
+
+    modelState.nodes.push(node)
+    console.log(`✅ Model node added: ${node.id} (${modelType})`)
   },
 
-  /**
-   * 학습 노드 추가
-   */
-  addTrainingNode: (modelType: string, position: { x: number; y: number }, modelId: string) => {
-    try {
-      const node = NodeRegistry.createTrainingNode(modelType, position, modelId)
-      modelState.nodes.push(node)
-
-      console.log(`✅ Training node added: ${node.id}`)
-    } catch (error) {
-      console.error(`❌ Failed to add training node: ${error}`)
-      modelState.error = `Failed to add training node: ${error}`
-    }
-  },
 
   /**
    * 데이터 노드 추가
@@ -175,6 +172,22 @@ export const modelStore = {
    */
   getModelInstance: (modelId: string) => {
     return modelState.modelInstances.get(modelId)
+  },
+
+  /**
+   * 모델 노드 데이터 업데이트
+   */
+  updateModelNodeData: (modelId: string, updates: any) => {
+    const nodeIndex = modelState.nodes.findIndex(node => node.data?.modelId === modelId)
+    if (nodeIndex !== -1) {
+      modelState.nodes[nodeIndex] = {
+        ...modelState.nodes[nodeIndex],
+        data: {
+          ...modelState.nodes[nodeIndex].data,
+          ...updates
+        }
+      }
+    }
   },
 
   /**

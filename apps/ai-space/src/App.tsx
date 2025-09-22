@@ -1,92 +1,165 @@
-import React from 'react'
-import { ReactFlowProvider } from 'reactflow'
+import React, { useMemo } from 'react'
+import ReactFlow, { Background, Controls, MiniMap, Panel, ReactFlowProvider } from 'reactflow'
 import { AppHeader } from 'shared'
-import FlowEditor from '@/components/FlowEditor'
-import Sidebar from '@/components/Sidebar'
+import { useModelStore } from '@/stores/modelStore'
+import DataNode from '@/components/nodes/DataNode'
+import ModelNode from '@/components/nodes/ModelNode'
 import NodeProperties from '@/components/NodeProperties'
-import BottomPanel from '@/components/BottomPanel'
+import Dashboard from '@/components/Dashboard'
 import {
-  Panel,
+  Panel as ResizablePanel,
   PanelGroup,
   PanelResizeHandleHorizontal,
-  PanelResizeHandleVertical,
 } from '@/components/PanelResize'
-import { useModelStore } from '@/stores/modelStore'
+import 'reactflow/dist/style.css'
 
 // 노드 자동 등록을 위한 import
 import '@/components/nodes'
 
-function App() {
-  const { isLoading, selectedNodeId, getDebugInfo } = useModelStore()
+function AppInner() {
+  console.log('🚀 App component loaded')
 
-  // 디버그: 등록된 모델 타입 확인
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    onSelectionChange,
+    addDataNode,
+    addModelNode,
+    clearAll
+  } = useModelStore()
+
+  // 노드 타입 정의
+  const nodeTypes = useMemo(() => ({
+    data: DataNode,
+    model: ModelNode,
+  }), [])
+
   React.useEffect(() => {
-    const debugInfo = getDebugInfo()
-    console.log('🔍 등록된 모델 타입:', debugInfo.registeredModelTypes)
-    console.log('🔍 등록된 노드 타입:', debugInfo.registeredNodeTypes)
-  }, [])
+    console.log('🔍 App useEffect triggered')
+    console.log('🔍 Nodes:', nodes.length)
+    console.log('🔍 Edges:', edges.length)
+  }, [nodes.length, edges.length])
+
+  // 노드 추가 핸들러
+  const handleAddDataNode = () => {
+    console.log('🔵 데이터 노드 추가 버튼 클릭됨')
+    try {
+      addDataNode({ x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 })
+      console.log('✅ 데이터 노드 추가 완료')
+    } catch (error) {
+      console.error('❌ 데이터 노드 추가 실패:', error)
+    }
+  }
+
+  const handleAddModelNode = () => {
+    console.log('🔵 모델 노드 추가 버튼 클릭됨')
+    try {
+      addModelNode('neural-network', { x: Math.random() * 400 + 300, y: Math.random() * 300 + 100 })
+      console.log('✅ 모델 노드 추가 완료')
+    } catch (error) {
+      console.error('❌ 모델 노드 추가 실패:', error)
+    }
+  }
 
   return (
-    <ReactFlowProvider>
-      <div className="h-screen flex flex-col bg-gray-50">
-        {/* 헤더 */}
-        <AppHeader title="AI SPACE" homeUrl="https://ttsg.space">
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
-              }`}
-            />
-            <span className="text-sm text-gray-600">{isLoading ? '로딩 중' : '준비 완료'}</span>
-          </div>
-        </AppHeader>
-
-        {/* 메인 콘텐츠 - Resizable Panels */}
-        <div className="flex-1 overflow-hidden">
-          <PanelGroup direction="horizontal">
-            <Panel defaultSize={75} minSize={50}>
-              <PanelGroup direction="vertical">
-                {/* 상단 패널 (노드 에디터 영역) */}
-                <Panel defaultSize={75} minSize={50}>
-                  <PanelGroup direction="horizontal">
-                    {/* 좌측 사이드바 */}
-                    <Panel defaultSize={20} minSize={15} maxSize={30}>
-                      <Sidebar />
-                    </Panel>
-
-                    <PanelResizeHandleHorizontal />
-
-                    {/* 중앙 플로우 에디터 */}
-                    <Panel defaultSize={60} minSize={40}>
-                      <div className="h-full flex flex-col">
-                        <FlowEditor />
+    <div className="h-screen flex flex-col bg-gray-50">
+      <AppHeader title="AI SPACE" homeUrl="https://ttsg.space">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-green-500" />
+          <span className="text-sm text-gray-600">준비 완료</span>
+        </div>
+      </AppHeader>
+      
+      {/* 메인 콘텐츠 - 3개 패널 구조 */}
+      <div className="flex-1 overflow-hidden">
+        <PanelGroup direction="horizontal">
+          {/* 좌측: 플로우 에디터 + 노드 속성 패널 */}
+          <ResizablePanel defaultSize={60} minSize={40}>
+            <PanelGroup direction="horizontal">
+              {/* 플로우 에디터 */}
+              <ResizablePanel defaultSize={75} minSize={60}>
+                <div className="h-full flex flex-col">
+                  <ReactFlow
+                    nodes={nodes as any}
+                    edges={edges as any}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onSelectionChange={onSelectionChange}
+                    nodeTypes={nodeTypes}
+                    fitView
+                    className="bg-gray-50"
+                  >
+                    <Background color="#e5e7eb" gap={20} />
+                    <Controls />
+                    <MiniMap 
+                      nodeColor="#6366f1"
+                      maskColor="rgba(0, 0, 0, 0.1)"
+                      className="!bg-white !border !border-gray-300"
+                    />
+                    
+                    {/* 노드 추가 패널 - ReactFlow Panel 사용 */}
+                    <Panel position="top-left" className="bg-white border border-gray-300 rounded-lg shadow-lg p-3">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-2">노드 추가</h3>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleAddDataNode}
+                          className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+                        >
+                          데이터 노드
+                        </button>
+                        <button
+                          onClick={handleAddModelNode}
+                          className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                        >
+                          모델 노드
+                        </button>
+                        <button
+                          onClick={clearAll}
+                          className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                        >
+                          모두 삭제
+                        </button>
                       </div>
                     </Panel>
-                  </PanelGroup>
-                </Panel>
-
-                <PanelResizeHandleVertical />
-
-                {/* 하단 패널 (로그창 등) */}
-                <Panel defaultSize={25} minSize={15} maxSize={50}>
-                  <BottomPanel />
-                </Panel>
-              </PanelGroup>
-            </Panel>
-
-            <PanelResizeHandleHorizontal />
-
-            {/* 우측 속성 패널 */}
-            <Panel defaultSize={20} minSize={15} maxSize={35}>
-              <div className="h-full bg-white border-l border-gray-200 flex flex-col">
-                <div className="flex-1 p-4">
-                  <NodeProperties />
+                  </ReactFlow>
                 </div>
-              </div>
-            </Panel>
-          </PanelGroup>
-        </div>
+              </ResizablePanel>
+
+              <PanelResizeHandleHorizontal />
+
+              {/* 노드 속성 패널 */}
+              <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+                <div className="h-full bg-white border-l border-gray-200 flex flex-col">
+                  <div className="flex-1 p-4">
+                    <NodeProperties />
+                  </div>
+                </div>
+              </ResizablePanel>
+            </PanelGroup>
+          </ResizablePanel>
+
+          <PanelResizeHandleHorizontal />
+
+          {/* 우측: 대시보드 */}
+          <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
+            <div className="h-full bg-white border-l border-gray-200">
+              <Dashboard />
+            </div>
+          </ResizablePanel>
+        </PanelGroup>
       </div>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <ReactFlowProvider>
+      <AppInner />
     </ReactFlowProvider>
   )
 }

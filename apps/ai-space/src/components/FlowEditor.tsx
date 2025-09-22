@@ -11,15 +11,14 @@ import 'reactflow/dist/style.css'
 
 import { useModelStore } from '@/stores/modelStore'
 import DataNode from '@/components/nodes/DataNode'
+import ModelNode from '@/components/nodes/ModelNode'
 
 // 동적 import를 위한 컴포넌트 로더
 const DynamicNodeComponent = ({ type, ...props }: any) => {
   const Component = useMemo(() => {
     switch (type) {
-      case 'neural-network-model':
-        return React.lazy(() => import('@/components/nodes/NNModelNode'))
-      case 'neural-network-training':
-        return React.lazy(() => import('@/components/nodes/NNTrainingNode'))
+      case 'model':
+        return ModelNode
       case 'data':
         return DataNode
       default:
@@ -49,19 +48,16 @@ const FlowEditorInner: React.FC = () => {
     onConnect,
     onSelectionChange,
     addModelNode,
-    addTrainingNode,
     addDataNode,
     removeNode,
-    clearAll,
-    getAvailableModelTypes
+    clearAll
   } = useModelStore()
 
   const { screenToFlowPosition } = useReactFlow()
 
   // 노드 타입 정의
   const nodeTypes = useMemo(() => ({
-    'neural-network-model': DynamicNodeComponent,
-    'neural-network-training': DynamicNodeComponent,
+    'model': DynamicNodeComponent,
     'data': DataNode
   }), [])
 
@@ -128,16 +124,13 @@ const FlowEditorInner: React.FC = () => {
                 데이터 노드
               </button>
               
-              {/* 모델 노드들 */}
-              {getAvailableModelTypes().map(modelType => (
-                <button
-                  key={modelType}
-                  onClick={() => addModelNode(modelType, { x: 300, y: 100 })}
-                  className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                  {modelType === 'neural-network' ? '신경망' : modelType}
-                </button>
-              ))}
+              {/* 모델 노드 */}
+              <button
+                onClick={() => addModelNode('neural-network', { x: 300, y: 100 })}
+                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                신경망 모델
+              </button>
             </div>
             
             <div className="flex gap-2 pt-2 border-t">

@@ -1,158 +1,37 @@
-import React from 'react'
-import { NodeProps } from 'reactflow'
-
 /**
- * 노드 컴포넌트 팩토리 인터페이스 (레거시)
+ * 간소화된 노드 레지스트리
+ * 새로운 아키텍처에서는 ModelNode와 DataNode만 사용
  */
-export interface NodeComponentFactory {
-  modelType: string
-  displayName: string
-  
-  // 노드 컴포넌트들
-  ModelNodeComponent: React.ComponentType<NodeProps<any>>
-  TrainingNodeComponent: React.ComponentType<NodeProps<any>>
-  
-  // 노드 생성 팩토리
-  createModelNode: (position: { x: number; y: number }, config?: any) => any
-  createTrainingNode: (position: { x: number; y: number }, modelId: string, config?: any) => any
-}
+class NodeRegistryClass {
+  private registeredTypes = ['neural-network']
 
-/**
- * 개별 노드 팩토리 인터페이스들
- */
-export interface ModelNodeFactory {
-  nodeType: string
-  displayName: string
-  ModelNodeComponent: React.ComponentType<NodeProps<any>>
-  createModelNode: (position: { x: number; y: number }, config?: any) => any
-}
-
-export interface TrainingNodeFactory {
-  nodeType: string
-  displayName: string
-  TrainingNodeComponent: React.ComponentType<NodeProps<any>>
-  createTrainingNode: (position: { x: number; y: number }, modelId: string, config?: any) => any
-}
-
-export interface TrainedModelNodeFactory {
-  nodeType: string
-  displayName: string
-  createTrainedModelNode: (position: { x: number; y: number }, ...args: any[]) => any
-}
-
-/**
- * 노드 레지스트리
- * 모든 노드 컴포넌트와 팩토리를 등록하고 관리
- */
-export class NodeRegistry {
-  private static factories = new Map<string, NodeComponentFactory>()
-  
   /**
-   * 노드 컴포넌트 팩토리 등록
+   * 등록된 모델 타입들 반환
    */
-  static register(factory: NodeComponentFactory): void {
-    if (this.factories.has(factory.modelType)) {
-      console.warn(`Node factory for '${factory.modelType}' is already registered. Overwriting...`)
+  getRegisteredTypes(): string[] {
+    return [...this.registeredTypes]
+  }
+
+  /**
+   * React Flow 노드 타입 맵 생성
+   */
+  createNodeTypes() {
+    return {
+      model: () => import('@/components/nodes/ModelNode').then(m => m.default),
+      data: () => import('@/components/nodes/DataNode').then(m => m.default)
     }
-    
-    this.factories.set(factory.modelType, factory)
-    console.log(`✅ Node factory registered: ${factory.modelType} (${factory.displayName})`)
   }
-  
+
   /**
-   * 등록된 모든 모델 타입 반환
+   * 디버그 정보
    */
-  static getRegisteredTypes(): string[] {
-    return Array.from(this.factories.keys())
-  }
-  
-  /**
-   * 모델 노드 컴포넌트 반환
-   */
-  static getModelNodeComponent(modelType: string): React.ComponentType<NodeProps<any>> | undefined {
-    const factory = this.factories.get(modelType)
-    return factory?.ModelNodeComponent
-  }
-  
-  /**
-   * 학습 노드 컴포넌트 반환
-   */
-  static getTrainingNodeComponent(modelType: string): React.ComponentType<NodeProps<any>> | undefined {
-    const factory = this.factories.get(modelType)
-    return factory?.TrainingNodeComponent
-  }
-  
-  /**
-   * React Flow용 노드 타입 맵 생성
-   */
-  static createNodeTypes(): Record<string, React.ComponentType<NodeProps<any>>> {
-    const nodeTypes: Record<string, React.ComponentType<NodeProps<any>>> = {}
-    
-    this.factories.forEach((factory, modelType) => {
-      // 모델 노드
-      nodeTypes[`${modelType}-model`] = factory.ModelNodeComponent
-      
-      // 학습 노드
-      nodeTypes[`${modelType}-training`] = factory.TrainingNodeComponent
-    })
-    
-    return nodeTypes
-  }
-  
-  /**
-   * 모델 노드 생성
-   */
-  static createModelNode(
-    modelType: string,
-    position: { x: number; y: number },
-    config?: any
-  ): any {
-    const factory = this.factories.get(modelType)
-    if (!factory) {
-      throw new Error(`Unknown model type: ${modelType}`)
+  getDebugInfo() {
+    return {
+      registeredTypes: this.getRegisteredTypes(),
+      totalTypes: this.registeredTypes.length
     }
-    
-    return factory.createModelNode(position, config)
-  }
-  
-  /**
-   * 학습 노드 생성
-   */
-  static createTrainingNode(
-    modelType: string,
-    position: { x: number; y: number },
-    modelId: string,
-    config?: any
-  ): any {
-    const factory = this.factories.get(modelType)
-    if (!factory) {
-      throw new Error(`Unknown model type: ${modelType}`)
-    }
-    
-    return factory.createTrainingNode(position, modelId, config)
-  }
-  
-  /**
-   * 팩토리 정보 반환
-   */
-  static getFactoryInfo(): Array<{
-    modelType: string
-    displayName: string
-  }> {
-    return Array.from(this.factories.entries()).map(([modelType, factory]) => ({
-      modelType,
-      displayName: factory.displayName
-    }))
   }
 }
 
-/**
- * 노드 자동 등록을 위한 데코레이터
- */
-export function RegisterNodeFactory(factory: NodeComponentFactory<any>) {
-  return function <T extends new (...args: any[]) => any>(constructor: T) {
-    // 노드 팩토리 등록
-    NodeRegistry.register(factory)
-    return constructor
-  }
-}
+// 싱글톤 인스턴스
+export const NodeRegistry = new NodeRegistryClass()
