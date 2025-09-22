@@ -22,12 +22,8 @@ export interface DataNodeData {
  * 간소화된 데이터 노드 컴포넌트
  */
 const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => {
-  const { selectNode, addVisualizationNode } = useModelStore()
+  const { addVisualizationNode } = useModelStore()
 
-  // 노드 클릭 핸들러
-  const handleClick = useCallback(() => {
-    selectNode(id)
-  }, [id, selectNode])
 
   // 시각화 노드 생성 핸들러
   const handleCreateVisualization = useCallback((event: React.MouseEvent) => {
@@ -51,9 +47,8 @@ const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => 
         relative min-w-[200px] max-w-[280px] rounded-lg border-2 shadow-lg transition-all duration-200
         ${selected ? 'border-blue-400 ring-2 ring-blue-400 ring-opacity-50' : 'border-yellow-300'}
         ${hasData ? 'bg-gradient-to-br from-yellow-50 to-orange-50' : 'bg-gradient-to-br from-gray-50 to-gray-100'}
-        hover:shadow-xl hover:scale-105 cursor-pointer
+        hover:shadow-xl cursor-pointer
       `}
-      onClick={handleClick}
     >
       {/* 입력 핸들 */}
       <Handle

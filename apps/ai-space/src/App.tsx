@@ -95,6 +95,9 @@ function AppInner() {
                     nodeTypes={nodeTypes}
                     fitView
                     className="bg-gray-50"
+                    nodesDraggable={true}
+                    nodesConnectable={true}
+                    elementsSelectable={true}
                   >
                     <Background color="#e5e7eb" gap={20} />
                     <Controls />

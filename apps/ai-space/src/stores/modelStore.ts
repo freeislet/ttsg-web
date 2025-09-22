@@ -123,6 +123,8 @@ export const modelStore = {
       id: nodeId,
       type: 'model',
       position,
+      draggable: true,
+      selectable: true,
       data: {
         label: '신경망 모델',
         modelType,
@@ -145,6 +147,8 @@ export const modelStore = {
       id: nodeId,
       type: 'data',
       position,
+      draggable: true,
+      selectable: true,
       data: {
         label: '훈련 데이터',
         samples: 1000,

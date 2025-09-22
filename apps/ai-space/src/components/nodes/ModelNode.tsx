@@ -1,18 +1,7 @@
-import React, { useState, useCallback } from 'react'
+import React from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { 
-  Brain, 
-  Play, 
-  Square, 
-  Settings, 
-  BarChart3, 
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Zap
-} from 'lucide-react'
+import { Brain, Clock, BarChart3, CheckCircle, AlertCircle } from 'lucide-react'
 import { ModelNodeData, ModelNodeState } from '@/types/ModelNode'
-import { useModelStore } from '@/stores/modelStore'
 
 /**
  * 상태별 스타일 설정
@@ -32,7 +21,7 @@ const getStateStyle = (state: ModelNodeState) => {
         border: 'border-blue-300',
         bg: 'bg-blue-50',
         text: 'text-blue-700',
-        icon: Settings,
+        icon: Brain,
         iconColor: 'text-blue-500'
       }
     case 'training':
@@ -40,7 +29,7 @@ const getStateStyle = (state: ModelNodeState) => {
         border: 'border-yellow-300',
         bg: 'bg-yellow-50',
         text: 'text-yellow-700',
-        icon: Play,
+        icon: Clock,
         iconColor: 'text-yellow-500'
       }
     case 'trained':
@@ -87,62 +76,18 @@ const getStateLabel = (state: ModelNodeState) => {
 /**
  * 통합 모델 노드 컴포넌트
  */
-const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) => {
-  const { selectNode } = useModelStore()
-  const [isHovered, setIsHovered] = useState(false)
-  
+const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ data, selected }) => {
   const style = getStateStyle(data.state)
   const StateIcon = style.icon
   
-  // 노드 클릭 핸들러
-  const handleClick = useCallback(() => {
-    selectNode(id)
-  }, [id, selectNode])
-  
-  // 빠른 액션 핸들러들
-  const handleQuickAction = useCallback((action: string, event: React.MouseEvent) => {
-    event.stopPropagation()
-    console.log(`🔧 Quick action: ${action} on node ${id}`)
-    // TODO: 실제 액션 구현
-  }, [id])
-
-  // 상태별 빠른 액션 버튼들
-  const getQuickActions = () => {
-    const actions = []
-    
-    switch (data.state) {
-      case 'definition':
-        actions.push({ key: 'configure', label: '구성', icon: Settings, color: 'blue' })
-        break
-      case 'configured':
-        actions.push({ key: 'train', label: '학습', icon: Play, color: 'green' })
-        break
-      case 'training':
-        actions.push({ key: 'stop', label: '중지', icon: Square, color: 'red' })
-        break
-      case 'trained':
-        actions.push({ key: 'evaluate', label: '평가', icon: BarChart3, color: 'purple' })
-        break
-      case 'error':
-        actions.push({ key: 'reset', label: '재설정', icon: Settings, color: 'gray' })
-        break
-    }
-    
-    return actions
-  }
-
   return (
     <div
       className={`
         relative min-w-[200px] max-w-[280px] rounded-lg border-2 shadow-lg transition-all duration-200
         ${style.border} ${style.bg}
         ${selected ? 'ring-2 ring-blue-400 ring-opacity-50' : ''}
-        ${isHovered ? 'shadow-xl scale-105' : ''}
-        cursor-pointer
+        hover:shadow-xl cursor-pointer
       `}
-      onClick={handleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {/* 입력 핸들 */}
       <Handle
@@ -262,50 +207,6 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) =
         )}
       </div>
       
-      {/* 빠른 액션 버튼들 */}
-      {isHovered && (
-        <div className="absolute -top-2 -right-2 flex gap-1">
-          {data.state === 'definition' && (
-            <button
-              onClick={(e) => handleQuickAction('configure', e)}
-              className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-lg"
-              title="설정"
-            >
-              <Settings className="w-3 h-3" />
-            </button>
-          )}
-          
-          {data.state === 'configured' && (
-            <button
-              onClick={(e) => handleQuickAction('train', e)}
-              className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition-colors shadow-lg"
-              title="학습 시작"
-            >
-              <Play className="w-3 h-3" />
-            </button>
-          )}
-          
-          {data.state === 'training' && (
-            <button
-              onClick={(e) => handleQuickAction('stop', e)}
-              className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
-              title="학습 중지"
-            >
-              <Square className="w-3 h-3" />
-            </button>
-          )}
-          
-          {(data.state === 'trained' || data.state === 'error') && (
-            <button
-              onClick={(e) => handleQuickAction('reset', e)}
-              className="w-6 h-6 bg-gray-500 text-white rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg"
-              title="초기화"
-            >
-              <Zap className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-      )}
     </div>
   )
 }
