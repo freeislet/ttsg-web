@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Brain, Clock, BarChart3, CheckCircle, AlertCircle } from 'lucide-react'
+import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3 } from 'lucide-react'
 import { ModelNodeData, ModelNodeState } from '@/types/ModelNode'
+import { LayerEditor } from '@/components/layer-editor'
+import { useModelStore } from '@/stores/modelStore'
 
 /**
  * 상태별 스타일 설정
@@ -76,9 +78,19 @@ const getStateLabel = (state: ModelNodeState) => {
 /**
  * 통합 모델 노드 컴포넌트
  */
-const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ data, selected }) => {
+const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) => {
+  const [isLayerEditorOpen, setIsLayerEditorOpen] = useState(false)
+  const { updateNodeData } = useModelStore()
   const style = getStateStyle(data.state)
   const StateIcon = style.icon
+
+  /**
+   * 레이어 설정 저장 핸들러
+   */
+  const handleLayersSave = (layers: import('@/types/ModelNode').LayerConfig[]) => {
+    updateNodeData(id, { layers })
+    console.log('Updated layers for node:', id, layers)
+  }
   
   return (
     <div
@@ -132,20 +144,55 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ data, selected }) => {
       {/* 본문 */}
       <div className="p-3 space-y-2">
         {/* 모델 구조 정보 */}
-        {data.inputShape && data.outputUnits && (
-          <div className="text-xs text-gray-600">
+        <div className="text-xs text-gray-600">
+          {data.inputShape && (
             <div className="flex justify-between">
               <span>입력:</span>
               <span className="font-mono">{data.inputShape.join('×')}</span>
             </div>
+          )}
+          {data.outputUnits && (
             <div className="flex justify-between">
               <span>출력:</span>
               <span className="font-mono">{data.outputUnits}</span>
             </div>
-            <div className="flex justify-between">
-              <span>레이어:</span>
+          )}
+          <div className="flex justify-between items-center">
+            <span>레이어:</span>
+            <div className="flex items-center gap-1">
               <span className="font-mono">{data.layers?.length || 0}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsLayerEditorOpen(true)
+                }}
+                className="p-0.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded"
+                title="레이어 구성 편집"
+              >
+                <Edit3 className="w-3 h-3" />
+              </button>
             </div>
+          </div>
+        </div>
+
+        {/* 레이어 요약 정보 */}
+        {data.layers && data.layers.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {data.layers.slice(0, 3).map((layer, index) => (
+              <div key={index} className="text-xs bg-gray-100 px-2 py-1 rounded flex justify-between">
+                <span className="font-medium">{layer.type}</span>
+                <span className="text-gray-500">
+                  {layer.units && `${layer.units}u`}
+                  {layer.filters && `${layer.filters}f`}
+                  {layer.rate && `${(layer.rate * 100).toFixed(0)}%`}
+                </span>
+              </div>
+            ))}
+            {data.layers.length > 3 && (
+              <div className="text-xs text-gray-500 text-center">
+                +{data.layers.length - 3} more layers
+              </div>
+            )}
           </div>
         )}
         
@@ -207,6 +254,13 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ data, selected }) => {
         )}
       </div>
       
+      {/* 레이어 에디터 팝업 */}
+      <LayerEditor
+        isOpen={isLayerEditorOpen}
+        onClose={() => setIsLayerEditorOpen(false)}
+        initialLayers={data.layers || []}
+        onSave={handleLayersSave}
+      />
     </div>
   )
 }

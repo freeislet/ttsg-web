@@ -9,6 +9,7 @@ import {
 } from 'reactflow'
 import { FlowNode, FlowEdge } from '@/types/flow'
 import { NodeRegistry } from '@/components/nodes/NodeRegistry'
+import { updateModelShapes } from '@/utils/modelShapeInference'
 
 /**
  * 모델 상태 인터페이스
@@ -55,6 +56,8 @@ export const modelStore = {
 
   onConnect: (connection: Connection) => {
     modelState.edges = addEdge(connection, modelState.edges)
+    // 연결 후 모델 shape 자동 업데이트
+    modelState.nodes = updateModelShapes(modelState.nodes, modelState.edges)
   },
 
   onSelectionChange: (params: { nodes: FlowNode[] }) => {

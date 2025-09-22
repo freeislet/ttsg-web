@@ -9,9 +9,11 @@ import {
   Settings,
   Layers,
   Target,
-  Zap
+  Zap,
+  Edit3
 } from 'lucide-react'
 import { ModelNodeData, LayerConfig, TrainingConfig, IModelComponent } from '@/types/ModelNode'
+import { LayerEditor as LayerEditorModal } from '@/components/layer-editor'
 
 /**
  * 레이어 타입별 기본 설정
@@ -315,25 +317,7 @@ export const NeuralNetworkModelComponent: IModelComponent = {
   
   renderPanel: (data: ModelNodeData, onUpdate: (data: Partial<ModelNodeData>) => void) => {
     const [activeTab, setActiveTab] = useState<'structure' | 'training' | 'results'>('structure')
-    
-    const addLayer = useCallback(() => {
-      const newLayer = getDefaultLayerConfig('dense')
-      onUpdate({
-        layers: [...(data.layers || []), newLayer]
-      })
-    }, [data.layers, onUpdate])
-    
-    const updateLayer = useCallback((index: number, layer: LayerConfig) => {
-      const newLayers = [...(data.layers || [])]
-      newLayers[index] = layer
-      onUpdate({ layers: newLayers })
-    }, [data.layers, onUpdate])
-    
-    const removeLayer = useCallback((index: number) => {
-      const newLayers = [...(data.layers || [])]
-      newLayers.splice(index, 1)
-      onUpdate({ layers: newLayers })
-    }, [data.layers, onUpdate])
+    const [isLayerEditorOpen, setIsLayerEditorOpen] = useState(false)
     
     const startTraining = useCallback(() => {
       if (data.trainingConfig) {
@@ -406,26 +390,51 @@ export const NeuralNetworkModelComponent: IModelComponent = {
             <div className="flex items-center justify-between">
               <h4 className="font-medium text-sm">모델 구조</h4>
               <button
-                onClick={addLayer}
-                className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => setIsLayerEditorOpen(true)}
+                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
               >
-                <Plus className="w-3 h-3 inline mr-1" />
-                레이어 추가
+                <Edit3 className="w-3 h-3" />
+                레이어 편집
               </button>
             </div>
             
+            {/* 레이어 요약 표시 */}
             <div className="space-y-2">
-              {data.layers?.map((layer, index) => (
-                <LayerEditor
-                  key={index}
-                  layer={layer}
-                  index={index}
-                  onUpdate={updateLayer}
-                  onRemove={removeLayer}
-                  mode="panel"
-                />
-              ))}
+              {data.layers && data.layers.length > 0 ? (
+                data.layers.map((layer, index) => (
+                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">
+                        {layer.type.charAt(0).toUpperCase() + layer.type.slice(1)} 레이어
+                      </span>
+                      <div className="text-xs text-gray-500">
+                        {layer.units && `${layer.units} units`}
+                        {layer.filters && `${layer.filters} filters`}
+                        {layer.rate && `${(layer.rate * 100).toFixed(0)}% dropout`}
+                        {layer.activation && ` (${layer.activation})`}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Layers className="w-8 h-8 mx-auto mb-2" />
+                  <p>레이어가 없습니다</p>
+                  <p className="text-xs">레이어 편집 버튼을 클릭하여 모델 구조를 설계해보세요</p>
+                </div>
+              )}
             </div>
+            
+            {/* 레이어 에디터 모달 */}
+            <LayerEditorModal
+              isOpen={isLayerEditorOpen}
+              onClose={() => setIsLayerEditorOpen(false)}
+              initialLayers={data.layers || []}
+              onSave={(layers) => {
+                onUpdate({ layers })
+                setIsLayerEditorOpen(false)
+              }}
+            />
           </div>
         )}
         
