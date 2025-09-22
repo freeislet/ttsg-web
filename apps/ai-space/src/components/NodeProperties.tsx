@@ -11,13 +11,13 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
   const [selectedPresetId, setSelectedPresetId] = useState(nodeData?.selectedPresetId || '')
   const [isLoading, setIsLoading] = useState(false)
   const [dataset, setDataset] = useState(nodeData?.dataset || null)
-  
+
   const dataPresets = getDataPresets()
 
   // 데이터셋 로드 핸들러
   const handleLoadDataset = async () => {
     if (!selectedPresetId) return
-    
+
     setIsLoading(true)
     try {
       const preset = getDataPreset(selectedPresetId)
@@ -34,11 +34,11 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-gray-700">
       {/* 데이터셋 선택 */}
       <div className="bg-yellow-50 rounded-lg p-3">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">데이터셋 선택</h4>
-        
+        <h4 className="text-sm font-semibold mb-3">데이터셋 선택</h4>
+
         <div className="space-y-3">
           <select
             value={selectedPresetId}
@@ -71,26 +71,26 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
       {/* 데이터 정보 */}
       {dataset && (
         <div className="bg-yellow-50 rounded-lg p-3">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">데이터 정보</h4>
-          <div className="space-y-2 text-sm">
+          <h4 className="text-sm font-semibold mb-2">데이터 정보</h4>
+          <div className="space-y-2 text-sm text-gray-600">
             <div className="flex justify-between">
-              <span className="text-gray-600">샘플 수:</span>
+              <span>샘플 수:</span>
               <span>{dataset.sampleCount?.toLocaleString() || 0}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">입력 컬럼:</span>
+              <span>입력 컬럼:</span>
               <span>{dataset.inputColumns?.length || 0}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">출력 컬럼:</span>
+              <span>출력 컬럼:</span>
               <span>{dataset.outputColumns?.length || 0}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">입력 Shape:</span>
+              <span>입력 Shape:</span>
               <span className="font-mono text-xs">[{dataset.inputShape?.join(', ') || ''}]</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">출력 Shape:</span>
+              <span>출력 Shape:</span>
               <span className="font-mono text-xs">[{dataset.outputShape?.join(', ') || ''}]</span>
             </div>
           </div>
@@ -101,15 +101,10 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
       {dataset && (
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="p-3 border-b border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-700">데이터 미리보기</h4>
+            <h4 className="text-sm font-semibold">데이터 미리보기</h4>
           </div>
           <div className="p-3">
-            <DataInspector 
-              dataset={dataset} 
-              mode="table" 
-              showModeSelector={true}
-              maxRows={50}
-            />
+            <DataInspector dataset={dataset} mode="table" showModeSelector={true} maxRows={50} />
           </div>
         </div>
       )}
@@ -121,11 +116,7 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
  * 노드 속성 패널 컴포넌트
  */
 const NodeProperties: React.FC = () => {
-  const {
-    nodes,
-    selectedNodeId,
-    removeNode,
-  } = useModelStore()
+  const { nodes, selectedNodeId, removeNode } = useModelStore()
 
   const selectedNode = nodes.find((node) => node.id === selectedNodeId)
 
@@ -135,7 +126,7 @@ const NodeProperties: React.FC = () => {
     return (
       <div className="h-full flex flex-col">
         {/* 헤더 */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="flex-shrink-0 p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
             <Settings className="w-5 h-5 text-gray-500" />
             속성 패널
@@ -163,7 +154,7 @@ const NodeProperties: React.FC = () => {
   return (
     <div className="h-full flex flex-col">
       {/* 헤더 */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="flex-shrink-0 p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
             {selectedNode.type === 'model' ? (
@@ -184,7 +175,7 @@ const NodeProperties: React.FC = () => {
       </div>
 
       {/* 노드 정보 */}
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="flex-1 min-h-0 p-4 overflow-y-auto overflow-x-hidden">
         <div className="space-y-4">
           {/* 기본 정보 */}
           <div className="bg-gray-50 rounded-lg p-3">

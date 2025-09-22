@@ -135,10 +135,8 @@ function AppInner() {
 
               {/* 노드 속성 패널 */}
               <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
-                <div className="h-full bg-white border-l border-gray-200 flex flex-col">
-                  <div className="flex-1 p-4">
-                    <NodeProperties />
-                  </div>
+                <div className="h-full bg-white border-l border-gray-200">
+                  <NodeProperties />
                 </div>
               </ResizablePanel>
             </PanelGroup>
