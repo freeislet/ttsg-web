@@ -113,16 +113,10 @@ const FlowEditorInner: React.FC = () => {
         onDoubleClick={handlePaneDoubleClick}
         nodeTypes={nodeTypes}
         fitView
-        attributionPosition="bottom-left"
-        className="bg-gray-50"
       >
-        <Background color="#e5e7eb" gap={20} />
+        <Background />
         <Controls />
-        <MiniMap
-          nodeColor="#6366f1"
-          maskColor="rgba(0, 0, 0, 0.1)"
-          className="!bg-white !border !border-gray-300"
-        />
+        <MiniMap />
 
         {/* 툴바 패널 */}
         <Panel
