@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react'
-import { Handle, Position, NodeProps } from 'reactflow'
+import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Database, Eye, BarChart3, RefreshCw } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
 import { getDataPreset, getDefaultVisualization } from '@/data'
@@ -9,6 +9,9 @@ import DatasetSelector from '@/components/DatasetSelector'
  * 데이터 노드 데이터 인터페이스
  */
 export interface DataNodeData {
+  // 인덱스 시그니처 (React Flow v12 호환성)
+  [key: string]: unknown
+  
   label: string
   samples?: number
   inputFeatures?: number
@@ -23,15 +26,16 @@ export interface DataNodeData {
 /**
  * 간소화된 데이터 노드 컴포넌트
  */
-const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => {
+const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
+  const nodeData = data as DataNodeData
   const { addVisualizationNode, updateNodeData } = useModelStore()
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(data.selectedPresetId || null)
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(nodeData.selectedPresetId || null)
   const [isLoading, setIsLoading] = useState(false)
 
   // props 변경 감지하여 로컬 상태 동기화
   useEffect(() => {
-    setSelectedPresetId(data.selectedPresetId || null)
-  }, [data.selectedPresetId])
+    setSelectedPresetId(nodeData.selectedPresetId || null)
+  }, [nodeData.selectedPresetId])
 
   // 시각화 노드 생성 핸들러
   const handleCreateVisualization = useCallback((event: React.MouseEvent) => {
@@ -39,12 +43,12 @@ const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => 
     console.log(`🔍 Creating visualization node for data node: ${id}`)
     
     // 기본 시각화 설정 가져오기
-    const defaultVisualization = data.selectedPresetId ? getDefaultVisualization(data.selectedPresetId) : null
+    const defaultVisualization = nodeData.selectedPresetId ? getDefaultVisualization(nodeData.selectedPresetId) : null
     
     if (addVisualizationNode) {
       addVisualizationNode(id, { x: 300, y: 0 }, defaultVisualization)
     }
-  }, [id, data.selectedPresetId, addVisualizationNode])
+  }, [id, nodeData.selectedPresetId, addVisualizationNode])
 
   // 데이터셋 선택 핸들러
   const handleDatasetSelect = useCallback(async (presetId: string | null) => {
@@ -53,7 +57,7 @@ const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => 
     if (!presetId) {
       // 데이터셋 선택 해제
       updateNodeData(id, {
-        ...data,
+        ...nodeData,
         selectedPresetId: null,
         dataset: null,
         samples: 0,
@@ -71,7 +75,7 @@ const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => 
         
         // 노드 데이터 업데이트
         updateNodeData(id, {
-          ...data,
+          ...nodeData,
           selectedPresetId: presetId,
           dataset: loadedDataset,
           samples: loadedDataset.sampleCount,
@@ -88,14 +92,14 @@ const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => 
     } finally {
       setIsLoading(false)
     }
-  }, [id, data, updateNodeData])
+  }, [id, nodeData, updateNodeData])
 
   // 데이터 상태 확인
-  const hasData = data.selectedPresetId && data.dataset
-  const sampleCount = data.samples || 0
-  const inputCount = data.inputFeatures || 0
-  const outputCount = data.outputFeatures || 0
-  const preset = data.selectedPresetId ? getDataPreset(data.selectedPresetId) : null
+  const hasData = nodeData.selectedPresetId && nodeData.dataset
+  const sampleCount = nodeData.samples || 0
+  const inputCount = nodeData.inputFeatures || 0
+  const outputCount = nodeData.outputFeatures || 0
+  const preset = nodeData.selectedPresetId ? getDataPreset(nodeData.selectedPresetId) : null
 
   return (
     <div
@@ -118,7 +122,7 @@ const DataNode: React.FC<NodeProps<DataNodeData>> = ({ id, data, selected }) => 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Database className="w-5 h-5 text-yellow-600" />
-            <span className="font-semibold text-gray-800">{data.label}</span>
+            <span className="font-semibold text-gray-800">{nodeData.label}</span>
           </div>
           <div className={`
             w-2 h-2 rounded-full

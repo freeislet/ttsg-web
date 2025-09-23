@@ -1,13 +1,14 @@
 import React, { useCallback, useMemo } from 'react'
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Controls,
   MiniMap,
   Panel,
   useReactFlow,
   ReactFlowProvider,
-} from 'reactflow'
-import 'reactflow/dist/style.css'
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 
 import { useModelStore } from '@/stores/modelStore'
 import DataNode from '@/components/nodes/DataNode'

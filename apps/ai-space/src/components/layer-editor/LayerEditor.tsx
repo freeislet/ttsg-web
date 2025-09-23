@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react'
-import ReactFlow, {
+import {
+  ReactFlow,
   Node,
   Edge,
   addEdge,
@@ -10,8 +11,8 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap
-} from 'reactflow'
-import 'reactflow/dist/style.css'
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import { 
   Layout, 
   Save, 

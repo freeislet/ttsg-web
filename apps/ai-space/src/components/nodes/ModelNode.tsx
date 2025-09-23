@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Handle, Position, NodeProps } from 'reactflow'
+import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play } from 'lucide-react'
 import { ModelNodeData, ModelNodeState } from '@/types/ModelNode'
 import { LayerEditor } from '@/components/layer-editor'
@@ -80,10 +80,11 @@ const getStateLabel = (state: ModelNodeState) => {
 /**
  * 통합 모델 노드 컴포넌트
  */
-const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) => {
+const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
+  const nodeData = data as ModelNodeData
   const [isLayerEditorOpen, setIsLayerEditorOpen] = useState(false)
   const { updateNodeData } = useModelStore()
-  const style = getStateStyle(data.state)
+  const style = getStateStyle(nodeData.state)
   const StateIcon = style.icon
 
   /**
@@ -98,12 +99,12 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) =
    * 모델 학습 시작
    */
   const handleStartTraining = async () => {
-    if (!data.layers || data.layers.length === 0) {
+    if (!nodeData.layers || nodeData.layers.length === 0) {
       console.warn('No layers defined for training')
       return
     }
 
-    if (!data.inputShape || !data.outputUnits) {
+    if (!nodeData.inputShape || !nodeData.outputUnits) {
       console.warn('Input shape or output units not defined')
       return
     }
@@ -114,7 +115,7 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) =
         state: 'training',
         trainingProgress: {
           epoch: 0,
-          totalEpochs: data.trainingConfig?.epochs || 10,
+          totalEpochs: nodeData.trainingConfig?.epochs || 10,
           loss: 0,
           isTraining: true,
           startTime: new Date()
@@ -129,11 +130,11 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) =
         updateNodeData(id, {
           state: 'trained',
           trainingProgress: {
-            epoch: data.trainingConfig?.epochs || 10,
-            totalEpochs: data.trainingConfig?.epochs || 10,
+            epoch: nodeData.trainingConfig?.epochs || 10,
+            totalEpochs: nodeData.trainingConfig?.epochs || 10,
             loss: 0.1,
             isTraining: false,
-            startTime: data.trainingProgress?.startTime || new Date()
+            startTime: nodeData.trainingProgress?.startTime || new Date()
           }
         })
         console.log('✅ Training completed for node:', id)
@@ -144,7 +145,7 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) =
       updateNodeData(id, { 
         state: 'error',
         trainingProgress: {
-          ...data.trainingProgress,
+          ...nodeData.trainingProgress,
           isTraining: false
         }
       })

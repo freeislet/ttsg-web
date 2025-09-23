@@ -1,5 +1,5 @@
 import React from 'react'
-import { Node } from 'reactflow'
+import { Node } from '@xyflow/react'
 import { Trash2, Settings, Info } from 'lucide-react'
 import { LayerNodeData } from '@/types/LayerEditor'
 

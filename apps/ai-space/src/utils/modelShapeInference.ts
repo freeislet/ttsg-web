@@ -1,4 +1,4 @@
-import { Node, Edge } from 'reactflow'
+import { Node, Edge } from '@xyflow/react'
 import { ModelNodeData } from '@/types/ModelNode'
 import { DataNodeData } from '@/components/nodes/DataNode'
 

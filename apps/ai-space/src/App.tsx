@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import ReactFlow, { Background, Controls, MiniMap, Panel, ReactFlowProvider } from 'reactflow'
+import { ReactFlow, Background, Controls, MiniMap, Panel, ReactFlowProvider } from '@xyflow/react'
 import { AppHeader } from 'shared'
 import { useModelStore } from '@/stores/modelStore'
 import DataNode from '@/components/nodes/DataNode'
@@ -13,7 +13,7 @@ import {
   PanelResizeHandleHorizontal,
   PanelResizeHandleVertical,
 } from '@/components/PanelResize'
-import 'reactflow/dist/style.css'
+import '@xyflow/react/dist/style.css'
 
 // 노드 자동 등록을 위한 import
 import '@/components/nodes'

@@ -1,4 +1,4 @@
-import { Node, Edge } from 'reactflow'
+import { Node, Edge } from '@xyflow/react'
 
 /**
  * 레이어 에디터용 노드 타입
@@ -25,6 +25,9 @@ export type LayerNodeType =
  * 레이어 노드 데이터 인터페이스
  */
 export interface LayerNodeData {
+  // 인덱스 시그니처 (React Flow v12 호환성)
+  [key: string]: unknown
+  
   // 기본 정보
   label: string
   layerType: LayerNodeType

@@ -1,4 +1,4 @@
-import { Node } from 'reactflow'
+import { Node } from '@xyflow/react'
 
 /**
  * 모델 노드의 상태 타입
@@ -68,6 +68,9 @@ export interface ModelMetrics {
  * 통합 모델 노드 데이터 인터페이스
  */
 export interface ModelNodeData {
+  // 인덱스 시그니처 (React Flow v12 호환성)
+  [key: string]: unknown
+  
   // 기본 정보
   label: string
   modelType: string

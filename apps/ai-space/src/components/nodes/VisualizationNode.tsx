@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react'
-import { Handle, Position, NodeProps } from 'reactflow'
+import { Handle, Position, NodeProps } from '@xyflow/react'
 import { BarChart3, Eye, Settings, Maximize2 } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
 import DataInspector, { DataVisualizationMode } from '../DataInspector'
@@ -8,6 +8,9 @@ import DataInspector, { DataVisualizationMode } from '../DataInspector'
  * 시각화 노드 데이터 인터페이스
  */
 export interface VisualizationNodeData {
+  // 인덱스 시그니처 (React Flow v12 호환성)
+  [key: string]: unknown
+  
   label: string
   sourceNodeId: string
   mode?: DataVisualizationMode
@@ -17,7 +20,8 @@ export interface VisualizationNodeData {
 /**
  * 데이터 시각화 노드 컴포넌트
  */
-const VisualizationNode: React.FC<NodeProps<VisualizationNodeData>> = ({ id, data, selected }) => {
+const VisualizationNode: React.FC<NodeProps> = ({ id, data, selected }) => {
+  const nodeData = data as VisualizationNodeData
   const { selectNode, nodes } = useModelStore()
 
   // 노드 클릭 핸들러

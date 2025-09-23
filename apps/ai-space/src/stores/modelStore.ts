@@ -6,7 +6,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   addEdge,
-} from 'reactflow'
+} from '@xyflow/react'
 import { FlowNode, FlowEdge } from '@/types/flow'
 import { NodeRegistry } from '@/components/nodes/NodeRegistry'
 import { updateModelShapes } from '@/utils/modelShapeInference'

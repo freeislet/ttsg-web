@@ -1,4 +1,4 @@
-import { Node, Edge } from 'reactflow'
+import { Node, Edge } from '@xyflow/react'
 
 /**
  * React Flow 타입 확장
