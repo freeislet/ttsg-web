@@ -17,8 +17,8 @@ class NodeRegistryClass {
    */
   createNodeTypes() {
     return {
-      model: () => import('@/components/nodes/ModelNode').then(m => m.default),
-      data: () => import('@/components/nodes/DataNode').then(m => m.default)
+      model: () => import('@/components/model-editor/ModelNode').then((m) => m.default),
+      data: () => import('@/components/model-editor/DataNode').then((m) => m.default),
     }
   }
 
@@ -28,7 +28,7 @@ class NodeRegistryClass {
   getDebugInfo() {
     return {
       registeredTypes: this.getRegisteredTypes(),
-      totalTypes: this.registeredTypes.length
+      totalTypes: this.registeredTypes.length,
     }
   }
 }

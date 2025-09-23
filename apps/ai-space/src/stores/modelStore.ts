@@ -76,17 +76,23 @@ export const modelStore = {
   /**
    * 시각화 노드 추가
    */
-  addVisualizationNode: (sourceNodeId: string, position: { x: number; y: number }, visualizationConfig?: any) => {
+  addVisualizationNode: (
+    sourceNodeId: string,
+    position: { x: number; y: number },
+    visualizationConfig?: any
+  ) => {
     const nodeId = `viz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     const edgeId = `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
     // 소스 노드 위치 기준으로 시각화 노드 위치 계산
-    const sourceNode = modelState.nodes.find(node => node.id === sourceNodeId)
-    const calculatedPosition = sourceNode ? {
-      x: sourceNode.position.x + 350,
-      y: sourceNode.position.y
-    } : position
-    
+    const sourceNode = modelState.nodes.find((node) => node.id === sourceNodeId)
+    const calculatedPosition = sourceNode
+      ? {
+          x: sourceNode.position.x + 350,
+          y: sourceNode.position.y,
+        }
+      : position
+
     const node: FlowNode = {
       id: nodeId,
       type: 'visualization',
@@ -122,7 +128,7 @@ export const modelStore = {
   addModelNode: (modelType: string, position: { x: number; y: number }) => {
     console.log(`🔧 Adding model node: ${modelType}`)
     const nodeId = `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
     const node: FlowNode = {
       id: nodeId,
       type: 'model',
@@ -132,14 +138,13 @@ export const modelStore = {
       data: {
         label: '신경망 모델',
         modelType,
-        state: 'definition'
+        state: 'definition',
       },
     }
 
     modelState.nodes.push(node)
     console.log(`✅ Model node added: ${node.id} (${modelType})`)
   },
-
 
   /**
    * 데이터 노드 추가
@@ -226,14 +231,14 @@ export const modelStore = {
    * 모델 노드 데이터 업데이트
    */
   updateModelNodeData: (modelId: string, updates: any) => {
-    const nodeIndex = modelState.nodes.findIndex(node => node.data?.modelId === modelId)
+    const nodeIndex = modelState.nodes.findIndex((node) => node.data?.modelId === modelId)
     if (nodeIndex !== -1) {
       modelState.nodes[nodeIndex] = {
         ...modelState.nodes[nodeIndex],
         data: {
           ...modelState.nodes[nodeIndex].data,
-          ...updates
-        }
+          ...updates,
+        },
       }
     }
   },
@@ -242,14 +247,14 @@ export const modelStore = {
    * 노드 데이터 업데이트 (일반적인 노드용)
    */
   updateNodeData: (nodeId: string, updates: any) => {
-    const nodeIndex = modelState.nodes.findIndex(node => node.id === nodeId)
+    const nodeIndex = modelState.nodes.findIndex((node) => node.id === nodeId)
     if (nodeIndex !== -1) {
       modelState.nodes[nodeIndex] = {
         ...modelState.nodes[nodeIndex],
         data: {
           ...modelState.nodes[nodeIndex].data,
-          ...updates
-        }
+          ...updates,
+        },
       }
     }
   },
@@ -267,10 +272,9 @@ export const modelStore = {
   getNodeTypes: () => {
     return {
       ...NodeRegistry.createNodeTypes(),
-      data: () => import('@/components/nodes/DataNode').then((m) => m.default),
+      data: () => import('@/components/model-editor/DataNode').then((m) => m.default),
     }
   },
-
 
   // === 유틸리티 ===
 

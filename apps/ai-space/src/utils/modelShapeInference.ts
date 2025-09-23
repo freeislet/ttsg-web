@@ -1,22 +1,22 @@
 import { Node, Edge } from '@xyflow/react'
 import { ModelNodeData } from '@/types/ModelNode'
-import { DataNodeData } from '@/components/nodes/DataNode'
+import { DataNodeData } from '@/components/model-editor/DataNode'
 
 /**
  * 데이터 타입별 기본 shape 매핑
  */
 const DATA_TYPE_SHAPES: Record<string, number[]> = {
   // 샘플 데이터
-  'mnist': [28, 28, 1],        // MNIST 이미지
-  'iris': [4],                 // Iris 특성 4개
-  'car-mpg': [7],             // Car MPG 특성 7개
-  
+  mnist: [28, 28, 1], // MNIST 이미지
+  iris: [4], // Iris 특성 4개
+  'car-mpg': [7], // Car MPG 특성 7개
+
   // 계산된 데이터
-  'linear': [1],              // 1차원 입력
-  'sine': [1],                // 1차원 입력
-  'quadratic': [1],           // 1차원 입력
-  'sigmoid': [1],             // 1차원 입력
-  'gaussian': [1],            // 1차원 입력
+  linear: [1], // 1차원 입력
+  sine: [1], // 1차원 입력
+  quadratic: [1], // 1차원 입력
+  sigmoid: [1], // 1차원 입력
+  gaussian: [1], // 1차원 입력
 }
 
 /**
@@ -24,16 +24,16 @@ const DATA_TYPE_SHAPES: Record<string, number[]> = {
  */
 const DATA_TYPE_OUTPUT_UNITS: Record<string, number> = {
   // 분류 문제
-  'mnist': 10,                // 0-9 숫자 분류
-  'iris': 3,                  // 3개 품종 분류
-  
+  mnist: 10, // 0-9 숫자 분류
+  iris: 3, // 3개 품종 분류
+
   // 회귀 문제
-  'car-mpg': 1,              // 연비 예측
-  'linear': 1,               // 선형 함수 출력
-  'sine': 1,                 // 사인 함수 출력
-  'quadratic': 1,            // 이차 함수 출력
-  'sigmoid': 1,              // 시그모이드 출력
-  'gaussian': 1,             // 가우시안 출력
+  'car-mpg': 1, // 연비 예측
+  linear: 1, // 선형 함수 출력
+  sine: 1, // 사인 함수 출력
+  quadratic: 1, // 이차 함수 출력
+  sigmoid: 1, // 시그모이드 출력
+  gaussian: 1, // 가우시안 출력
 }
 
 /**
@@ -45,21 +45,21 @@ export function inferInputShapeFromDataNode(
   edges: Edge[]
 ): number[] | null {
   // 모델 노드로 연결되는 엣지 찾기
-  const incomingEdges = edges.filter(edge => edge.target === modelNode.id)
-  
+  const incomingEdges = edges.filter((edge) => edge.target === modelNode.id)
+
   if (incomingEdges.length === 0) {
     return null
   }
-  
+
   // 첫 번째 연결된 데이터 노드 찾기
-  const connectedDataNode = dataNodes.find(node => 
-    incomingEdges.some(edge => edge.source === node.id)
+  const connectedDataNode = dataNodes.find((node) =>
+    incomingEdges.some((edge) => edge.source === node.id)
   )
-  
+
   if (!connectedDataNode || !connectedDataNode.data.selectedPresetId) {
     return null
   }
-  
+
   // 데이터셋 ID에서 shape 추론
   const datasetId = connectedDataNode.data.selectedPresetId
   return DATA_TYPE_SHAPES[datasetId] || [1]
@@ -74,21 +74,21 @@ export function inferOutputUnitsFromDataNode(
   edges: Edge[]
 ): number | null {
   // 모델 노드로 연결되는 엣지 찾기
-  const incomingEdges = edges.filter(edge => edge.target === modelNode.id)
-  
+  const incomingEdges = edges.filter((edge) => edge.target === modelNode.id)
+
   if (incomingEdges.length === 0) {
     return null
   }
-  
+
   // 첫 번째 연결된 데이터 노드 찾기
-  const connectedDataNode = dataNodes.find(node => 
-    incomingEdges.some(edge => edge.source === node.id)
+  const connectedDataNode = dataNodes.find((node) =>
+    incomingEdges.some((edge) => edge.source === node.id)
   )
-  
+
   if (!connectedDataNode || !connectedDataNode.data.selectedPresetId) {
     return null
   }
-  
+
   // 데이터셋 ID에서 출력 유닛 수 추론
   const datasetId = connectedDataNode.data.selectedPresetId
   return DATA_TYPE_OUTPUT_UNITS[datasetId] || 1
@@ -97,37 +97,34 @@ export function inferOutputUnitsFromDataNode(
 /**
  * 모든 모델 노드의 shape 자동 업데이트
  */
-export function updateModelShapes(
-  nodes: Node[],
-  edges: Edge[]
-): Node[] {
-  const dataNodes = nodes.filter(node => node.type === 'dataNode') as Node<DataNodeData>[]
-  
-  return nodes.map(node => {
+export function updateModelShapes(nodes: Node[], edges: Edge[]): Node[] {
+  const dataNodes = nodes.filter((node) => node.type === 'dataNode') as Node<DataNodeData>[]
+
+  return nodes.map((node) => {
     if (node.type !== 'modelNode') {
       return node
     }
-    
+
     const modelNode = node as Node<ModelNodeData>
     const inputShape = inferInputShapeFromDataNode(modelNode, dataNodes, edges)
     const outputUnits = inferOutputUnitsFromDataNode(modelNode, dataNodes, edges)
-    
+
     // shape이 변경된 경우에만 업데이트
-    const needsUpdate = 
+    const needsUpdate =
       (inputShape && JSON.stringify(inputShape) !== JSON.stringify(modelNode.data.inputShape)) ||
       (outputUnits && outputUnits !== modelNode.data.outputUnits)
-    
+
     if (needsUpdate) {
       return {
         ...modelNode,
         data: {
           ...modelNode.data,
           ...(inputShape && { inputShape }),
-          ...(outputUnits && { outputUnits })
-        }
+          ...(outputUnits && { outputUnits }),
+        },
       }
     }
-    
+
     return node
   })
 }
@@ -135,14 +132,11 @@ export function updateModelShapes(
 /**
  * 데이터셋 타입에 따른 권장 레이어 구성 제안
  */
-export function suggestLayerConfiguration(
-  inputShape: number[],
-  outputUnits: number
-) {
+export function suggestLayerConfiguration(inputShape: number[], outputUnits: number) {
   const isImageData = inputShape.length >= 2 && inputShape[0] > 1 && inputShape[1] > 1
   const isSequenceData = inputShape.length === 1 && inputShape[0] > 10
   const isClassification = outputUnits > 1
-  
+
   if (isImageData) {
     // 이미지 데이터: CNN 구조 제안
     return [
@@ -151,14 +145,14 @@ export function suggestLayerConfiguration(
       { type: 'flatten' },
       { type: 'dense', units: 128, activation: 'relu' },
       { type: 'dropout', rate: 0.5 },
-      { type: 'dense', units: outputUnits, activation: isClassification ? 'softmax' : 'linear' }
+      { type: 'dense', units: outputUnits, activation: isClassification ? 'softmax' : 'linear' },
     ]
   } else if (isSequenceData) {
     // 시퀀스 데이터: RNN 구조 제안
     return [
       { type: 'lstm', units: 50, activation: 'tanh' },
       { type: 'dropout', rate: 0.2 },
-      { type: 'dense', units: outputUnits, activation: isClassification ? 'softmax' : 'linear' }
+      { type: 'dense', units: outputUnits, activation: isClassification ? 'softmax' : 'linear' },
     ]
   } else {
     // 일반 테이블 데이터: MLP 구조 제안
@@ -168,7 +162,7 @@ export function suggestLayerConfiguration(
       { type: 'dropout', rate: 0.3 },
       { type: 'dense', units: Math.floor(hiddenUnits / 2), activation: 'relu' },
       { type: 'dropout', rate: 0.3 },
-      { type: 'dense', units: outputUnits, activation: isClassification ? 'softmax' : 'linear' }
+      { type: 'dense', units: outputUnits, activation: isClassification ? 'softmax' : 'linear' },
     ]
   }
 }

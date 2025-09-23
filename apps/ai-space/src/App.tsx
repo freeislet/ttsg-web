@@ -1,18 +1,15 @@
 import { AppHeader } from 'shared'
-import { FlowEditor } from '@/components/FlowEditor'
-import NodeProperties from '@/components/NodeProperties'
-import BottomPanel from '@/components/BottomPanel'
 import {
   Panel,
   PanelGroup,
   PanelResizeHandleHorizontal,
   PanelResizeHandleVertical,
 } from '@/components/PanelResize'
+import { ModelEditor } from '@/components/model-editor'
+import NodeProperties from '@/components/NodeProperties'
+import BottomPanel from '@/components/BottomPanel'
 
-// 노드 자동 등록을 위한 import
-import '@/components/nodes'
-
-function AppInner() {
+function App() {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <AppHeader title="AI SPACE" homeUrl="https://ttsg.space">
@@ -31,7 +28,7 @@ function AppInner() {
               {/* 플로우 에디터 */}
               <Panel defaultSize={75} minSize={60}>
                 <div className="h-full flex flex-col">
-                  <FlowEditor />
+                  <ModelEditor />
                 </div>
               </Panel>
 
@@ -58,4 +55,4 @@ function AppInner() {
   )
 }
 
-export default AppInner
+export default App

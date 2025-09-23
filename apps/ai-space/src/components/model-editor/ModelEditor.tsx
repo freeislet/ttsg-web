@@ -1,39 +1,15 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { Panel } from '@xyflow/react'
 
 import { useModelStore } from '@/stores/modelStore'
-import { ReactFlow } from '@/components/ReactFlow'
-import DataNode from '@/components/nodes/DataNode'
-import ModelNode from '@/components/nodes/ModelNode'
-
-// 동적 import를 위한 컴포넌트 로더
-const DynamicNodeComponent = ({ type, ...props }: any) => {
-  const Component = useMemo(() => {
-    switch (type) {
-      case 'model':
-        return ModelNode
-      case 'data':
-        return DataNode
-      default:
-        return () => (
-          <div className="p-4 bg-red-100 border border-red-300 rounded">
-            Unknown node type: {type}
-          </div>
-        )
-    }
-  }, [type])
-
-  return (
-    <React.Suspense fallback={<div className="p-4 bg-gray-100 border rounded">Loading...</div>}>
-      <Component {...props} />
-    </React.Suspense>
-  )
-}
+import { Flow } from '@/components/Flow'
+import DataNode from '@/components/model-editor/DataNode'
+import ModelNode from '@/components/model-editor/ModelNode'
 
 /**
- * Flow Editor 컴포넌트
+ * Model Editor 컴포넌트
  */
-export const FlowEditor = () => {
+export const ModelEditor = () => {
   const {
     nodes,
     edges,
@@ -52,14 +28,14 @@ export const FlowEditor = () => {
   // 노드 타입 정의
   const nodeTypes = useMemo(
     () => ({
-      model: DynamicNodeComponent,
+      model: ModelNode,
       data: DataNode,
     }),
     []
   )
 
   return (
-    <ReactFlow
+    <Flow
       nodes={nodes as any}
       edges={edges as any}
       onNodesChange={onNodesChange}
@@ -150,6 +126,6 @@ export const FlowEditor = () => {
           </div>
         </Panel>
       )}
-    </ReactFlow>
+    </Flow>
   )
 }

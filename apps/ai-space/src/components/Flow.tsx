@@ -1,10 +1,11 @@
 import {
-  ReactFlow as _ReactFlow,
+  ReactFlow,
   ReactFlowProps,
   Background,
   Controls,
   MiniMap,
   SelectionMode,
+  Node,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -12,9 +13,13 @@ import '@xyflow/react/dist/style.css'
  * 커스터마이징된 ReactFlow 컴포넌트
  * 기본 설정과 Background, Controls, MiniMap이 포함됨
  */
-export const ReactFlow = ({ children, ...props }: ReactFlowProps) => {
+export interface FlowProps extends ReactFlowProps {
+  nodeColor?: (node: Node) => string
+}
+
+export const Flow = ({ nodeColor, children, ...props }: FlowProps) => {
   return (
-    <_ReactFlow
+    <ReactFlow
       fitView
       panOnScroll
       panOnDrag={false}
@@ -24,8 +29,8 @@ export const ReactFlow = ({ children, ...props }: ReactFlowProps) => {
     >
       <Background />
       <Controls />
-      <MiniMap />
+      <MiniMap nodeColor={nodeColor} />
       {children}
-    </_ReactFlow>
+    </ReactFlow>
   )
 }
