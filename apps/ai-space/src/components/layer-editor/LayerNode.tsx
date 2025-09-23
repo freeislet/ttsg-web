@@ -7,7 +7,13 @@ import {
   Layers, 
   Shuffle, 
   Droplets,
-  Settings
+  Settings,
+  Zap,
+  Hash,
+  Eye,
+  Grid3x3,
+  Minimize2,
+  Maximize2
 } from 'lucide-react'
 import { LayerNodeData, LayerNodeType } from '@/types/LayerEditor'
 
@@ -22,6 +28,7 @@ const getLayerIcon = (layerType: LayerNodeType) => {
     case 'dense':
       return Brain
     case 'conv2d':
+    case 'conv1d':
       return Layers
     case 'lstm':
       return Shuffle
@@ -29,6 +36,20 @@ const getLayerIcon = (layerType: LayerNodeType) => {
       return Droplets
     case 'flatten':
       return Box
+    case 'batchNorm':
+      return Zap
+    case 'layerNorm':
+      return Hash
+    case 'attention':
+      return Eye
+    case 'embedding':
+      return Grid3x3
+    case 'maxPool2d':
+    case 'avgPool2d':
+      return Minimize2
+    case 'globalMaxPool2d':
+    case 'globalAvgPool2d':
+      return Maximize2
     default:
       return Settings
   }

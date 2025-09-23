@@ -1,8 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { 
   Brain, 
-  Plus, 
-  Minus, 
   Play, 
   Square, 
   BarChart3, 
@@ -15,154 +13,9 @@ import {
 import { ModelNodeData, LayerConfig, TrainingConfig, IModelComponent } from '@/types/ModelNode'
 import { LayerEditor as LayerEditorModal } from '@/components/layer-editor'
 
-/**
- * 레이어 타입별 기본 설정
- */
-const getDefaultLayerConfig = (type: LayerConfig['type']): LayerConfig => {
-  switch (type) {
-    case 'dense':
-      return { type: 'dense', units: 64, activation: 'relu' }
-    case 'conv2d':
-      return { type: 'conv2d', filters: 32, kernelSize: 3, activation: 'relu' }
-    case 'lstm':
-      return { type: 'lstm', units: 50, activation: 'tanh' }
-    case 'dropout':
-      return { type: 'dropout', rate: 0.2 }
-    case 'flatten':
-      return { type: 'flatten' }
-    default:
-      return { type: 'dense', units: 64, activation: 'relu' }
-  }
-}
+// 기본 레이어 설정은 LayerEditor 타입 정의로 이동됨
 
-/**
- * 레이어 편집 컴포넌트
- */
-const LayerEditor: React.FC<{
-  layer: LayerConfig
-  index: number
-  onUpdate: (index: number, layer: LayerConfig) => void
-  onRemove: (index: number) => void
-  mode: 'node' | 'panel'
-}> = ({ layer, index, onUpdate, onRemove, mode }) => {
-  const isCompact = mode === 'node'
-  
-  const handleChange = (field: string, value: any) => {
-    onUpdate(index, { ...layer, [field]: value })
-  }
-  
-  if (isCompact) {
-    return (
-      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
-        <span className="font-medium">{layer.type}</span>
-        {layer.units && <span>({layer.units})</span>}
-        {layer.filters && <span>({layer.filters})</span>}
-        <button
-          onClick={() => onRemove(index)}
-          className="ml-auto text-red-500 hover:text-red-700"
-        >
-          <Minus className="w-3 h-3" />
-        </button>
-      </div>
-    )
-  }
-  
-  return (
-    <div className="p-3 border border-gray-200 rounded-lg space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-sm">레이어 {index + 1}</span>
-        <button
-          onClick={() => onRemove(index)}
-          className="text-red-500 hover:text-red-700"
-        >
-          <Minus className="w-4 h-4" />
-        </button>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">타입</label>
-          <select
-            value={layer.type}
-            onChange={(e) => handleChange('type', e.target.value)}
-            className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-          >
-            <option value="dense">Dense</option>
-            <option value="conv2d">Conv2D</option>
-            <option value="lstm">LSTM</option>
-            <option value="dropout">Dropout</option>
-            <option value="flatten">Flatten</option>
-          </select>
-        </div>
-        
-        {layer.type === 'dense' && (
-          <>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">유닛 수</label>
-              <input
-                type="number"
-                value={layer.units || 64}
-                onChange={(e) => handleChange('units', parseInt(e.target.value))}
-                className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">활성화 함수</label>
-              <select
-                value={layer.activation || 'relu'}
-                onChange={(e) => handleChange('activation', e.target.value)}
-                className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-              >
-                <option value="relu">ReLU</option>
-                <option value="sigmoid">Sigmoid</option>
-                <option value="tanh">Tanh</option>
-                <option value="softmax">Softmax</option>
-              </select>
-            </div>
-          </>
-        )}
-        
-        {layer.type === 'conv2d' && (
-          <>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">필터 수</label>
-              <input
-                type="number"
-                value={layer.filters || 32}
-                onChange={(e) => handleChange('filters', parseInt(e.target.value))}
-                className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">커널 크기</label>
-              <input
-                type="number"
-                value={layer.kernelSize || 3}
-                onChange={(e) => handleChange('kernelSize', parseInt(e.target.value))}
-                className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-              />
-            </div>
-          </>
-        )}
-        
-        {layer.type === 'dropout' && (
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">드롭아웃 비율</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="1"
-              value={layer.rate || 0.2}
-              onChange={(e) => handleChange('rate', parseFloat(e.target.value))}
-              className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+// 기존 LayerEditor 컴포넌트는 새로운 React Flow 기반 레이어 에디터로 대체됨
 
 /**
  * 학습 설정 컴포넌트
@@ -256,24 +109,7 @@ export const NeuralNetworkModelComponent: IModelComponent = {
   description: '다층 퍼셉트론 신경망 모델',
   
   renderNode: (data: ModelNodeData, onUpdate: (data: Partial<ModelNodeData>) => void) => {
-    const addLayer = useCallback(() => {
-      const newLayer = getDefaultLayerConfig('dense')
-      onUpdate({
-        layers: [...(data.layers || []), newLayer]
-      })
-    }, [data.layers, onUpdate])
-    
-    const updateLayer = useCallback((index: number, layer: LayerConfig) => {
-      const newLayers = [...(data.layers || [])]
-      newLayers[index] = layer
-      onUpdate({ layers: newLayers })
-    }, [data.layers, onUpdate])
-    
-    const removeLayer = useCallback((index: number) => {
-      const newLayers = [...(data.layers || [])]
-      newLayers.splice(index, 1)
-      onUpdate({ layers: newLayers })
-    }, [data.layers, onUpdate])
+    // 레이어 편집은 새로운 React Flow 기반 에디터에서 처리
     
     return (
       <div className="space-y-2">
@@ -281,25 +117,24 @@ export const NeuralNetworkModelComponent: IModelComponent = {
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-gray-700">레이어 구조</span>
-            <button
-              onClick={addLayer}
-              className="text-blue-500 hover:text-blue-700"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
+            <span className="text-xs text-gray-500">
+              {data.layers?.length || 0}개 레이어
+            </span>
           </div>
           
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {data.layers?.map((layer, index) => (
-              <LayerEditor
-                key={index}
-                layer={layer}
-                index={index}
-                onUpdate={updateLayer}
-                onRemove={removeLayer}
-                mode="node"
-              />
+              <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                <span className="font-medium">{layer.type}</span>
+                {layer.units && <span>({layer.units})</span>}
+                {layer.filters && <span>({layer.filters})</span>}
+              </div>
             ))}
+            {(!data.layers || data.layers.length === 0) && (
+              <div className="text-xs text-gray-500 text-center py-2">
+                레이어 편집 버튼을 클릭하여 레이어를 추가하세요
+              </div>
+            )}
           </div>
         </div>
         

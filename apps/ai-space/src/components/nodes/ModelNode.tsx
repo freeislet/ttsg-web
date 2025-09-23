@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3 } from 'lucide-react'
+import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play } from 'lucide-react'
 import { ModelNodeData, ModelNodeState } from '@/types/ModelNode'
 import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
+import { executeModelPipeline } from '@/utils/modelBuilder'
+import { uiLayerConfigToLayerNodeData } from '@/utils/layerConfigConverter'
 
 /**
  * 상태별 스타일 설정
@@ -90,6 +92,63 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) =
   const handleLayersSave = (layers: import('@/types/ModelNode').LayerConfig[]) => {
     updateNodeData(id, { layers })
     console.log('Updated layers for node:', id, layers)
+  }
+
+  /**
+   * 모델 학습 시작
+   */
+  const handleStartTraining = async () => {
+    if (!data.layers || data.layers.length === 0) {
+      console.warn('No layers defined for training')
+      return
+    }
+
+    if (!data.inputShape || !data.outputUnits) {
+      console.warn('Input shape or output units not defined')
+      return
+    }
+
+    try {
+      // 상태를 학습 중으로 변경
+      updateNodeData(id, { 
+        state: 'training',
+        trainingProgress: {
+          epoch: 0,
+          totalEpochs: data.trainingConfig?.epochs || 10,
+          loss: 0,
+          isTraining: true,
+          startTime: new Date()
+        }
+      })
+
+      console.log('🚀 Starting model training for node:', id)
+      
+      // TODO: 실제 데이터 연결 및 학습 구현
+      // 현재는 시뮬레이션만 수행
+      setTimeout(() => {
+        updateNodeData(id, {
+          state: 'trained',
+          trainingProgress: {
+            epoch: data.trainingConfig?.epochs || 10,
+            totalEpochs: data.trainingConfig?.epochs || 10,
+            loss: 0.1,
+            isTraining: false,
+            startTime: data.trainingProgress?.startTime || new Date()
+          }
+        })
+        console.log('✅ Training completed for node:', id)
+      }, 3000)
+
+    } catch (error) {
+      console.error('❌ Training failed:', error)
+      updateNodeData(id, { 
+        state: 'error',
+        trainingProgress: {
+          ...data.trainingProgress,
+          isTraining: false
+        }
+      })
+    }
   }
   
   return (
@@ -194,6 +253,20 @@ const ModelNode: React.FC<NodeProps<ModelNodeData>> = ({ id, data, selected }) =
               </div>
             )}
           </div>
+        )}
+
+        {/* 학습 버튼 */}
+        {data.state === 'definition' && data.layers && data.layers.length > 0 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleStartTraining()
+            }}
+            className="w-full mt-2 px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center gap-1"
+          >
+            <Play className="w-3 h-3" />
+            모델 학습 시작
+          </button>
         )}
         
         {/* 학습 진행 상황 */}

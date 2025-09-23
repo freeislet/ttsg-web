@@ -20,7 +20,15 @@ import {
   Layers,
   Shuffle,
   Droplets,
-  Box
+  Box,
+  Zap,
+  Hash,
+  Eye,
+  Grid3x3,
+  Minimize2,
+  Maximize2,
+  Circle,
+  Square
 } from 'lucide-react'
 
 import LayerNode from './LayerNode'
@@ -57,9 +65,18 @@ const nodeTypes: NodeTypes = {
 const LAYER_ICONS = {
   dense: Brain,
   conv2d: Layers,
+  conv1d: Layers,
   lstm: Shuffle,
   dropout: Droplets,
-  flatten: Box
+  flatten: Box,
+  batchNorm: Zap,
+  layerNorm: Hash,
+  attention: Eye,
+  embedding: Grid3x3,
+  maxPool2d: Minimize2,
+  avgPool2d: Minimize2,
+  globalMaxPool2d: Maximize2,
+  globalAvgPool2d: Maximize2
 }
 
 /**
