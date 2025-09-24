@@ -128,7 +128,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       const layerNodes = initialLayers.map((layer, index) => ({
         id: `layer-${index}`,
         type: 'layerNode' as const,
-        position: { x: 0, y: 200 + index * 150 },
+        position: { x: 0, y: index * 150 },
         data: {
           label: layer.type.charAt(0).toUpperCase() + layer.type.slice(1),
           layerType: layer.type as LayerNodeType,
@@ -176,7 +176,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       const newNode: Node<LayerNodeData> = {
         id: `layer-${nextNodeId}`,
         type: 'layerNode',
-        position: { x: 0, y: 200 + nextNodeId * 150 },
+        position: { x: 0, y: nextNodeId * 150 },
         data: {
           label: defaultConfig.label || layerType,
           layerType: defaultConfig.layerType || layerType,
@@ -359,6 +359,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
               onNodeClick={onNodeClick}
               nodeTypes={nodeTypes}
               className="bg-gray-50"
+              fitView
             >
               <Background />
               <Controls />
