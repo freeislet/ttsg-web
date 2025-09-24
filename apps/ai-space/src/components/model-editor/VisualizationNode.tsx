@@ -2,26 +2,15 @@ import React, { useCallback, useMemo } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
 import { BarChart3, Eye, Settings, Maximize2 } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
-import DataInspector, { DataVisualizationMode } from '../DataInspector'
+import DataInspector from '../DataInspector'
+import { VisualizationNodeData } from '@/types/VisualizationNode'
 
-/**
- * 시각화 노드 데이터 인터페이스
- */
-export interface VisualizationNodeData {
-  // 인덱스 시그니처 (React Flow v12 호환성)
-  [key: string]: unknown
-  
-  label: string
-  sourceNodeId: string
-  mode?: DataVisualizationMode
-  isExpanded?: boolean
-}
+export type { VisualizationNodeData }
 
 /**
  * 데이터 시각화 노드 컴포넌트
  */
 const VisualizationNode: React.FC<NodeProps> = ({ id, data, selected }) => {
-  const nodeData = data as VisualizationNodeData
   const { selectNode, nodes } = useModelStore()
 
   // 노드 클릭 핸들러
@@ -29,21 +18,15 @@ const VisualizationNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     selectNode(id)
   }, [id, selectNode])
 
-  // 소스 데이터 노드 찾기
+  // 소스 노드 찾기
   const sourceNode = useMemo(() => {
-    return nodes.find(node => node.id === data.sourceNodeId)
-  }, [nodes, data.sourceNodeId])
+    const vizData = data as VisualizationNodeData
+    return nodes.find(node => node.id === vizData.sourceNodeId)
+  }, [data, nodes])
 
-  // 소스 노드의 데이터셋 가져오기
-  const sourceDataset = useMemo(() => {
-    return sourceNode?.data?.dataset || null
-  }, [sourceNode])
+  // 소스 데이터 가져오기
+  const sourceDataset = sourceNode?.data?.dataset
 
-  // 시각화 모드 변경
-  const handleModeChange = useCallback((newMode: DataVisualizationMode) => {
-    // TODO: 노드 데이터 업데이트 로직
-    console.log(`🔧 Changing visualization mode to: ${newMode}`)
-  }, [])
 
   // 확장/축소 토글
   const handleToggleExpand = useCallback((event: React.MouseEvent) => {
@@ -52,8 +35,8 @@ const VisualizationNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     console.log('🔧 Toggle expand visualization node')
   }, [])
 
-  const currentMode = data.mode || 'table'
-  const isExpanded = data.isExpanded || false
+  const currentMode = (data as VisualizationNodeData).visualizationMode || 'table'
+  const isExpanded = (data as VisualizationNodeData).showDataTable || false
 
   return (
     <div
@@ -78,7 +61,7 @@ const VisualizationNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-purple-600" />
-            <span className="font-semibold text-gray-800">{data.label}</span>
+            <span className="font-semibold text-gray-800">{(data as VisualizationNodeData).label}</span>
           </div>
           
           <div className="flex items-center gap-1">
@@ -114,7 +97,7 @@ const VisualizationNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           <div className={isExpanded ? 'h-96' : 'h-48'}>
             <DataInspector
               dataset={sourceDataset}
-              mode={currentMode}
+              mode={currentMode as any}
               showModeSelector={isExpanded}
               maxRows={isExpanded ? 100 : 20}
               className="h-full"

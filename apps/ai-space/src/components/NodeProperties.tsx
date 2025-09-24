@@ -4,6 +4,7 @@ import { Brain, Database, Trash2, Info, Settings, RefreshCw } from 'lucide-react
 import { getDataPreset } from '@/data'
 import DataInspector from './DataInspector'
 import DatasetSelector from './DatasetSelector'
+import { AppNode } from '@/types/AppNodes'
 
 /**
  * 데이터 노드 속성 컴포넌트
@@ -142,7 +143,7 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
 const NodeProperties: React.FC = () => {
   const { nodes, selectedNodeId, removeNode } = useModelStore()
 
-  const selectedNode = nodes.find((node) => node.id === selectedNodeId)
+  const selectedNode = nodes.find((node) => node.id === selectedNodeId) as AppNode | undefined
 
   console.log('🔍 NodeProperties render:', { selectedNodeId, selectedNode: !!selectedNode })
 

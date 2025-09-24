@@ -1,10 +1,15 @@
-import { useMemo } from 'react'
 import { Panel } from '@xyflow/react'
 
 import { useModelStore } from '@/stores/modelStore'
-import { Flow } from '@/components/Flow'
-import DataNode from '@/components/model-editor/DataNode'
-import ModelNode from '@/components/model-editor/ModelNode'
+import { Flow } from '../Flow'
+import DataNode from './DataNode'
+import ModelNode from './ModelNode'
+
+// 노드 타입 정의
+const nodeTypes = {
+  data: DataNode,
+  model: ModelNode,
+}
 
 /**
  * Model Editor 컴포넌트
@@ -13,7 +18,6 @@ export const ModelEditor = () => {
   const {
     nodes,
     edges,
-    selectedNodeId,
     isLoading,
     error,
     onNodesChange,
@@ -25,24 +29,15 @@ export const ModelEditor = () => {
     clearAll,
   } = useModelStore()
 
-  // 노드 타입 정의
-  const nodeTypes = useMemo(
-    () => ({
-      model: ModelNode,
-      data: DataNode,
-    }),
-    []
-  )
-
   return (
     <Flow
       nodes={nodes as any}
       edges={edges as any}
+      nodeTypes={nodeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
-      onSelectionChange={onSelectionChange}
-      nodeTypes={nodeTypes}
+      onSelectionChange={onSelectionChange as any}
     >
       {/* 툴바 패널 */}
       <Panel
@@ -50,8 +45,6 @@ export const ModelEditor = () => {
         className="bg-white border border-gray-300 rounded-lg shadow-lg p-3"
       >
         <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-gray-700">노드 추가</h3>
-
           <div className="flex flex-wrap gap-2">
             {/* 데이터 노드 */}
             <button
@@ -78,29 +71,6 @@ export const ModelEditor = () => {
               모두 삭제
             </button>
           </div>
-        </div>
-      </Panel>
-
-      {/* 상태 패널 */}
-      <Panel
-        position="top-right"
-        className="bg-white border border-gray-300 rounded-lg shadow-lg p-3"
-      >
-        <div className="text-xs space-y-1">
-          <div className="flex justify-between">
-            <span className="text-gray-600">노드:</span>
-            <span className="font-mono">{nodes.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">연결:</span>
-            <span className="font-mono">{edges.length}</span>
-          </div>
-          {selectedNodeId && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">선택:</span>
-              <span className="font-mono text-xs">{selectedNodeId.slice(0, 8)}...</span>
-            </div>
-          )}
         </div>
       </Panel>
 

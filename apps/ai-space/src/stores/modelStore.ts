@@ -7,7 +7,7 @@ import {
   applyEdgeChanges,
   addEdge,
 } from '@xyflow/react'
-import { FlowNode, FlowEdge } from '@/types/flow'
+import { AppNode, AppEdge } from '@/types/AppNodes'
 import { NodeRegistry } from '@/components/nodes/NodeRegistry'
 import { updateModelShapes } from '@/utils/modelShapeInference'
 
@@ -16,8 +16,8 @@ import { updateModelShapes } from '@/utils/modelShapeInference'
  */
 interface ModelState {
   // React Flow 상태
-  nodes: FlowNode[]
-  edges: FlowEdge[]
+  nodes: AppNode[]
+  edges: AppEdge[]
   selectedNodeId: string | null
 
   // 모델 인스턴스 관리
@@ -47,20 +47,20 @@ export const modelStore = {
   // === React Flow 이벤트 핸들러 ===
 
   onNodesChange: (changes: NodeChange[]) => {
-    modelState.nodes = applyNodeChanges(changes, modelState.nodes)
+    modelState.nodes = applyNodeChanges(changes, modelState.nodes as any) as AppNode[]
   },
 
   onEdgesChange: (changes: EdgeChange[]) => {
-    modelState.edges = applyEdgeChanges(changes, modelState.edges)
+    modelState.edges = applyEdgeChanges(changes, modelState.edges as any) as AppEdge[]
   },
 
   onConnect: (connection: Connection) => {
-    modelState.edges = addEdge(connection, modelState.edges)
+    modelState.edges = addEdge(connection, modelState.edges as any) as AppEdge[]
     // 연결 후 모델 shape 자동 업데이트
-    modelState.nodes = updateModelShapes(modelState.nodes, modelState.edges)
+    modelState.nodes = updateModelShapes(modelState.nodes, modelState.edges) as AppNode[]
   },
 
-  onSelectionChange: (params: { nodes: FlowNode[] }) => {
+  onSelectionChange: (params: any) => {
     modelState.selectedNodeId = params.nodes[0]?.id || null
     console.log('🔍 Node selected:', modelState.selectedNodeId)
   },
@@ -93,7 +93,7 @@ export const modelStore = {
         }
       : position
 
-    const node: FlowNode = {
+    const node: AppNode = {
       id: nodeId,
       type: 'visualization',
       position: calculatedPosition,
@@ -104,10 +104,10 @@ export const modelStore = {
         isExpanded: false,
         visualizationConfig,
       },
-    }
+    } as AppNode
 
     // 연결 엣지 추가
-    const edge: FlowEdge = {
+    const edge: AppEdge = {
       id: edgeId,
       source: sourceNodeId,
       target: nodeId,
@@ -129,7 +129,7 @@ export const modelStore = {
     console.log(`🔧 Adding model node: ${modelType}`)
     const nodeId = `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-    const node: FlowNode = {
+    const node: AppNode = {
       id: nodeId,
       type: 'model',
       position,
@@ -138,9 +138,11 @@ export const modelStore = {
       data: {
         label: '신경망 모델',
         modelType,
+        modelId: nodeId,
         state: 'definition',
+        layers: [],
       },
-    }
+    } as AppNode
 
     modelState.nodes.push(node)
     console.log(`✅ Model node added: ${node.id} (${modelType})`)
@@ -152,7 +154,7 @@ export const modelStore = {
   addDataNode: (position: { x: number; y: number }) => {
     const nodeId = `data_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-    const node: FlowNode = {
+    const node: AppNode = {
       id: nodeId,
       type: 'data',
       position,
@@ -167,7 +169,7 @@ export const modelStore = {
         inputShape: [10],
         outputShape: [1],
       },
-    }
+    } as AppNode
 
     modelState.nodes.push(node)
     console.log(`✅ Data node added: ${node.id}`)
@@ -187,7 +189,7 @@ export const modelStore = {
 
     // 모델 인스턴스 정리
     const node = modelState.nodes.find((n) => n.id === nodeId)
-    if (node?.data?.modelId) {
+    if (node?.data && 'modelId' in node.data && typeof node.data.modelId === 'string') {
       const model = modelState.modelInstances.get(node.data.modelId)
       if (model && typeof model.dispose === 'function') {
         model.dispose()

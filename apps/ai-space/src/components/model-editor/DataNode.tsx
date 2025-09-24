@@ -8,20 +8,9 @@ import DatasetSelector from '@/components/DatasetSelector'
 /**
  * 데이터 노드 데이터 인터페이스
  */
-export interface DataNodeData {
-  // 인덱스 시그니처 (React Flow v12 호환성)
-  [key: string]: unknown
-  
-  label: string
-  samples?: number
-  inputFeatures?: number
-  outputFeatures?: number
-  dataType?: string
-  inputShape?: number[]
-  outputShape?: number[]
-  selectedPresetId?: string
-  dataset?: any
-}
+import { DataNodeData } from '@/types/DataNode'
+
+export type { DataNodeData }
 
 /**
  * 간소화된 데이터 노드 컴포넌트

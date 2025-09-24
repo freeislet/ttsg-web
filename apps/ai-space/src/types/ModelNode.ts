@@ -107,7 +107,7 @@ export interface ModelNodeData {
 /**
  * 모델 노드 타입
  */
-export type ModelNode = Node<ModelNodeData>
+export type ModelNode = Node<ModelNodeData, 'model'>
 
 /**
  * 모델 컴포넌트 렌더링 모드

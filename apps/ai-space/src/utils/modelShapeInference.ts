@@ -1,6 +1,6 @@
 import { Node, Edge } from '@xyflow/react'
 import { ModelNodeData } from '@/types/ModelNode'
-import { DataNodeData } from '@/components/model-editor/DataNode'
+import { DataNodeData } from '@/types/DataNode'
 
 /**
  * 데이터 타입별 기본 shape 매핑
