@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
+import Modal from 'react-modal'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -92,7 +93,6 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [nextNodeId, setNextNodeId] = useState(1)
-  const dialogRef = useRef<HTMLDialogElement>(null)
 
   /**
    * 에디터 초기화
@@ -159,27 +159,6 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
     setNodes(initialNodes)
   }, [initialLayers])
-
-  // Dialog 제어
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-
-    const handleClose = () => {
-      onClose()
-    }
-
-    if (isOpen) {
-      dialog.showModal()
-      dialog.addEventListener('close', handleClose)
-    } else {
-      dialog.close()
-    }
-
-    return () => {
-      dialog.removeEventListener('close', handleClose)
-    }
-  }, [isOpen, onClose])
 
   // 초기 레이어 설정 (입력/출력 노드 포함)
   React.useEffect(() => {
@@ -316,45 +295,56 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
   return (
     <ReactFlowProvider>
-      <dialog
-        ref={dialogRef}
-        className="backdrop:bg-black backdrop:opacity-50 bg-transparent rounded-lg shadow-xl border-0 outline-0 p-0 w-[90vw] h-[80vh] fixed top-[5vh] left-1/2 -translate-x-1/2"
-        onClick={(e) => {
-          // backdrop 클릭 시 닫기 (dialog 자체 클릭은 제외)
-          if (e.target === dialogRef.current) {
-            onClose()
-          }
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={onClose}
+        shouldCloseOnOverlayClick={true}
+        shouldCloseOnEsc={true}
+        className="bg-white rounded-lg shadow-xl w-[90vw] h-[80vh] flex flex-col outline-none"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        ariaHideApp={false}
+        style={{
+          content: {
+            position: 'relative',
+            top: 'auto',
+            left: 'auto',
+            right: 'auto',
+            bottom: 'auto',
+            border: 'none',
+            padding: 0,
+            margin: 0,
+          },
         }}
       >
-        <div className="bg-white rounded-lg shadow-xl w-full h-full flex flex-col">
-          {/* 헤더 */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">레이어 구성 에디터</h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={autoLayout}
-                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
-              >
-                <Layout className="w-4 h-4" />
-                자동 배치
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-1"
-              >
-                <Save className="w-4 h-4" />
-                저장
-              </button>
-              <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-700">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        {/* 헤더 */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">레이어 구성 에디터</h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={autoLayout}
+              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
+            >
+              <Layout className="w-4 h-4" />
+              자동 배치
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-1"
+            >
+              <Save className="w-4 h-4" />
+              저장
+            </button>
+            <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-700">
+              <X className="w-5 h-5" />
+            </button>
           </div>
+        </div>
 
-          <div className="flex flex-1 overflow-hidden">
-            {/* 레이어 팔레트 */}
-            <div className="w-48 border-r border-gray-200 p-4 bg-gray-50">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">레이어 추가</h3>
+        <div className="flex flex-1 overflow-hidden">
+          {/* 레이어 팔레트 */}
+          <div className="w-48 border-r border-gray-200 bg-gray-50 overflow-y-auto">
+            <div className="p-4 space-y-3">
+              <h3 className="text-sm font-medium text-gray-700">레이어 추가</h3>
               <div className="space-y-2">
                 {Object.entries(LAYER_ICONS).map(([layerType, Icon]) => (
                   <button
@@ -368,65 +358,65 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
                 ))}
               </div>
             </div>
-
-            {/* React Flow 에디터 */}
-            <div className="flex-1 relative">
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onNodeClick={onNodeClick}
-                nodeTypes={nodeTypes}
-                className="bg-gray-50"
-              >
-                <Background />
-                <Controls />
-                <MiniMap
-                  nodeColor={(node) => {
-                    switch ((node.data as LayerNodeData)?.layerType) {
-                      case 'input':
-                        return '#10b981'
-                      case 'output':
-                        return '#ef4444'
-                      case 'dense':
-                        return '#3b82f6'
-                      case 'conv2d':
-                        return '#8b5cf6'
-                      case 'lstm':
-                        return '#f97316'
-                      default:
-                        return '#6b7280'
-                    }
-                  }}
-                  className="bg-white"
-                />
-              </ReactFlow>
-            </div>
-
-            {/* 속성 패널 - 임시로 간단한 정보만 표시 */}
-            {selectedNode && (
-              <div className="w-80 border-l border-gray-200 bg-white p-4">
-                <h3 className="font-medium text-gray-800 mb-2">선택된 레이어</h3>
-                <div className="text-sm text-gray-600">
-                  <div>ID: {selectedNode.id}</div>
-                  <div>타입: {(selectedNode.data as LayerNodeData)?.layerType || 'unknown'}</div>
-                  <div>라벨: {(selectedNode.data as LayerNodeData)?.label || 'unnamed'}</div>
-                </div>
-                {selectedNode.id !== 'input' && selectedNode.id !== 'output' && (
-                  <button
-                    onClick={() => removeLayer(selectedNode.id)}
-                    className="mt-4 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    레이어 삭제
-                  </button>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* React Flow 에디터 */}
+          <div className="flex-1 relative">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              nodeTypes={nodeTypes}
+              className="bg-gray-50"
+            >
+              <Background />
+              <Controls />
+              <MiniMap
+                nodeColor={(node) => {
+                  switch ((node.data as LayerNodeData)?.layerType) {
+                    case 'input':
+                      return '#10b981'
+                    case 'output':
+                      return '#ef4444'
+                    case 'dense':
+                      return '#3b82f6'
+                    case 'conv2d':
+                      return '#8b5cf6'
+                    case 'lstm':
+                      return '#f97316'
+                    default:
+                      return '#6b7280'
+                  }
+                }}
+                className="bg-white"
+              />
+            </ReactFlow>
+          </div>
+
+          {/* 속성 패널 - 임시로 간단한 정보만 표시 */}
+          {selectedNode && (
+            <div className="w-80 border-l border-gray-200 bg-white p-4">
+              <h3 className="font-medium text-gray-800 mb-2">선택된 레이어</h3>
+              <div className="text-sm text-gray-600">
+                <div>ID: {selectedNode.id}</div>
+                <div>타입: {(selectedNode.data as LayerNodeData)?.layerType || 'unknown'}</div>
+                <div>라벨: {(selectedNode.data as LayerNodeData)?.label || 'unnamed'}</div>
+              </div>
+              {selectedNode.id !== 'input' && selectedNode.id !== 'output' && (
+                <button
+                  onClick={() => removeLayer(selectedNode.id)}
+                  className="mt-4 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  레이어 삭제
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      </dialog>
+      </Modal>
     </ReactFlowProvider>
   )
 }
