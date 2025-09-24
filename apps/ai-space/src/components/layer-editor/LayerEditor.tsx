@@ -301,20 +301,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
         shouldCloseOnOverlayClick={true}
         shouldCloseOnEsc={true}
         className="bg-white rounded-lg shadow-xl w-[90vw] h-[80vh] flex flex-col outline-none"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
         ariaHideApp={false}
-        style={{
-          content: {
-            position: 'relative',
-            top: 'auto',
-            left: 'auto',
-            right: 'auto',
-            bottom: 'auto',
-            border: 'none',
-            padding: 0,
-            margin: 0,
-          },
-        }}
       >
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
