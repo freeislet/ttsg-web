@@ -20,7 +20,6 @@ export interface FlowProps extends ReactFlowProps {
 export const Flow = ({ nodeColor, children, ...props }: FlowProps) => {
   return (
     <ReactFlow
-      fitView
       panOnScroll
       panOnDrag={false}
       selectionOnDrag
