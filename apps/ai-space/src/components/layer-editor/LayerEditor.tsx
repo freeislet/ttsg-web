@@ -318,7 +318,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     <ReactFlowProvider>
       <dialog
         ref={dialogRef}
-        className="backdrop:bg-black backdrop:bg-opacity-50 bg-transparent p-0 max-w-none max-h-none w-[90vw] h-[80vh] rounded-lg shadow-xl"
+        className="backdrop:bg-black backdrop:opacity-50 bg-transparent rounded-lg shadow-xl border-0 outline-0 p-0 w-[90vw] h-[80vh] fixed top-[5vh] left-1/2 -translate-x-1/2"
         onClick={(e) => {
           // backdrop 클릭 시 닫기 (dialog 자체 클릭은 제외)
           if (e.target === dialogRef.current) {
