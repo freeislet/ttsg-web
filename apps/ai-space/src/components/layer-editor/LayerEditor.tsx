@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import Modal from 'react-modal'
 import {
-  ReactFlow,
   ReactFlowProvider,
   Node,
   Edge,
@@ -10,11 +9,8 @@ import {
   useEdgesState,
   Connection,
   NodeTypes,
-  Background,
-  Controls,
-  MiniMap,
 } from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
+import { Flow } from '@/components/Flow'
 import {
   Layout,
   Save,
@@ -58,6 +54,26 @@ interface LayerEditorProps {
 const nodeTypes: NodeTypes = {
   layerNode: LayerNode,
   default: LayerNode, // fallback으로도 LayerNode 사용
+}
+
+/**
+ * 미니맵용 노드 색상 함수
+ */
+const getNodeColor = (node: Node<LayerNodeData>): string => {
+  switch (node.data?.layerType) {
+    case 'input':
+      return '#10b981'
+    case 'output':
+      return '#ef4444'
+    case 'dense':
+      return '#3b82f6'
+    case 'conv2d':
+      return '#8b5cf6'
+    case 'lstm':
+      return '#f97316'
+    default:
+      return '#6b7280'
+  }
 }
 
 /**
@@ -348,9 +364,9 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
             </div>
           </div>
 
-          {/* React Flow 에디터 */}
+          {/* Flow 에디터 */}
           <div className="flex-1 relative">
-            <ReactFlow
+            <Flow
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
@@ -358,31 +374,10 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
               onConnect={onConnect}
               onNodeClick={onNodeClick}
               nodeTypes={nodeTypes}
+              nodeColor={getNodeColor}
               className="bg-gray-50"
               fitView
-            >
-              <Background />
-              <Controls />
-              <MiniMap
-                nodeColor={(node) => {
-                  switch ((node.data as LayerNodeData)?.layerType) {
-                    case 'input':
-                      return '#10b981'
-                    case 'output':
-                      return '#ef4444'
-                    case 'dense':
-                      return '#3b82f6'
-                    case 'conv2d':
-                      return '#8b5cf6'
-                    case 'lstm':
-                      return '#f97316'
-                    default:
-                      return '#6b7280'
-                  }
-                }}
-                className="bg-white"
-              />
-            </ReactFlow>
+            />
           </div>
 
           {/* 속성 패널 - 임시로 간단한 정보만 표시 */}

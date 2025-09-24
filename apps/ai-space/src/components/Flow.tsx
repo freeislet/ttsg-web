@@ -13,11 +13,15 @@ import '@xyflow/react/dist/style.css'
  * 커스터마이징된 ReactFlow 컴포넌트
  * 기본 설정과 Background, Controls, MiniMap이 포함됨
  */
-export interface FlowProps extends ReactFlowProps {
-  nodeColor?: (node: Node) => string
+export interface FlowProps<NodeType extends Node = Node> extends ReactFlowProps<NodeType> {
+  nodeColor?: (node: NodeType) => string
 }
 
-export const Flow = ({ nodeColor, children, ...props }: FlowProps) => {
+export const Flow = <NodeType extends Node = Node>({
+  nodeColor,
+  children,
+  ...props
+}: FlowProps<NodeType>) => {
   return (
     <ReactFlow
       panOnScroll
