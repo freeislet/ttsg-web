@@ -150,22 +150,22 @@ const LayerNode: React.FC<NodeProps> = ({ data, selected }) => {
   if (nodeData.layerType === 'input' || nodeData.layerType === 'output') {
     return (
       <div className={style.container}>
-        {/* 입력 노드는 출력 핸들만, 출력 노드는 입력 핸들만 */}
+        {/* 입력 노드는 아래쪽 핸들만, 출력 노드는 위쪽 핸들만 */}
         {nodeData.layerType === 'input' && (
           <Handle
             type="source"
-            position={Position.Right}
+            position={Position.Bottom}
             className="w-3 h-3 bg-green-500 border-2 border-white"
-            style={{ right: -6 }}
+            style={{ bottom: -6 }}
           />
         )}
 
         {nodeData.layerType === 'output' && (
           <Handle
             type="target"
-            position={Position.Left}
+            position={Position.Top}
             className="w-3 h-3 bg-red-500 border-2 border-white"
-            style={{ left: -6 }}
+            style={{ top: -6 }}
           />
         )}
 
@@ -177,20 +177,20 @@ const LayerNode: React.FC<NodeProps> = ({ data, selected }) => {
   // 일반 레이어 노드는 사각형으로 상세 정보 표시
   return (
     <div className={style.container}>
-      {/* 입력 핸들 */}
+      {/* 입력 핸들 (위쪽) */}
       <Handle
         type="target"
-        position={Position.Left}
+        position={Position.Top}
         className="w-3 h-3 bg-blue-500 border-2 border-white"
-        style={{ left: -6 }}
+        style={{ top: -6 }}
       />
 
-      {/* 출력 핸들 */}
+      {/* 출력 핸들 (아래쪽) */}
       <Handle
         type="source"
-        position={Position.Right}
+        position={Position.Bottom}
         className="w-3 h-3 bg-blue-500 border-2 border-white"
-        style={{ right: -6 }}
+        style={{ bottom: -6 }}
       />
 
       {/* 레이어 정보 */}

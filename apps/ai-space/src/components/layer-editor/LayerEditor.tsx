@@ -103,7 +103,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       {
         id: 'input',
         type: 'layerNode',
-        position: { x: 50, y: 200 },
+        position: { x: 0, y: 0 },
         data: {
           ...DEFAULT_LAYER_CONFIGS.input,
           label: '입력',
@@ -114,7 +114,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       {
         id: 'output',
         type: 'layerNode',
-        position: { x: 600, y: 200 },
+        position: { x: 0, y: 600 },
         data: {
           ...DEFAULT_LAYER_CONFIGS.output,
           label: '출력',
@@ -128,7 +128,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       const layerNodes = initialLayers.map((layer, index) => ({
         id: `layer-${index}`,
         type: 'layerNode' as const,
-        position: { x: 200 + index * 150, y: 200 },
+        position: { x: 0, y: 200 + index * 150 },
         data: {
           label: layer.type.charAt(0).toUpperCase() + layer.type.slice(1),
           layerType: layer.type as LayerNodeType,
@@ -176,7 +176,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       const newNode: Node<LayerNodeData> = {
         id: `layer-${nextNodeId}`,
         type: 'layerNode',
-        position: { x: 300 + nextNodeId * 50, y: 200 + nextNodeId * 20 },
+        position: { x: 0, y: 200 + nextNodeId * 150 },
         data: {
           label: defaultConfig.label || layerType,
           layerType: defaultConfig.layerType || layerType,
@@ -246,8 +246,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       return sortedNodes.map((node, index) => ({
         ...node,
         position: {
-          x: config.startX + index * config.nodeSpacing,
-          y: config.startY,
+          x: config.startX,
+          y: config.startY + index * config.layerSpacing,
         },
       }))
     })
