@@ -1,4 +1,4 @@
-import { Node, Edge } from '@xyflow/react'
+import { Edge } from '@xyflow/react'
 import { DataNode, DataNodeData } from './DataNode'
 import { ModelNode, ModelNodeData } from './ModelNode'
 import { VisualizationNode, VisualizationNodeData } from './VisualizationNode'
@@ -22,9 +22,9 @@ export type AppEdge = Edge
  * 노드 타입 매핑
  */
 export interface AppNodeTypes {
-  data: Node<DataNodeData>
-  model: Node<ModelNodeData>
-  visualization: Node<VisualizationNodeData>
+  data: DataNode
+  model: ModelNode
+  visualization: VisualizationNode
 }
 
 /**
