@@ -10,12 +10,12 @@ import {
   NodeTypes,
   Background,
   Controls,
-  MiniMap
+  MiniMap,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { 
-  Layout, 
-  Save, 
+import {
+  Layout,
+  Save,
   X,
   Brain,
   Layers,
@@ -28,17 +28,15 @@ import {
   Grid3x3,
   Minimize2,
   Maximize2,
-  Circle,
-  Square
 } from 'lucide-react'
 
 import LayerNode from './LayerNode'
 // import LayerPropertiesPanel from './LayerPropertiesPanel'
-import { 
-  LayerNodeData, 
-  LayerNodeType, 
+import {
+  LayerNodeData,
+  LayerNodeType,
   DEFAULT_LAYER_CONFIGS,
-  DEFAULT_LAYOUT_CONFIG
+  DEFAULT_LAYOUT_CONFIG,
 } from '@/types/LayerEditor'
 import { LayerConfig } from '@/types/ModelNode'
 
@@ -57,7 +55,7 @@ interface LayerEditorProps {
  */
 const nodeTypes: NodeTypes = {
   layerNode: LayerNode,
-  default: LayerNode  // fallback으로도 LayerNode 사용
+  default: LayerNode, // fallback으로도 LayerNode 사용
 }
 
 /**
@@ -77,7 +75,7 @@ const LAYER_ICONS = {
   maxPool2d: Minimize2,
   avgPool2d: Minimize2,
   globalMaxPool2d: Maximize2,
-  globalAvgPool2d: Maximize2
+  globalAvgPool2d: Maximize2,
 }
 
 /**
@@ -87,19 +85,12 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   isOpen,
   onClose,
   initialLayers = [],
-  onSave
+  onSave,
 }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<LayerNodeData>>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [nextNodeId, setNextNodeId] = useState(1)
-
-  // 초기 레이어 설정 (입력/출력 노드 포함)
-  React.useEffect(() => {
-    if (isOpen && nodes.length === 0) {
-      initializeEditor()
-    }
-  }, [isOpen])
 
   /**
    * 에디터 초기화
@@ -114,8 +105,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
         data: {
           ...DEFAULT_LAYER_CONFIGS.input,
           label: '입력',
-          layerType: 'input'
-        }
+          layerType: 'input',
+        },
       },
       // 출력 노드
       {
@@ -125,9 +116,9 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
         data: {
           ...DEFAULT_LAYER_CONFIGS.output,
           label: '출력',
-          layerType: 'output'
-        }
-      }
+          layerType: 'output',
+        },
+      },
     ]
 
     // 기존 레이어가 있다면 변환해서 추가
@@ -144,8 +135,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
           filters: layer.filters,
           kernelSize: layer.kernelSize,
           rate: layer.rate,
-          layerIndex: index
-        }
+          layerIndex: index,
+        },
       }))
 
       initialNodes.splice(1, 0, ...layerNodes)
@@ -157,7 +148,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
           id: `edge-${i}`,
           source: initialNodes[i].id,
           target: initialNodes[i + 1].id,
-          type: 'smoothstep'
+          type: 'smoothstep',
         })
       }
       setEdges(initialEdges)
@@ -165,56 +156,71 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     }
 
     setNodes(initialNodes)
-  }, [initialLayers, setNodes, setEdges])
+  }, [initialLayers])
+
+  // 초기 레이어 설정 (입력/출력 노드 포함)
+  React.useEffect(() => {
+    if (isOpen && nodes.length === 0) {
+      initializeEditor()
+    }
+  }, [isOpen, nodes.length, initializeEditor])
 
   /**
    * 새 레이어 추가
    */
-  const addLayer = useCallback((layerType: LayerNodeType) => {
-    const defaultConfig = DEFAULT_LAYER_CONFIGS[layerType]
-    const newNode: Node<LayerNodeData> = {
-      id: `layer-${nextNodeId}`,
-      type: 'layerNode',
-      position: { x: 300 + nextNodeId * 50, y: 200 + nextNodeId * 20 },
-      data: {
-        label: defaultConfig.label || layerType,
-        layerType: defaultConfig.layerType || layerType,
-        ...defaultConfig,
-        layerIndex: nextNodeId
+  const addLayer = useCallback(
+    (layerType: LayerNodeType) => {
+      const defaultConfig = DEFAULT_LAYER_CONFIGS[layerType]
+      const newNode: Node<LayerNodeData> = {
+        id: `layer-${nextNodeId}`,
+        type: 'layerNode',
+        position: { x: 300 + nextNodeId * 50, y: 200 + nextNodeId * 20 },
+        data: {
+          label: defaultConfig.label || layerType,
+          layerType: defaultConfig.layerType || layerType,
+          ...defaultConfig,
+          layerIndex: nextNodeId,
+        },
       }
-    }
 
-    setNodes(nds => [...nds, newNode])
-    setNextNodeId(id => id + 1)
-  }, [nextNodeId, setNodes])
+      setNodes((nds) => [...nds, newNode])
+      setNextNodeId((id) => id + 1)
+    },
+    [nextNodeId, setNodes]
+  )
 
   /**
    * 레이어 삭제
    */
-  const removeLayer = useCallback((nodeId: string) => {
-    // 입력/출력 노드는 삭제 불가
-    if (nodeId === 'input' || nodeId === 'output') return
+  const removeLayer = useCallback(
+    (nodeId: string) => {
+      // 입력/출력 노드는 삭제 불가
+      if (nodeId === 'input' || nodeId === 'output') return
 
-    setNodes(nds => nds.filter(node => node.id !== nodeId))
-    setEdges(eds => eds.filter(edge => edge.source !== nodeId && edge.target !== nodeId))
-    
-    if (selectedNodeId === nodeId) {
-      setSelectedNodeId(null)
-    }
-  }, [setNodes, setEdges, selectedNodeId])
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId))
+      setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId))
 
+      if (selectedNodeId === nodeId) {
+        setSelectedNodeId(null)
+      }
+    },
+    [setNodes, setEdges, selectedNodeId]
+  )
 
   /**
    * 연결 생성
    */
-  const onConnect = useCallback((params: Connection) => {
-    setEdges(eds => addEdge({ ...params, type: 'smoothstep' }, eds))
-  }, [setEdges])
+  const onConnect = useCallback(
+    (params: Connection) => {
+      setEdges((eds) => addEdge({ ...params, type: 'smoothstep' }, eds))
+    },
+    [setEdges]
+  )
 
   /**
    * 노드 선택
    */
-  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node<LayerNodeData>) => {
     setSelectedNodeId(node.id)
   }, [])
 
@@ -223,22 +229,24 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
    */
   const autoLayout = useCallback(() => {
     const config = DEFAULT_LAYOUT_CONFIG
-    
-    setNodes(nds => {
+
+    setNodes((nds) => {
       const sortedNodes = [...nds].sort((a, b) => {
         if (a.id === 'input') return -1
         if (b.id === 'input') return 1
         if (a.id === 'output') return 1
         if (b.id === 'output') return -1
-        return (a.data.layerIndex || 0) - (b.data.layerIndex || 0)
+        return (
+          ((a.data as LayerNodeData).layerIndex || 0) - ((b.data as LayerNodeData).layerIndex || 0)
+        )
       })
 
       return sortedNodes.map((node, index) => ({
         ...node,
         position: {
           x: config.startX + index * config.nodeSpacing,
-          y: config.startY
-        }
+          y: config.startY,
+        },
       }))
     })
   }, [setNodes])
@@ -248,13 +256,13 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
    */
   const exportLayers = useCallback((): LayerConfig[] => {
     const layerNodes = nodes
-      .filter(node => node.data.layerType !== 'input' && node.data.layerType !== 'output')
+      .filter((node) => node.data.layerType !== 'input' && node.data.layerType !== 'output')
       .sort((a, b) => (a.data.layerIndex || 0) - (b.data.layerIndex || 0))
 
-    return layerNodes.map(node => {
+    return layerNodes.map((node) => {
       const data = node.data
       const config: LayerConfig = {
-        type: data.layerType as any
+        type: data.layerType as any,
       }
 
       if (data.units) config.units = data.units
@@ -280,7 +288,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
    * 선택된 노드 데이터
    */
   const selectedNode = useMemo(() => {
-    return selectedNodeId ? nodes.find(node => node.id === selectedNodeId) : null
+    return selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : null
   }, [selectedNodeId, nodes])
 
   if (!isOpen) return null
@@ -306,10 +314,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
               <Save className="w-4 h-4" />
               저장
             </button>
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-500 hover:text-gray-700"
-            >
+            <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-700">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -343,20 +348,25 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
               onConnect={onConnect}
               onNodeClick={onNodeClick}
               nodeTypes={nodeTypes}
-              fitView
               className="bg-gray-50"
             >
               <Background />
               <Controls />
-              <MiniMap 
+              <MiniMap
                 nodeColor={(node) => {
-                  switch (node.data?.layerType) {
-                    case 'input': return '#10b981'
-                    case 'output': return '#ef4444'
-                    case 'dense': return '#3b82f6'
-                    case 'conv2d': return '#8b5cf6'
-                    case 'lstm': return '#f97316'
-                    default: return '#6b7280'
+                  switch ((node.data as LayerNodeData)?.layerType) {
+                    case 'input':
+                      return '#10b981'
+                    case 'output':
+                      return '#ef4444'
+                    case 'dense':
+                      return '#3b82f6'
+                    case 'conv2d':
+                      return '#8b5cf6'
+                    case 'lstm':
+                      return '#f97316'
+                    default:
+                      return '#6b7280'
                   }
                 }}
                 className="bg-white"
@@ -370,8 +380,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
               <h3 className="font-medium text-gray-800 mb-2">선택된 레이어</h3>
               <div className="text-sm text-gray-600">
                 <div>ID: {selectedNode.id}</div>
-                <div>타입: {selectedNode.data?.layerType || 'unknown'}</div>
-                <div>라벨: {selectedNode.data?.label || 'unnamed'}</div>
+                <div>타입: {(selectedNode.data as LayerNodeData)?.layerType || 'unknown'}</div>
+                <div>라벨: {(selectedNode.data as LayerNodeData)?.label || 'unnamed'}</div>
               </div>
               {selectedNode.id !== 'input' && selectedNode.id !== 'output' && (
                 <button

@@ -18,7 +18,7 @@ interface LayerPropertiesPanelProps {
 const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
   node,
   onUpdate,
-  onRemove
+  onRemove,
 }) => {
   const { data } = node
 
@@ -42,10 +42,9 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
           </h3>
         </div>
         <p className="text-sm text-gray-600">
-          {data.layerType === 'input' 
+          {data.layerType === 'input'
             ? '입력 노드는 데이터 연결에 의해 자동으로 shape이 결정됩니다.'
-            : '출력 노드는 모델의 최종 출력을 나타냅니다.'
-          }
+            : '출력 노드는 모델의 최종 출력을 나타냅니다.'}
         </p>
       </div>
     )
@@ -71,9 +70,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
       {/* 기본 정보 */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            레이어 이름
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">레이어 이름</label>
           <input
             type="text"
             value={data.label}
@@ -83,9 +80,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            레이어 타입
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">레이어 타입</label>
           <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700">
             {data.layerType.charAt(0).toUpperCase() + data.layerType.slice(1)}
           </div>
@@ -95,9 +90,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
         {data.layerType === 'dense' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                유닛 수
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">유닛 수</label>
               <input
                 type="number"
                 min="1"
@@ -107,9 +100,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                활성화 함수
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">활성화 함수</label>
               <select
                 value={data.activation || 'relu'}
                 onChange={(e) => handleChange('activation', e.target.value)}
@@ -129,9 +120,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
         {data.layerType === 'conv2d' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                필터 수
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">필터 수</label>
               <input
                 type="number"
                 min="1"
@@ -141,13 +130,11 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                커널 크기
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">커널 크기</label>
               <input
                 type="number"
                 min="1"
-                value={Array.isArray(data.kernelSize) ? data.kernelSize[0] : (data.kernelSize || 3)}
+                value={Array.isArray(data.kernelSize) ? data.kernelSize[0] : data.kernelSize || 3}
                 onChange={(e) => {
                   const size = parseInt(e.target.value)
                   handleChange('kernelSize', size)
@@ -156,9 +143,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                패딩
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">패딩</label>
               <select
                 value={data.padding || 'same'}
                 onChange={(e) => handleChange('padding', e.target.value)}
@@ -169,9 +154,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                활성화 함수
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">활성화 함수</label>
               <select
                 value={data.activation || 'relu'}
                 onChange={(e) => handleChange('activation', e.target.value)}
@@ -190,9 +173,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
         {data.layerType === 'lstm' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                유닛 수
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">유닛 수</label>
               <input
                 type="number"
                 min="1"
@@ -202,9 +183,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                활성화 함수
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">활성화 함수</label>
               <select
                 value={data.activation || 'tanh'}
                 onChange={(e) => handleChange('activation', e.target.value)}
@@ -233,9 +212,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
         {/* Dropout 레이어 설정 */}
         {data.layerType === 'dropout' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              드롭아웃 비율
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">드롭아웃 비율</label>
             <input
               type="number"
               min="0"
@@ -245,9 +222,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
               onChange={(e) => handleChange('rate', parseFloat(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              0.0 ~ 1.0 사이의 값 (0.2 = 20% 드롭아웃)
-            </p>
+            <p className="text-xs text-gray-500 mt-1">0.0 ~ 1.0 사이의 값 (0.2 = 20% 드롭아웃)</p>
           </div>
         )}
 
@@ -255,8 +230,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
         {data.layerType === 'flatten' && (
           <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
             <Info className="w-4 h-4 inline mr-2" />
-            Flatten 레이어는 추가 설정이 필요하지 않습니다.
-            다차원 입력을 1차원으로 평탄화합니다.
+            Flatten 레이어는 추가 설정이 필요하지 않습니다. 다차원 입력을 1차원으로 평탄화합니다.
           </div>
         )}
       </div>
@@ -267,9 +241,7 @@ const LayerPropertiesPanel: React.FC<LayerPropertiesPanelProps> = ({
         <div className="text-xs text-gray-600 space-y-1">
           <div>ID: {node.id}</div>
           <div>타입: {data.layerType}</div>
-          {data.layerIndex !== undefined && (
-            <div>순서: {data.layerIndex}</div>
-          )}
+          {data.layerIndex !== undefined && <div>순서: {data.layerIndex}</div>}
         </div>
       </div>
     </div>
