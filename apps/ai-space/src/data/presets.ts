@@ -1,5 +1,6 @@
 import { DataPreset, VisualizationConfig } from './types'
 import { loadMNIST } from './datasets/sample/mnist'
+import { loadFashionMNIST } from './datasets/sample/fashion-mnist'
 import { loadIris } from './datasets/sample/iris'
 import { loadCarMPG } from './datasets/sample/car-mpg'
 import { loadLinearData, loadSineData, createComputedDataLoader } from './datasets/computed'
@@ -27,8 +28,8 @@ export const DATA_PRESETS: DataPreset[] = [
           width: 28,
           height: 28,
           channels: 1,
-          colormap: 'grayscale'
-        }
+          colormap: 'grayscale',
+        },
       },
       {
         type: 'chart',
@@ -38,17 +39,57 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'bar',
           xAxis: { column: 'label', label: '숫자', type: 'categorical' },
           yAxis: { column: 'count', label: '샘플 수', type: 'continuous' },
-          title: 'MNIST 클래스 분포'
-        }
+          title: 'MNIST 클래스 분포',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: '이미지 데이터와 라벨 정보'
-      }
-    ]
+        description: '이미지 데이터와 라벨 정보',
+      },
+    ],
   },
-  
+
+  {
+    id: 'fashion-mnist',
+    name: 'Fashion-MNIST',
+    description: '패션 아이템 분류 데이터셋 (28x28 이미지 → 10개 패션 카테고리)',
+    category: 'sample',
+    loader: loadFashionMNIST,
+    tags: ['classification', 'computer-vision', 'fashion', 'intermediate'],
+    difficulty: 'intermediate',
+    estimatedSize: '25MB',
+    visualizations: [
+      {
+        type: 'image',
+        title: '패션 아이템 이미지',
+        description: '28x28 패션 아이템 이미지들을 그리드 형태로 표시',
+        imageConfig: {
+          width: 28,
+          height: 28,
+          channels: 1,
+          colormap: 'grayscale',
+        },
+      },
+      {
+        type: 'chart',
+        title: '패션 카테고리 분포',
+        description: '10개 패션 아이템별 샘플 수 분포',
+        chartConfig: {
+          type: 'bar',
+          xAxis: { column: 'label', label: '패션 카테고리', type: 'categorical' },
+          yAxis: { column: 'count', label: '샘플 수', type: 'continuous' },
+          title: 'Fashion-MNIST 카테고리 분포',
+        },
+      },
+      {
+        type: 'table',
+        title: '데이터 테이블',
+        description: '패션 이미지 데이터와 카테고리 정보',
+      },
+    ],
+  },
+
   {
     id: 'iris',
     name: 'Iris Flower Classification',
@@ -68,8 +109,8 @@ export const DATA_PRESETS: DataPreset[] = [
           xAxis: { column: 'petal_length', label: '꽃잎 길이 (cm)', type: 'continuous' },
           yAxis: { column: 'petal_width', label: '꽃잎 너비 (cm)', type: 'continuous' },
           colorBy: 'species',
-          title: 'Iris 꽃잎 특성 분포'
-        }
+          title: 'Iris 꽃잎 특성 분포',
+        },
       },
       {
         type: 'chart',
@@ -80,17 +121,17 @@ export const DATA_PRESETS: DataPreset[] = [
           xAxis: { column: 'sepal_length', label: '꽃받침 길이 (cm)', type: 'continuous' },
           yAxis: { column: 'count', label: '빈도', type: 'continuous' },
           colorBy: 'species',
-          title: '꽃받침 길이 분포'
-        }
+          title: '꽃받침 길이 분포',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: '붓꽃 특성 및 품종 정보'
-      }
-    ]
+        description: '붓꽃 특성 및 품종 정보',
+      },
+    ],
   },
-  
+
   {
     id: 'car-mpg',
     name: 'Car MPG Prediction',
@@ -109,8 +150,8 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'scatter',
           xAxis: { column: 'horsepower', label: '마력 (HP)', type: 'continuous' },
           yAxis: { column: 'mpg', label: '연비 (MPG)', type: 'continuous' },
-          title: '마력과 연비의 상관관계'
-        }
+          title: '마력과 연비의 상관관계',
+        },
       },
       {
         type: 'chart',
@@ -120,17 +161,17 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'histogram',
           xAxis: { column: 'mpg', label: '연비 (MPG)', type: 'continuous' },
           yAxis: { column: 'count', label: '빈도', type: 'continuous' },
-          title: '자동차 연비 분포'
-        }
+          title: '자동차 연비 분포',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: '자동차 특성 및 연비 정보'
-      }
-    ]
+        description: '자동차 특성 및 연비 정보',
+      },
+    ],
   },
-  
+
   // Computed 데이터 (프로그래밍 방식으로 생성)
   {
     id: 'linear',
@@ -150,8 +191,8 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'line',
           xAxis: { column: 'x', label: 'X', type: 'continuous' },
           yAxis: { column: 'y', label: 'Y', type: 'continuous' },
-          title: '선형 함수 (y = ax + b)'
-        }
+          title: '선형 함수 (y = ax + b)',
+        },
       },
       {
         type: 'scatter',
@@ -161,17 +202,17 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'scatter',
           xAxis: { column: 'x', label: 'X', type: 'continuous' },
           yAxis: { column: 'y', label: 'Y', type: 'continuous' },
-          title: '선형 데이터 포인트'
-        }
+          title: '선형 데이터 포인트',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: 'X, Y 좌표 값'
-      }
-    ]
+        description: 'X, Y 좌표 값',
+      },
+    ],
   },
-  
+
   {
     id: 'sine',
     name: 'Sine Wave',
@@ -190,8 +231,8 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'line',
           xAxis: { column: 'x', label: 'X (라디안)', type: 'continuous' },
           yAxis: { column: 'y', label: 'Y', type: 'continuous' },
-          title: '사인파 함수'
-        }
+          title: '사인파 함수',
+        },
       },
       {
         type: 'chart',
@@ -201,17 +242,17 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'area',
           xAxis: { column: 'frequency', label: '주파수 (Hz)', type: 'continuous' },
           yAxis: { column: 'amplitude', label: '진폭', type: 'continuous' },
-          title: '주파수 스펙트럼'
-        }
+          title: '주파수 스펙트럼',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: 'X, Y 좌표 값과 위상 정보'
-      }
-    ]
+        description: 'X, Y 좌표 값과 위상 정보',
+      },
+    ],
   },
-  
+
   {
     id: 'quadratic',
     name: 'Quadratic Function',
@@ -227,8 +268,8 @@ export const DATA_PRESETS: DataPreset[] = [
         noiseAmount: 0.1,
         a: 1,
         b: 0,
-        c: 0
-      }
+        c: 0,
+      },
     }),
     tags: ['regression', 'polynomial', 'intermediate'],
     difficulty: 'intermediate',
@@ -242,8 +283,8 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'line',
           xAxis: { column: 'x', label: 'X', type: 'continuous' },
           yAxis: { column: 'y', label: 'Y', type: 'continuous' },
-          title: '이차 함수 (y = ax² + bx + c)'
-        }
+          title: '이차 함수 (y = ax² + bx + c)',
+        },
       },
       {
         type: 'scatter',
@@ -253,17 +294,17 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'scatter',
           xAxis: { column: 'x', label: 'X', type: 'continuous' },
           yAxis: { column: 'y', label: 'Y', type: 'continuous' },
-          title: '이차 함수 데이터 포인트'
-        }
+          title: '이차 함수 데이터 포인트',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: 'X, Y 좌표 값'
-      }
-    ]
+        description: 'X, Y 좌표 값',
+      },
+    ],
   },
-  
+
   {
     id: 'sigmoid',
     name: 'Sigmoid Function',
@@ -277,8 +318,8 @@ export const DATA_PRESETS: DataPreset[] = [
         numPoints: 100,
         trainSplit: 80,
         noiseAmount: 0.05,
-        k: 1
-      }
+        k: 1,
+      },
     }),
     tags: ['regression', 'activation-function', 'advanced'],
     difficulty: 'advanced',
@@ -292,8 +333,8 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'line',
           xAxis: { column: 'x', label: 'X', type: 'continuous' },
           yAxis: { column: 'y', label: 'Y (0-1)', type: 'continuous' },
-          title: '시그모이드 함수 (y = 1/(1+e^(-kx)))'
-        }
+          title: '시그모이드 함수 (y = 1/(1+e^(-kx)))',
+        },
       },
       {
         type: 'chart',
@@ -303,17 +344,17 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'histogram',
           xAxis: { column: 'y', label: '출력값', type: 'continuous' },
           yAxis: { column: 'count', label: '빈도', type: 'continuous' },
-          title: '시그모이드 출력 분포'
-        }
+          title: '시그모이드 출력 분포',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: 'X, Y 좌표 값과 활성화 정보'
-      }
-    ]
+        description: 'X, Y 좌표 값과 활성화 정보',
+      },
+    ],
   },
-  
+
   {
     id: 'gaussian',
     name: 'Gaussian (Normal) Distribution',
@@ -329,8 +370,8 @@ export const DATA_PRESETS: DataPreset[] = [
         noiseAmount: 0.02,
         amplitude: 1,
         mean: 0,
-        stddev: 1
-      }
+        stddev: 1,
+      },
     }),
     tags: ['regression', 'statistics', 'advanced'],
     difficulty: 'advanced',
@@ -344,8 +385,8 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'area',
           xAxis: { column: 'x', label: 'X', type: 'continuous' },
           yAxis: { column: 'y', label: '확률 밀도', type: 'continuous' },
-          title: '가우시안 분포 (μ=0, σ=1)'
-        }
+          title: '가우시안 분포 (μ=0, σ=1)',
+        },
       },
       {
         type: 'chart',
@@ -355,16 +396,16 @@ export const DATA_PRESETS: DataPreset[] = [
           type: 'line',
           xAxis: { column: 'x', label: 'X', type: 'continuous' },
           yAxis: { column: 'cdf', label: '누적 확률', type: 'continuous' },
-          title: '누적 분포 함수'
-        }
+          title: '누적 분포 함수',
+        },
       },
       {
         type: 'table',
         title: '데이터 테이블',
-        description: 'X, Y 좌표 값과 통계 정보'
-      }
-    ]
-  }
+        description: 'X, Y 좌표 값과 통계 정보',
+      },
+    ],
+  },
 ]
 
 /**
@@ -384,13 +425,13 @@ export const DATA_PRESETS_MAP: Record<string, DataPreset> = DATA_PRESETS.reduce(
 export const getPresetsByCategory = () => {
   const categories: Record<string, DataPreset[]> = {
     sample: [],
-    computed: []
+    computed: [],
   }
-  
-  DATA_PRESETS.forEach(preset => {
+
+  DATA_PRESETS.forEach((preset) => {
     categories[preset.category].push(preset)
   })
-  
+
   return categories
 }
 
@@ -398,18 +439,16 @@ export const getPresetsByCategory = () => {
  * 태그별 프리셋 필터링
  */
 export const getPresetsByTag = (tag: string): DataPreset[] => {
-  return DATA_PRESETS.filter(preset => 
-    preset.tags?.includes(tag)
-  )
+  return DATA_PRESETS.filter((preset) => preset.tags?.includes(tag))
 }
 
 /**
  * 난이도별 프리셋 필터링
  */
-export const getPresetsByDifficulty = (difficulty: 'beginner' | 'intermediate' | 'advanced'): DataPreset[] => {
-  return DATA_PRESETS.filter(preset => 
-    preset.difficulty === difficulty
-  )
+export const getPresetsByDifficulty = (
+  difficulty: 'beginner' | 'intermediate' | 'advanced'
+): DataPreset[] => {
+  return DATA_PRESETS.filter((preset) => preset.difficulty === difficulty)
 }
 
 /**
