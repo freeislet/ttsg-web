@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, createContext, useContext } from 'react'
 import Modal from 'react-modal'
 import {
   ReactFlowProvider,
@@ -46,6 +46,23 @@ interface LayerEditorProps {
   onClose: () => void
   initialLayers?: LayerConfig[]
   onSave: (layers: LayerConfig[]) => void
+}
+
+/**
+ * 레이어 에디터 Context
+ */
+interface LayerEditorContextType {
+  updateNodeData: (nodeId: string, updates: Partial<LayerNodeData>) => void
+}
+
+const LayerEditorContext = createContext<LayerEditorContextType | null>(null)
+
+export const useLayerEditor = () => {
+  const context = useContext(LayerEditorContext)
+  if (!context) {
+    throw new Error('useLayerEditor must be used within LayerEditorProvider')
+  }
+  return context
 }
 
 /**
@@ -208,6 +225,28 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   )
 
   /**
+   * 노드 데이터 업데이트
+   */
+  const updateNodeData = useCallback(
+    (nodeId: string, updates: Partial<LayerNodeData>) => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  ...updates,
+                },
+              }
+            : node
+        )
+      )
+    },
+    [setNodes]
+  )
+
+  /**
    * 레이어 삭제
    */
   const removeLayer = useCallback(
@@ -344,62 +383,64 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* 레이어 팔레트 */}
-          <div className="w-48 border-r border-gray-200 bg-gray-50 overflow-y-auto">
-            <div className="p-4 space-y-3">
-              <h3 className="text-sm font-medium text-gray-700">레이어 추가</h3>
-              <div className="space-y-2">
-                {Object.entries(LAYER_ICONS).map(([layerType, Icon]) => (
+        <LayerEditorContext.Provider value={{ updateNodeData }}>
+          <div className="flex flex-1 overflow-hidden">
+            {/* 레이어 팔레트 */}
+            <div className="w-48 border-r border-gray-200 bg-gray-50 overflow-y-auto">
+              <div className="p-4 space-y-3">
+                <h3 className="text-sm font-medium text-gray-700">레이어 추가</h3>
+                <div className="space-y-2">
+                  {Object.entries(LAYER_ICONS).map(([layerType, Icon]) => (
+                    <button
+                      key={layerType}
+                      onClick={() => addLayer(layerType as LayerNodeType)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded hover:bg-gray-50 hover:border-gray-300"
+                    >
+                      <Icon className="w-4 h-4" />
+                      {layerType.charAt(0).toUpperCase() + layerType.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Flow 에디터 */}
+            <div className="flex-1 relative">
+              <Flow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodeClick={onNodeClick}
+                nodeTypes={nodeTypes}
+                nodeColor={getNodeColor}
+                className="bg-gray-50"
+                fitView
+              />
+            </div>
+
+            {/* 속성 패널 - 임시로 간단한 정보만 표시 */}
+            {selectedNode && (
+              <div className="w-80 border-l border-gray-200 bg-white p-4">
+                <h3 className="font-medium text-gray-800 mb-2">선택된 레이어</h3>
+                <div className="text-sm text-gray-600">
+                  <div>ID: {selectedNode.id}</div>
+                  <div>타입: {(selectedNode.data as LayerNodeData)?.layerType || 'unknown'}</div>
+                  <div>라벨: {(selectedNode.data as LayerNodeData)?.label || 'unnamed'}</div>
+                </div>
+                {selectedNode.id !== 'input' && selectedNode.id !== 'output' && (
                   <button
-                    key={layerType}
-                    onClick={() => addLayer(layerType as LayerNodeType)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded hover:bg-gray-50 hover:border-gray-300"
+                    onClick={() => removeLayer(selectedNode.id)}
+                    className="mt-4 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
                   >
-                    <Icon className="w-4 h-4" />
-                    {layerType.charAt(0).toUpperCase() + layerType.slice(1)}
+                    레이어 삭제
                   </button>
-                ))}
+                )}
               </div>
-            </div>
+            )}
           </div>
-
-          {/* Flow 에디터 */}
-          <div className="flex-1 relative">
-            <Flow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onNodeClick={onNodeClick}
-              nodeTypes={nodeTypes}
-              nodeColor={getNodeColor}
-              className="bg-gray-50"
-              fitView
-            />
-          </div>
-
-          {/* 속성 패널 - 임시로 간단한 정보만 표시 */}
-          {selectedNode && (
-            <div className="w-80 border-l border-gray-200 bg-white p-4">
-              <h3 className="font-medium text-gray-800 mb-2">선택된 레이어</h3>
-              <div className="text-sm text-gray-600">
-                <div>ID: {selectedNode.id}</div>
-                <div>타입: {(selectedNode.data as LayerNodeData)?.layerType || 'unknown'}</div>
-                <div>라벨: {(selectedNode.data as LayerNodeData)?.label || 'unnamed'}</div>
-              </div>
-              {selectedNode.id !== 'input' && selectedNode.id !== 'output' && (
-                <button
-                  onClick={() => removeLayer(selectedNode.id)}
-                  className="mt-4 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  레이어 삭제
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        </LayerEditorContext.Provider>
       </Modal>
     </ReactFlowProvider>
   )

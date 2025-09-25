@@ -16,6 +16,7 @@ import {
   Maximize2,
 } from 'lucide-react'
 import { LayerNodeData, LayerNodeType } from '@/types/LayerEditor'
+import { useLayerEditor } from './LayerEditor'
 
 /**
  * 레이어 타입별 아이콘 매핑
@@ -77,37 +78,37 @@ const getLayerStyle = (layerType: LayerNodeType, isSelected: boolean) => {
       }
     case 'dense':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[120px] rounded-lg border-2 border-blue-300 bg-blue-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-blue-300 bg-blue-50 p-3`,
         text: 'text-blue-700',
         icon: 'text-blue-500',
       }
     case 'conv2d':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[120px] rounded-lg border-2 border-purple-300 bg-purple-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-purple-300 bg-purple-50 p-3`,
         text: 'text-purple-700',
         icon: 'text-purple-500',
       }
     case 'lstm':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[120px] rounded-lg border-2 border-orange-300 bg-orange-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-orange-300 bg-orange-50 p-3`,
         text: 'text-orange-700',
         icon: 'text-orange-500',
       }
     case 'dropout':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[120px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
         text: 'text-gray-700',
         icon: 'text-gray-500',
       }
     case 'flatten':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[120px] rounded-lg border-2 border-indigo-300 bg-indigo-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-indigo-300 bg-indigo-50 p-3`,
         text: 'text-indigo-700',
         icon: 'text-indigo-500',
       }
     default:
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[120px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
         text: 'text-gray-700',
         icon: 'text-gray-500',
       }
@@ -115,36 +116,117 @@ const getLayerStyle = (layerType: LayerNodeType, isSelected: boolean) => {
 }
 
 /**
- * 레이어 파라미터 표시 컴포넌트
+ * 레이어 파라미터 입력 폼 컴포넌트
  */
-const LayerParams: React.FC<{ data: LayerNodeData }> = ({ data }) => {
-  const params: string[] = []
-
-  if (data.units) params.push(`${data.units} units`)
-  if (data.filters) params.push(`${data.filters} filters`)
-  if (data.kernelSize) {
-    const kernel = Array.isArray(data.kernelSize)
-      ? `${data.kernelSize[0]}×${data.kernelSize[1]}`
-      : `${data.kernelSize}×${data.kernelSize}`
-    params.push(`${kernel} kernel`)
-  }
-  if (data.rate) params.push(`${(data.rate * 100).toFixed(0)}% rate`)
-  if (data.activation && data.layerType !== 'dropout' && data.layerType !== 'flatten') {
-    params.push(data.activation)
+const LayerParamsForm: React.FC<{ 
+  data: LayerNodeData
+  onChange: (updates: Partial<LayerNodeData>) => void
+}> = ({ data, onChange }) => {
+  const handleChange = (field: keyof LayerNodeData, value: any) => {
+    onChange({ [field]: value })
   }
 
-  if (params.length === 0) return null
+  const renderField = (field: keyof LayerNodeData, value: any, label: string) => {
+    if (field === 'label' || field === 'layerType' || field === 'layerIndex') return null
 
-  return <div className="text-xs text-gray-600 mt-1">{params.join(', ')}</div>
+    switch (typeof value) {
+      case 'number':
+        return (
+          <div key={field} className="mb-2">
+            <label className="block text-xs text-gray-600 mb-1">{label}</label>
+            <input
+              type="number"
+              value={value}
+              onChange={(e) => handleChange(field, Number(e.target.value))}
+              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+              min={field === 'rate' ? 0 : 1}
+              max={field === 'rate' ? 1 : undefined}
+              step={field === 'rate' ? 0.1 : 1}
+            />
+          </div>
+        )
+      case 'string':
+        if (field === 'activation') {
+          const activations = ['relu', 'sigmoid', 'tanh', 'softmax', 'linear', 'elu', 'selu']
+          return (
+            <div key={field} className="mb-2">
+              <label className="block text-xs text-gray-600 mb-1">{label}</label>
+              <select
+                value={value}
+                onChange={(e) => handleChange(field, e.target.value)}
+                className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+              >
+                {activations.map(act => (
+                  <option key={act} value={act}>{act}</option>
+                ))}
+              </select>
+            </div>
+          )
+        } else if (field === 'padding') {
+          return (
+            <div key={field} className="mb-2">
+              <label className="block text-xs text-gray-600 mb-1">{label}</label>
+              <select
+                value={value}
+                onChange={(e) => handleChange(field, e.target.value)}
+                className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+              >
+                <option value="valid">valid</option>
+                <option value="same">same</option>
+              </select>
+            </div>
+          )
+        } else {
+          return (
+            <div key={field} className="mb-2">
+              <label className="block text-xs text-gray-600 mb-1">{label}</label>
+              <input
+                type="text"
+                value={value}
+                onChange={(e) => handleChange(field, e.target.value)}
+                className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+            </div>
+          )
+        }
+      default:
+        return null
+    }
+  }
+
+  // 현재 레이어 타입에 해당하는 필드들만 표시
+  const relevantFields = Object.entries(data).filter(([key, value]) => {
+    if (key === 'label' || key === 'layerType' || key === 'layerIndex') return false
+    return value !== undefined && value !== null
+  })
+
+  if (relevantFields.length === 0) return null
+
+  return (
+    <div className="mt-2 pt-2 border-t border-gray-200">
+      {relevantFields.map(([field, value]) => {
+        const label = field.charAt(0).toUpperCase() + field.slice(1)
+        return renderField(field as keyof LayerNodeData, value, label)
+      })}
+    </div>
+  )
 }
 
 /**
  * 레이어 노드 컴포넌트
  */
-const LayerNode: React.FC<NodeProps> = ({ data, selected }) => {
+const LayerNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as LayerNodeData
   const Icon = getLayerIcon(nodeData.layerType)
   const style = getLayerStyle(nodeData.layerType, selected || false)
+  const { updateNodeData } = useLayerEditor()
+
+  // 노드 데이터 업데이트 핸들러
+  const handleDataChange = (updates: Partial<LayerNodeData>) => {
+    if (id) {
+      updateNodeData(id, updates)
+    }
+  }
 
   // 입력/출력 노드는 원형으로 간단하게 표시
   if (nodeData.layerType === 'input' || nodeData.layerType === 'output') {
@@ -199,8 +281,8 @@ const LayerNode: React.FC<NodeProps> = ({ data, selected }) => {
         <span className={`text-sm font-medium ${style.text}`}>{nodeData.label}</span>
       </div>
 
-      {/* 레이어 파라미터 */}
-      <LayerParams data={nodeData} />
+      {/* 레이어 파라미터 폼 */}
+      <LayerParamsForm data={nodeData} onChange={handleDataChange} />
     </div>
   )
 }
