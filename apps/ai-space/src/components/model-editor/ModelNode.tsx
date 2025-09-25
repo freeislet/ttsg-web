@@ -94,9 +94,11 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   /**
    * 레이어 설정 저장 핸들러
    */
-  const handleLayersSave = (layers: import('@/types/ModelNode').LayerConfig[]) => {
-    updateNodeData(id, { layers })
-    console.log('Updated layers for node:', id, layers)
+  const handleLayersSave = (layers: import('@/types/ModelNode').LayerConfig[], modelNodeId?: string) => {
+    // modelNodeId가 제공되면 해당 ID 사용, 아니면 현재 노드 ID 사용
+    const targetNodeId = modelNodeId || id
+    updateNodeData(targetNodeId, { layers })
+    console.log('Updated layers for node:', targetNodeId, layers)
   }
 
   /**
@@ -340,6 +342,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         onClose={() => setIsLayerEditorOpen(false)}
         initialLayers={nodeData.layers || []}
         onSave={handleLayersSave}
+        modelNodeId={id}
       />
     </div>
   )

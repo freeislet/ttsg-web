@@ -45,7 +45,8 @@ interface LayerEditorProps {
   isOpen: boolean
   onClose: () => void
   initialLayers?: LayerConfig[]
-  onSave: (layers: LayerConfig[]) => void
+  onSave: (layers: LayerConfig[], modelNodeId?: string) => void
+  modelNodeId?: string // 어떤 모델 노드의 레이어를 편집하는지 식별
 }
 
 /**
@@ -53,6 +54,7 @@ interface LayerEditorProps {
  */
 interface LayerEditorContextType {
   updateNodeData: (nodeId: string, updates: Partial<LayerNodeData>) => void
+  connectedNodeIds: string[]
 }
 
 const LayerEditorContext = createContext<LayerEditorContextType | null>(null)
@@ -116,12 +118,7 @@ const LAYER_ICONS = {
 /**
  * 레이어 에디터 컴포넌트
  */
-const LayerEditor: React.FC<LayerEditorProps> = ({
-  isOpen,
-  onClose,
-  initialLayers = [],
-  onSave,
-}) => {
+const LayerEditor: React.FC<LayerEditorProps> = ({ isOpen, onClose, initialLayers = [], onSave, modelNodeId }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<LayerNodeData>>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
@@ -309,14 +306,47 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   }, [setNodes])
 
   /**
-   * 레이어 설정을 LayerConfig 배열로 변환
+   * input 노드로부터 연결된 레이어들을 순서대로 추출
+   */
+  const getConnectedLayers = useCallback((): string[] => {
+    const connectedNodeIds: string[] = []
+    const visitedNodes = new Set<string>()
+    
+    // input 노드부터 시작하여 연결된 노드들을 순회
+    const traverseFromNode = (nodeId: string) => {
+      if (visitedNodes.has(nodeId)) return
+      visitedNodes.add(nodeId)
+      
+      // 현재 노드가 input이 아니고 output이 아닌 경우에만 추가
+      const currentNode = nodes.find(n => n.id === nodeId)
+      if (currentNode && currentNode.data.layerType !== 'input' && currentNode.data.layerType !== 'output') {
+        connectedNodeIds.push(nodeId)
+      }
+      
+      // 현재 노드에서 나가는 엣지들을 찾아서 다음 노드로 이동
+      const outgoingEdges = edges.filter(edge => edge.source === nodeId)
+      outgoingEdges.forEach(edge => {
+        traverseFromNode(edge.target)
+      })
+    }
+    
+    // input 노드부터 시작
+    traverseFromNode('input')
+    return connectedNodeIds
+  }, [nodes, edges])
+
+  /**
+   * 레이어 설정을 LayerConfig 배열로 변환 (연결된 레이어만)
    */
   const exportLayers = useCallback((): LayerConfig[] => {
-    const layerNodes = nodes
-      .filter((node) => node.data.layerType !== 'input' && node.data.layerType !== 'output')
-      .sort((a, b) => (a.data.layerIndex || 0) - (b.data.layerIndex || 0))
+    const connectedLayerIds = getConnectedLayers()
+    
+    // 연결된 레이어들만 필터링하고 연결 순서대로 정렬
+    const connectedLayerNodes = connectedLayerIds
+      .map(id => nodes.find(node => node.id === id))
+      .filter(node => node !== undefined) as Node<LayerNodeData>[]
 
-    return layerNodes.map((node) => {
+    return connectedLayerNodes.map((node) => {
       const data = node.data
       const config: LayerConfig = {
         type: data.layerType as any,
@@ -327,19 +357,20 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       if (data.filters) config.filters = data.filters
       if (data.kernelSize) config.kernelSize = data.kernelSize
       if (data.rate) config.rate = data.rate
+      if (data.padding) config.padding = data.padding
 
       return config
     })
-  }, [nodes])
+  }, [nodes, getConnectedLayers])
 
   /**
    * 저장 및 닫기
    */
   const handleSave = useCallback(() => {
     const layers = exportLayers()
-    onSave(layers)
+    onSave(layers, modelNodeId)
     onClose()
-  }, [exportLayers, onSave, onClose])
+  }, [exportLayers, onSave, onClose, modelNodeId])
 
   /**
    * 선택된 노드 데이터
@@ -383,7 +414,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
           </div>
         </div>
 
-        <LayerEditorContext.Provider value={{ updateNodeData }}>
+        <LayerEditorContext.Provider value={{ updateNodeData, connectedNodeIds: getConnectedLayers() }}>
           <div className="flex flex-1 overflow-hidden">
             {/* 레이어 팔레트 */}
             <div className="w-48 border-r border-gray-200 bg-gray-50 overflow-y-auto">
@@ -400,6 +431,24 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
                       {layerType.charAt(0).toUpperCase() + layerType.slice(1)}
                     </button>
                   ))}
+                </div>
+                
+                {/* 연결 상태 표시 */}
+                <div className="mt-4 pt-3 border-t border-gray-300">
+                  <h4 className="text-xs font-medium text-gray-600 mb-2">연결 상태</h4>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>연결됨</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      <span>연결되지 않음</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    저장 시 연결된 레이어만 모델에 적용됩니다.
+                  </div>
                 </div>
               </div>
             </div>

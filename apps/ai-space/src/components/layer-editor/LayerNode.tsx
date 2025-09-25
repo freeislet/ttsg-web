@@ -59,56 +59,57 @@ const getLayerIcon = (layerType: LayerNodeType) => {
 /**
  * 레이어 타입별 스타일 설정
  */
-const getLayerStyle = (layerType: LayerNodeType, isSelected: boolean) => {
+const getLayerStyle = (layerType: LayerNodeType, isSelected: boolean, isConnected: boolean = true) => {
   const baseStyle = 'transition-all duration-200 hover:shadow-lg'
   const selectedStyle = isSelected ? 'ring-2 ring-blue-400 ring-opacity-50' : ''
+  const disconnectedStyle = !isConnected ? 'opacity-50 border-dashed' : ''
 
   switch (layerType) {
     case 'input':
       return {
-        container: `${baseStyle} ${selectedStyle} w-16 h-16 rounded-full border-2 border-green-400 bg-green-50 flex items-center justify-center`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} w-16 h-16 rounded-full border-2 border-green-400 bg-green-50 flex items-center justify-center`,
         text: 'text-green-700',
         icon: 'text-green-500',
       }
     case 'output':
       return {
-        container: `${baseStyle} ${selectedStyle} w-16 h-16 rounded-full border-2 border-red-400 bg-red-50 flex items-center justify-center`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} w-16 h-16 rounded-full border-2 border-red-400 bg-red-50 flex items-center justify-center`,
         text: 'text-red-700',
         icon: 'text-red-500',
       }
     case 'dense':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-blue-300 bg-blue-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-blue-300 bg-blue-50 p-3`,
         text: 'text-blue-700',
         icon: 'text-blue-500',
       }
     case 'conv2d':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-purple-300 bg-purple-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-purple-300 bg-purple-50 p-3`,
         text: 'text-purple-700',
         icon: 'text-purple-500',
       }
     case 'lstm':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-orange-300 bg-orange-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-orange-300 bg-orange-50 p-3`,
         text: 'text-orange-700',
         icon: 'text-orange-500',
       }
     case 'dropout':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
         text: 'text-gray-700',
         icon: 'text-gray-500',
       }
     case 'flatten':
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-indigo-300 bg-indigo-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-indigo-300 bg-indigo-50 p-3`,
         text: 'text-indigo-700',
         icon: 'text-indigo-500',
       }
     default:
       return {
-        container: `${baseStyle} ${selectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
+        container: `${baseStyle} ${selectedStyle} ${disconnectedStyle} min-w-[180px] max-w-[220px] rounded-lg border-2 border-gray-300 bg-gray-50 p-3`,
         text: 'text-gray-700',
         icon: 'text-gray-500',
       }
@@ -218,8 +219,11 @@ const LayerParamsForm: React.FC<{
 const LayerNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as LayerNodeData
   const Icon = getLayerIcon(nodeData.layerType)
-  const style = getLayerStyle(nodeData.layerType, selected || false)
-  const { updateNodeData } = useLayerEditor()
+  const { updateNodeData, connectedNodeIds } = useLayerEditor()
+  
+  // 연결 상태 확인
+  const isConnected = id ? (connectedNodeIds.includes(id) || nodeData.layerType === 'input' || nodeData.layerType === 'output') : false
+  const style = getLayerStyle(nodeData.layerType, selected || false, isConnected)
 
   // 노드 데이터 업데이트 핸들러
   const handleDataChange = (updates: Partial<LayerNodeData>) => {
