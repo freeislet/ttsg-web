@@ -98,10 +98,10 @@ export function inferOutputUnitsFromDataNode(
  * 모든 모델 노드의 shape 자동 업데이트
  */
 export function updateModelShapes(nodes: Node[], edges: Edge[]): Node[] {
-  const dataNodes = nodes.filter((node) => node.type === 'dataNode') as Node<DataNodeData>[]
+  const dataNodes = nodes.filter((node) => node.type === 'data') as Node<DataNodeData>[]
 
   return nodes.map((node) => {
-    if (node.type !== 'modelNode') {
+    if (node.type !== 'model') {
       return node
     }
 

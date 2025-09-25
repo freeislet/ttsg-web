@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play, Database } from 'lucide-react'
 import { ModelNodeData, ModelNodeState } from '@/types/ModelNode'
+import { DataNodeData } from '@/types/DataNode'
 import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
 
@@ -87,9 +88,36 @@ const getStateLabel = (state: ModelNodeState) => {
 const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const nodeData = data as ModelNodeData
   const [isLayerEditorOpen, setIsLayerEditorOpen] = useState(false)
-  const { updateNodeData } = useModelStore()
+  const { updateNodeData, nodes, edges } = useModelStore()
   const style = getStateStyle(nodeData.state)
   const StateIcon = style.icon
+
+  // 연결된 데이터 노드 정보 계산
+  const connectedDataInfo = useMemo(() => {
+    // 현재 모델 노드로 연결되는 엣지 찾기
+    const incomingEdges = edges.filter((edge) => edge.target === id && edge.targetHandle === 'data-input')
+    
+    if (incomingEdges.length === 0) {
+      return null
+    }
+    
+    // 연결된 데이터 노드 찾기
+    const connectedDataNode = nodes.find((node) => 
+      node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
+    )
+    
+    if (!connectedDataNode) {
+      return null
+    }
+    
+    const dataNodeData = connectedDataNode.data as DataNodeData
+    return {
+      name: dataNodeData.selectedPresetId || '데이터셋',
+      inputShape: dataNodeData.inputShape,
+      outputShape: dataNodeData.outputShape,
+      samples: dataNodeData.samples || 0,
+    }
+  }, [id, nodes, edges])
 
   /**
    * 레이어 설정 저장 핸들러
@@ -170,6 +198,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle
         type="source"
         position={Position.Right}
+        id="model-output"
         className="w-3 h-3 bg-green-500 border-2 border-white"
         style={{ right: -6 }}
       />
@@ -199,35 +228,41 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
         {/* 데이터 연결 섹션 */}
         <div className="mt-2 relative">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <Database className="w-3 h-3 text-gray-400" />
             <span className="text-xs text-gray-500">데이터</span>
-            {/* 데이터 입력 핸들 */}
+            {/* 데이터 입력 핸들 - 데이터 레벨과 정렬 */}
             <Handle
               type="target"
               position={Position.Left}
               id="data-input"
-              className="w-2 h-2 bg-purple-500 border border-white !absolute !left-[-8px] !top-[2px]"
+              className="w-2 h-2 bg-purple-500 border border-white !absolute !left-[-10px] !top-[1px]"
             />
           </div>
           
           {/* 데이터 연결 정보 표시 */}
-          {nodeData.connectedDataNode ? (
+          {connectedDataInfo ? (
             <div className="mt-1 text-xs text-gray-600 bg-purple-50 p-2 rounded border border-purple-200">
               <div className="flex justify-between items-center mb-1">
                 <span className="font-medium text-purple-700">연결된 데이터</span>
-                <span className="text-purple-600">{nodeData.connectedDataNode.name}</span>
+                <span className="text-purple-600">{connectedDataInfo.name}</span>
               </div>
-              {nodeData.inputShape && (
+              {connectedDataInfo.samples > 0 && (
                 <div className="flex justify-between">
-                  <span>Input Shape:</span>
-                  <span className="font-mono text-purple-700">{nodeData.inputShape.join('×')}</span>
+                  <span>샘플 수:</span>
+                  <span className="font-mono text-purple-700">{connectedDataInfo.samples.toLocaleString()}</span>
                 </div>
               )}
-              {nodeData.outputUnits && (
+              {connectedDataInfo.inputShape && (
                 <div className="flex justify-between">
-                  <span>Output Units:</span>
-                  <span className="font-mono text-purple-700">{String(nodeData.outputUnits)}</span>
+                  <span>Input Shape:</span>
+                  <span className="font-mono text-purple-700">{connectedDataInfo.inputShape.join('×')}</span>
+                </div>
+              )}
+              {connectedDataInfo.outputShape && (
+                <div className="flex justify-between">
+                  <span>Output Shape:</span>
+                  <span className="font-mono text-purple-700">{connectedDataInfo.outputShape.join('×')}</span>
                 </div>
               )}
             </div>

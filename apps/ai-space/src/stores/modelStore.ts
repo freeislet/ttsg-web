@@ -47,6 +47,40 @@ export const modelStore = {
   // === React Flow 이벤트 핸들러 ===
 
   onNodesChange: (changes: NodeChange[]) => {
+    // 삭제되는 노드들의 리소스 정리
+    changes.forEach((change) => {
+      if (change.type === 'remove') {
+        const nodeToRemove = modelState.nodes.find(node => node.id === change.id)
+        if (nodeToRemove) {
+          // 데이터 노드의 경우 데이터셋 정리
+          if (nodeToRemove.type === 'data' && nodeToRemove.data.dataset) {
+            try {
+              if (typeof nodeToRemove.data.dataset.dispose === 'function') {
+                nodeToRemove.data.dataset.dispose()
+                console.log(`🧹 Disposed dataset for removed node: ${change.id}`)
+              }
+            } catch (error) {
+              console.warn('Failed to dispose dataset:', error)
+            }
+          }
+          
+          // 모델 인스턴스 정리
+          if (modelState.modelInstances.has(change.id)) {
+            const modelInstance = modelState.modelInstances.get(change.id)
+            if (modelInstance && typeof modelInstance.dispose === 'function') {
+              try {
+                modelInstance.dispose()
+                console.log(`🧹 Disposed model instance for removed node: ${change.id}`)
+              } catch (error) {
+                console.warn('Failed to dispose model instance:', error)
+              }
+            }
+            modelState.modelInstances.delete(change.id)
+          }
+        }
+      }
+    })
+    
     modelState.nodes = applyNodeChanges(changes, modelState.nodes as any) as AppNode[]
   },
 

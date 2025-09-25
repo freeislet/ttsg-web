@@ -49,6 +49,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   )
   const [isLoading, setIsLoading] = useState(false)
   const [showSplitConfig, setShowSplitConfig] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // 기본 데이터 분할 설정
   const defaultSplitConfig: DataSplitConfig = {
@@ -62,7 +63,26 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   // props 변경 감지하여 로컬 상태 동기화
   useEffect(() => {
     setSelectedPresetId(nodeData.selectedPresetId || null)
-  }, [nodeData.selectedPresetId])
+    // 데이터가 성공적으로 로드되면 에러 상태 초기화
+    if (nodeData.dataset) {
+      setError(null)
+    }
+  }, [nodeData.selectedPresetId, nodeData.dataset])
+
+  // 컴포넌트 언마운트 시 메모리 정리
+  useEffect(() => {
+    return () => {
+      // 데이터셋이 있고 dispose 메서드가 있으면 호출
+      if (nodeData.dataset && typeof nodeData.dataset.dispose === 'function') {
+        try {
+          nodeData.dataset.dispose()
+          console.log(`🧹 Disposed dataset for node: ${id}`)
+        } catch (error) {
+          console.warn('Failed to dispose dataset:', error)
+        }
+      }
+    }
+  }, [id, nodeData.dataset])
 
   // 시각화 노드 생성 핸들러
   const handleCreateVisualization = useCallback(
@@ -124,6 +144,8 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       }
 
       setIsLoading(true)
+      setError(null) // 로딩 시작 시 이전 에러 초기화
+      
       try {
         const preset = getDataPreset(presetId)
         if (preset) {
@@ -145,6 +167,19 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         }
       } catch (error) {
         console.error('❌ Failed to load dataset:', error)
+        const errorMessage = error instanceof Error ? error.message : '데이터셋 로딩에 실패했습니다'
+        setError(errorMessage)
+        
+        // 에러 발생 시 선택 상태 초기화
+        setSelectedPresetId(null)
+        updateNodeData(id, {
+          ...nodeData,
+          selectedPresetId: null,
+          dataset: null,
+          samples: 0,
+          inputFeatures: 0,
+          outputFeatures: 0,
+        })
       } finally {
         setIsLoading(false)
       }
@@ -372,21 +407,28 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                   데이터 로딩 중...
                 </div>
               )}
+
+              {/* 에러 상태 */}
+              {error && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                  <div className="font-medium mb-1">로딩 실패</div>
+                  <div>{error}</div>
+                </div>
+              )}
             </div>
           </>
         )}
       </div>
 
-      {/* 데이터 출력 핸들 */}
-      {hasData && (
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="data-output"
-          className="!bg-yellow-500 !border-2 !border-yellow-600"
-          style={{ right: -2 }}
-        />
-      )}
+      {/* 데이터 출력 핸들 - 항상 렌더링하되 연결 가능 여부만 제어 */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="data-output"
+        className={`!border-2 ${hasData ? '!bg-yellow-500 !border-yellow-600' : '!bg-gray-300 !border-gray-400'}`}
+        style={{ right: -2 }}
+        isConnectable={hasData}
+      />
     </div>
   )
 }
