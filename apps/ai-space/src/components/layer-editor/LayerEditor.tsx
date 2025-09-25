@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, createContext, useContext } from 'react'
+import React, { useState, useCallback, createContext, useContext } from 'react'
 import Modal from 'react-modal'
 import {
   ReactFlowProvider,
@@ -9,6 +9,7 @@ import {
   useEdgesState,
   Connection,
   NodeTypes,
+  Panel,
 } from '@xyflow/react'
 import { Flow } from '@/components/Flow'
 import {
@@ -26,6 +27,7 @@ import {
   Grid3x3,
   Minimize2,
   Maximize2,
+  Trash2,
 } from 'lucide-react'
 
 import LayerNode from './LayerNode'
@@ -372,12 +374,6 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ isOpen, onClose, initialLayer
     onClose()
   }, [exportLayers, onSave, onClose, modelNodeId])
 
-  /**
-   * 선택된 노드 데이터
-   */
-  const selectedNode = useMemo(() => {
-    return selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : null
-  }, [selectedNodeId, nodes])
 
   /**
    * 키보드 이벤트 핸들러 (이벤트 전파 차단)
@@ -501,28 +497,26 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ isOpen, onClose, initialLayer
                 nodeColor={getNodeColor}
                 className="bg-gray-50"
                 fitView
-              />
+              >
+                {/* 레이어 삭제 패널 */}
+                {selectedNodeId && selectedNodeId !== 'input' && selectedNodeId !== 'output' && (
+                  <Panel position="top-right" className="bg-white border border-gray-200 rounded-lg shadow-lg p-2">
+                    <button
+                      onClick={() => {
+                        removeLayer(selectedNodeId)
+                        setSelectedNodeId(null)
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                      title="선택된 레이어 삭제"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      레이어 삭제
+                    </button>
+                  </Panel>
+                )}
+              </Flow>
             </div>
 
-            {/* 속성 패널 - 임시로 간단한 정보만 표시 */}
-            {selectedNode && (
-              <div className="w-80 border-l border-gray-200 bg-white p-4">
-                <h3 className="font-medium text-gray-800 mb-2">선택된 레이어</h3>
-                <div className="text-sm text-gray-600">
-                  <div>ID: {selectedNode.id}</div>
-                  <div>타입: {(selectedNode.data as LayerNodeData)?.layerType || 'unknown'}</div>
-                  <div>라벨: {(selectedNode.data as LayerNodeData)?.label || 'unnamed'}</div>
-                </div>
-                {selectedNode.id !== 'input' && selectedNode.id !== 'output' && (
-                  <button
-                    onClick={() => removeLayer(selectedNode.id)}
-                    className="mt-4 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    레이어 삭제
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </LayerEditorContext.Provider>
         </div>
