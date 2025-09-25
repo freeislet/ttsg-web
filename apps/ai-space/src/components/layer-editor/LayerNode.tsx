@@ -132,13 +132,13 @@ const LayerParamsForm: React.FC<{
     switch (typeof value) {
       case 'number':
         return (
-          <div key={field} className="mb-2">
-            <label className="block text-xs text-gray-600 mb-1">{label}</label>
+          <div key={field} className="mb-2 flex items-center justify-between">
+            <label className="text-xs text-gray-600 mr-2 flex-shrink-0">{label}</label>
             <input
               type="number"
               value={value}
               onChange={(e) => handleChange(field, Number(e.target.value))}
-              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
               min={field === 'rate' ? 0 : 1}
               max={field === 'rate' ? 1 : undefined}
               step={field === 'rate' ? 0.1 : 1}
@@ -149,12 +149,12 @@ const LayerParamsForm: React.FC<{
         if (field === 'activation') {
           const activations = ['relu', 'sigmoid', 'tanh', 'softmax', 'linear', 'elu', 'selu']
           return (
-            <div key={field} className="mb-2">
-              <label className="block text-xs text-gray-600 mb-1">{label}</label>
+            <div key={field} className="mb-2 flex items-center justify-between">
+              <label className="text-xs text-gray-600 mr-2 flex-shrink-0">{label}</label>
               <select
                 value={value}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
               >
                 {activations.map(act => (
                   <option key={act} value={act}>{act}</option>
@@ -164,12 +164,12 @@ const LayerParamsForm: React.FC<{
           )
         } else if (field === 'padding') {
           return (
-            <div key={field} className="mb-2">
-              <label className="block text-xs text-gray-600 mb-1">{label}</label>
+            <div key={field} className="mb-2 flex items-center justify-between">
+              <label className="text-xs text-gray-600 mr-2 flex-shrink-0">{label}</label>
               <select
                 value={value}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
               >
                 <option value="valid">valid</option>
                 <option value="same">same</option>
@@ -178,13 +178,13 @@ const LayerParamsForm: React.FC<{
           )
         } else {
           return (
-            <div key={field} className="mb-2">
-              <label className="block text-xs text-gray-600 mb-1">{label}</label>
+            <div key={field} className="mb-2 flex items-center justify-between">
+              <label className="text-xs text-gray-600 mr-2 flex-shrink-0">{label}</label>
               <input
                 type="text"
                 value={value}
                 onChange={(e) => handleChange(field, e.target.value)}
-                className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
               />
             </div>
           )

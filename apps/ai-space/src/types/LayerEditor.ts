@@ -226,8 +226,8 @@ export interface AutoLayoutConfig {
 export const DEFAULT_LAYOUT_CONFIG: AutoLayoutConfig = {
   nodeSpacing: 150,
   layerSpacing: 200,
-  startX: 100,
-  startY: 100,
+  startX: 0,
+  startY: 0,
   nodeWidth: 120,
   nodeHeight: 80,
 }
