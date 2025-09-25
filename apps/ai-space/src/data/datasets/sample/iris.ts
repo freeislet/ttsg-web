@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
-import { IDataset } from '../../types'
+import { IDataset, ProgressCallback } from '../../types'
 
 // Iris 클래스 정의
 export const IRIS_CLASSES = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
@@ -145,14 +145,18 @@ function convertToTensors(testSplit: number = 0.2): [tf.Tensor, tf.Tensor, tf.Te
 /**
  * Iris 데이터셋 로더
  */
-export async function loadIris(): Promise<IDataset> {
+export async function loadIris(onProgress?: ProgressCallback): Promise<IDataset> {
   console.log('🌸 Loading Iris dataset...')
+  onProgress?.(0, 'initializing', 'Iris 데이터셋 초기화...')
   
   try {
+    onProgress?.(20, 'processing', '데이터 변환 중...')
     const [trainInputs, trainLabels, testInputs, testLabels] = convertToTensors(0.2)
     
+    onProgress?.(80, 'creating', '데이터셋 생성 중...')
     const dataset = new IrisDataset(trainInputs, trainLabels, testInputs, testLabels)
     
+    onProgress?.(100, 'completed', '로딩 완료!')
     console.log('✅ Iris dataset loaded successfully')
     console.log(`📊 Train samples: ${dataset.trainCount}, Test samples: ${dataset.testCount}`)
     console.log(`🏷️ Classes: ${IRIS_CLASSES.join(', ')}`)

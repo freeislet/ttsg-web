@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
-import { IDataset, ComputedDataFunction, ComputedDataConfig, FunctionInfo } from '../../types'
+import { IDataset, ComputedDataFunction, ComputedDataConfig, FunctionInfo, ProgressCallback } from '../../types'
 
 /**
  * 계산된 데이터 함수 정의
@@ -137,39 +137,43 @@ class ComputedDataset extends BaseDataset {
 }
 
 /**
- * 계산된 데이터셋 생성 함수
+ * 계산된 데이터 로더 팩토리
  */
 export function createComputedDataLoader(config: ComputedDataConfig) {
-  return async (): Promise<IDataset> => {
-    const { functionType, parameters } = config
-    const { minX, maxX, numPoints, trainSplit, noiseAmount } = parameters
+  return async (onProgress?: ProgressCallback): Promise<IDataset> => {
+    console.log(`🧮 Generating ${config.functionType} data...`)
+    onProgress?.(0, 'initializing', '데이터 생성 초기화...')
 
-    console.log(`🧮 Generating ${functionType} dataset with ${numPoints} points`)
+    const { minX, maxX, numPoints, trainSplit, noiseAmount } = config.parameters
+
+    console.log(`🧮 Generating ${config.functionType} dataset with ${numPoints} points`)
 
     // X 값 생성
-    const xValues: number[] = []
-    const step = (maxX - minX) / (numPoints - 1)
-    for (let i = 0; i < numPoints; i++) {
-      xValues.push(minX + i * step)
-    }
+    onProgress?.(10, 'generating', 'X 값 생성 중...')
+    const xValues = Array.from({ length: numPoints }, (_, i) => {
+      return minX + (i / (numPoints - 1)) * (maxX - minX)
+    })
 
     // 함수 파라미터 추출
-    const funcInfo = COMPUTED_FUNCTIONS[functionType]
-    const funcParams = { ...funcInfo.defaultParams, ...parameters }
-    const computeFunc = computeFunctions[functionType]
+    const funcInfo = COMPUTED_FUNCTIONS[config.functionType]
+    const funcParams = { ...funcInfo.defaultParams, ...config.parameters }
+    const computeFunc = computeFunctions[config.functionType]
 
-    // Y 값 계산 (노이즈 추가)
+    // Y 값 계산
+    onProgress?.(30, 'computing', 'Y 값 계산 중...')
     const yValues = xValues.map((x) => {
-      const y = computeFunc(x, funcParams)
-      const noise = noiseAmount > 0 ? (Math.random() - 0.5) * 2 * noiseAmount : 0
-      return y + noise
+      const baseY = computeFunc(x, funcParams)
+      const noise = (Math.random() - 0.5) * 2 * noiseAmount
+      return baseY + noise
     })
 
     // 텐서 생성
+    onProgress?.(70, 'creating_tensors', '텐서 생성 중...')
     const inputs = tf.tensor2d(xValues.map((x) => [x]))
     const labels = tf.tensor2d(yValues.map((y) => [y]))
 
     // 훈련/테스트 분할
+    onProgress?.(50, 'splitting', '데이터 분할 중...')
     const trainCount = Math.floor((numPoints * trainSplit) / 100)
     const testCount = numPoints - trainCount
 
@@ -178,6 +182,8 @@ export function createComputedDataLoader(config: ComputedDataConfig) {
     const testInputs = inputs.slice([trainCount, 0], [testCount, 1])
     const testLabels = labels.slice([trainCount, 0], [testCount, 1])
 
+    // 데이터셋 생성
+    onProgress?.(90, 'finalizing', '데이터셋 생성 중...')
     const dataset = new ComputedDataset(
       inputs,
       labels,
@@ -187,8 +193,9 @@ export function createComputedDataLoader(config: ComputedDataConfig) {
       testLabels
     )
 
+    onProgress?.(100, 'completed', '데이터 생성 완료!')
     console.log(
-      `✅ Generated ${functionType} dataset: ${trainCount} train, ${testCount} test samples`
+      `✅ Generated ${config.functionType} dataset: ${trainCount} train, ${testCount} test samples`
     )
 
     return dataset
@@ -198,7 +205,7 @@ export function createComputedDataLoader(config: ComputedDataConfig) {
 /**
  * 선형 데이터 로더 (기본 예제)
  */
-export async function loadLinearData(): Promise<IDataset> {
+export async function loadLinearData(onProgress?: ProgressCallback): Promise<IDataset> {
   const config: ComputedDataConfig = {
     functionType: 'linear',
     parameters: {
@@ -213,13 +220,13 @@ export async function loadLinearData(): Promise<IDataset> {
   }
 
   const loader = createComputedDataLoader(config)
-  return loader()
+  return loader(onProgress)
 }
 
 /**
  * 사인파 데이터 로더
  */
-export async function loadSineData(): Promise<IDataset> {
+export async function loadSineData(onProgress?: ProgressCallback): Promise<IDataset> {
   const config: ComputedDataConfig = {
     functionType: 'sine',
     parameters: {
@@ -235,7 +242,7 @@ export async function loadSineData(): Promise<IDataset> {
   }
 
   const loader = createComputedDataLoader(config)
-  return loader()
+  return loader(onProgress)
 }
 
 /**

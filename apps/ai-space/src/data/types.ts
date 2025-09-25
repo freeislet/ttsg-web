@@ -36,9 +36,16 @@ export interface IDataset {
 }
 
 /**
+ * 프로그레스 콜백 타입 (재사용을 위해 여기서도 정의)
+ */
+export interface ProgressCallback {
+  (progress: number, stage: string, message?: string): void
+}
+
+/**
  * 데이터 로더 함수 타입
  */
-export type DataLoader = () => Promise<IDataset>
+export type DataLoader = (onProgress?: ProgressCallback) => Promise<IDataset>
 
 /**
  * 데이터 프리셋 정의
@@ -150,6 +157,13 @@ export interface DataNodeState {
   isLoading: boolean
   error?: string
   viewMode: DataViewMode
+  
+  // 프로그레스 정보
+  progress?: {
+    percentage: number
+    stage: string
+    message?: string
+  }
 }
 
 /**

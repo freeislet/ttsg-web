@@ -50,6 +50,11 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [showSplitConfig, setShowSplitConfig] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [progress, setProgress] = useState<{
+    percentage: number
+    stage: string
+    message?: string
+  } | null>(null)
 
   // 기본 데이터 분할 설정
   const defaultSplitConfig: DataSplitConfig = {
@@ -145,11 +150,17 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
       setIsLoading(true)
       setError(null) // 로딩 시작 시 이전 에러 초기화
+      setProgress({ percentage: 0, stage: 'initializing', message: '초기화 중...' })
       
       try {
         const preset = getDataPreset(presetId)
         if (preset) {
-          const loadedDataset = await preset.loader()
+          // 프로그레스 콜백 정의
+          const onProgress = (percentage: number, stage: string, message?: string) => {
+            setProgress({ percentage, stage, message })
+          }
+
+          const loadedDataset = await preset.loader(onProgress)
 
           // 노드 데이터 업데이트
           updateNodeData(id, {
@@ -182,6 +193,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         })
       } finally {
         setIsLoading(false)
+        setProgress(null)
       }
     },
     [id, nodeData, updateNodeData]
@@ -402,9 +414,39 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
               {/* 로딩 상태 */}
               {isLoading && (
-                <div className="flex items-center justify-center gap-2 py-2 text-sm text-gray-600">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  데이터 로딩 중...
+                <div className="space-y-2 py-2">
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    데이터 로딩 중...
+                  </div>
+                  
+                  {/* 프로그레스바 */}
+                  {progress && (
+                    <div className="space-y-1">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                          style={{ width: `${progress.percentage}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        <span className="capitalize">
+                          {progress.stage === 'downloading' && '📥 다운로드'}
+                          {progress.stage === 'decompressing' && '📦 압축 해제'}
+                          {progress.stage === 'parsing' && '🔍 파싱'}
+                          {progress.stage === 'cached' && '💾 캐시'}
+                          {progress.stage === 'completed' && '✅ 완료'}
+                          {progress.stage === 'initializing' && '🚀 초기화'}
+                        </span>
+                        <span>{Math.round(progress.percentage)}%</span>
+                      </div>
+                      {progress.message && (
+                        <div className="text-xs text-gray-400 truncate" title={progress.message}>
+                          {progress.message}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

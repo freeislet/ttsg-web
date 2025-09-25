@@ -1,6 +1,5 @@
 import { DataPreset, VisualizationConfig } from './types'
 import { loadMNIST } from './datasets/sample/mnist'
-import { loadFashionMNIST } from './datasets/sample/fashion-mnist'
 import { loadIris } from './datasets/sample/iris'
 import { loadCarMPG } from './datasets/sample/car-mpg'
 import { loadLinearData, loadSineData, createComputedDataLoader } from './datasets/computed'
@@ -12,8 +11,8 @@ export const DATA_PRESETS: DataPreset[] = [
   // Sample 데이터 (외부에서 로드)
   {
     id: 'mnist',
-    name: 'MNIST Handwritten Digits',
-    description: '손글씨 숫자 인식 데이터셋 (28x28 이미지 → 0-9 숫자)',
+    name: 'MNIST Handwritten Digits (Full)',
+    description: '손글씨 숫자 인식 데이터셋 (28x28 이미지 → 0-9 숫자, 70,000개)',
     category: 'sample',
     loader: loadMNIST,
     tags: ['classification', 'computer-vision', 'beginner'],
@@ -46,46 +45,6 @@ export const DATA_PRESETS: DataPreset[] = [
         type: 'table',
         title: '데이터 테이블',
         description: '이미지 데이터와 라벨 정보',
-      },
-    ],
-  },
-
-  {
-    id: 'fashion-mnist',
-    name: 'Fashion-MNIST',
-    description: '패션 아이템 분류 데이터셋 (28x28 이미지 → 10개 패션 카테고리)',
-    category: 'sample',
-    loader: loadFashionMNIST,
-    tags: ['classification', 'computer-vision', 'fashion', 'intermediate'],
-    difficulty: 'intermediate',
-    estimatedSize: '25MB',
-    visualizations: [
-      {
-        type: 'image',
-        title: '패션 아이템 이미지',
-        description: '28x28 패션 아이템 이미지들을 그리드 형태로 표시',
-        imageConfig: {
-          width: 28,
-          height: 28,
-          channels: 1,
-          colormap: 'grayscale',
-        },
-      },
-      {
-        type: 'chart',
-        title: '패션 카테고리 분포',
-        description: '10개 패션 아이템별 샘플 수 분포',
-        chartConfig: {
-          type: 'bar',
-          xAxis: { column: 'label', label: '패션 카테고리', type: 'categorical' },
-          yAxis: { column: 'count', label: '샘플 수', type: 'continuous' },
-          title: 'Fashion-MNIST 카테고리 분포',
-        },
-      },
-      {
-        type: 'table',
-        title: '데이터 테이블',
-        description: '패션 이미지 데이터와 카테고리 정보',
       },
     ],
   },

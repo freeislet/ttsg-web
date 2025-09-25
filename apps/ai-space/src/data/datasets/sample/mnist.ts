@@ -1,41 +1,25 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
-import { IDataset } from '../../types'
-import { 
-  fetchAndDecompress, 
-  parseIDXImages, 
-  parseIDXLabels, 
-  getCacheKey, 
-  loadFromCache, 
-  saveToCache, 
-  isCacheExpired 
-} from '../../../utils/dataLoader'
+import { IDataset, ProgressCallback } from '../../types'
 
 // MNIST 데이터 상수
 const IMAGE_HEIGHT = 28
 const IMAGE_WIDTH = 28
-const IMAGE_FLAT_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH
-const LABEL_FLAT_SIZE = 10
+const NUM_CLASSES = 10
+const NUM_DATASET_ELEMENTS = 65000
+const NUM_TRAIN_ELEMENTS = 55000
+const NUM_TEST_ELEMENTS = NUM_DATASET_ELEMENTS - NUM_TRAIN_ELEMENTS
 
-// MNIST 데이터 URL (TensorFlow Datasets 공식)
-const MNIST_BASE_URL = 'https://storage.googleapis.com/cvdf-datasets/mnist/'
-const MNIST_TRAIN_IMAGES = 'train-images-idx3-ubyte.gz'
-const MNIST_TRAIN_LABELS = 'train-labels-idx1-ubyte.gz'
-const MNIST_TEST_IMAGES = 't10k-images-idx3-ubyte.gz'
-const MNIST_TEST_LABELS = 't10k-labels-idx1-ubyte.gz'
+// MNIST 이미지 스프라이트 URL (TensorFlow.js 예제에서 사용하는 방식)
+const MNIST_IMAGES_SPRITE_PATH = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_images.png'
+const MNIST_LABELS_PATH = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_labels_uint8'
 
 /**
- * MNIST 데이터셋 클래스
+ * MNIST 데이터셋 클래스 (TensorFlow.js 예제 방식)
  */
 class MNISTDataset extends BaseDataset {
   readonly inputs: tf.Tensor
   readonly labels: tf.Tensor
-  readonly inputShape: number[] = [28, 28, 1]
-  readonly outputShape: number[] = [10]
-  readonly inputColumns: string[] = ['pixel']
-  readonly outputColumns: string[] = ['digit']
-  readonly sampleCount: number
-
   readonly trainInputs: tf.Tensor
   readonly trainLabels: tf.Tensor
   readonly testInputs: tf.Tensor
@@ -43,234 +27,170 @@ class MNISTDataset extends BaseDataset {
   readonly trainCount: number
   readonly testCount: number
 
+  // BaseDataset 추상 속성 구현
+  readonly inputShape = [28, 28, 1]
+  readonly outputShape = [10]
+  readonly inputColumns = ['pixel']
+  readonly outputColumns = ['digit']
+  readonly sampleCount: number
+
   constructor(
-    trainImages: tf.Tensor,
+    inputs: tf.Tensor,
+    labels: tf.Tensor,
+    trainInputs: tf.Tensor,
     trainLabels: tf.Tensor,
-    testImages: tf.Tensor,
+    testInputs: tf.Tensor,
     testLabels: tf.Tensor
   ) {
     super()
-
-    // 훈련 및 테스트 데이터 저장
-    this.trainInputs = trainImages
+    this.inputs = inputs
+    this.labels = labels
+    this.trainInputs = trainInputs
     this.trainLabels = trainLabels
-    this.testInputs = testImages
+    this.testInputs = testInputs
     this.testLabels = testLabels
-
-    this.trainCount = trainImages.shape[0]
-    this.testCount = testImages.shape[0]
+    this.trainCount = trainInputs.shape[0]
+    this.testCount = testInputs.shape[0]
     this.sampleCount = this.trainCount + this.testCount
+  }
 
-    // 전체 데이터 결합
-    this.inputs = tf.concat([trainImages, testImages], 0)
-    this.labels = tf.concat([trainLabels, testLabels], 0)
+  getTrainBatch(batchSize: number = 32): { inputs: tf.Tensor; labels: tf.Tensor } {
+    const indices = tf.randomUniform([batchSize], 0, this.trainCount, 'int32')
+    return {
+      inputs: tf.gather(this.trainInputs, indices),
+      labels: tf.gather(this.trainLabels, indices)
+    }
+  }
+
+  getTestBatch(batchSize: number = 32): { inputs: tf.Tensor; labels: tf.Tensor } {
+    const indices = tf.randomUniform([batchSize], 0, this.testCount, 'int32')
+    return {
+      inputs: tf.gather(this.testInputs, indices),
+      labels: tf.gather(this.testLabels, indices)
+    }
   }
 
   dispose(): void {
-    super.dispose()
-    // 추가 정리 작업이 필요한 경우 여기에 구현
+    this.inputs.dispose()
+    this.labels.dispose()
+    this.trainInputs.dispose()
+    this.trainLabels.dispose()
+    this.testInputs.dispose()
+    this.testLabels.dispose()
   }
 }
 
+/**
+ * 이미지 스프라이트에서 개별 이미지 추출
+ */
+function loadImageFromSprite(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  index: number
+): Float32Array {
+  const imagesPerRow = img.width / IMAGE_WIDTH
+  const row = Math.floor(index / imagesPerRow)
+  const col = index % imagesPerRow
+
+  ctx.drawImage(
+    img,
+    col * IMAGE_WIDTH, row * IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT,
+    0, 0, IMAGE_WIDTH, IMAGE_HEIGHT
+  )
+
+  const imageData = ctx.getImageData(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT)
+  const data = new Float32Array(IMAGE_HEIGHT * IMAGE_WIDTH)
+  
+  for (let i = 0; i < data.length; i++) {
+    // RGBA에서 R 채널만 사용하고 0-1로 정규화
+    data[i] = imageData.data[i * 4] / 255
+  }
+  
+  return data
+}
 
 /**
- * 실제 MNIST 데이터를 URL에서 로드하는 클래스
+ * MNIST 데이터셋 로더 (TensorFlow.js 예제 방식)
  */
-class MNISTDataLoader {
-  private trainImages: Float32Array[] | null = null
-  private trainLabels: Uint8Array[] | null = null
-  private testImages: Float32Array[] | null = null
-  private testLabels: Uint8Array[] | null = null
+export async function loadMNIST(onProgress?: ProgressCallback): Promise<IDataset> {
+  console.log('🎯 Loading MNIST dataset from image sprite...')
+  onProgress?.(0, 'initializing', 'MNIST 데이터셋 초기화...')
+  
+  try {
+    // 이미지 스프라이트 로드
+    onProgress?.(10, 'downloading', '이미지 스프라이트 다운로드 중...')
+    const img = new Image()
+    const imgLoadPromise = new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('이미지 로드 실패'))
+      img.crossOrigin = 'anonymous'
+      img.src = MNIST_IMAGES_SPRITE_PATH
+    })
+    await imgLoadPromise
 
-  async load(): Promise<void> {
-    console.log('🌐 Loading MNIST data from official sources...')
-    
-    try {
-      // 병렬로 모든 파일 로드
-      const [trainImagesData, trainLabelsData, testImagesData, testLabelsData] = await Promise.all([
-        this.loadFile(MNIST_BASE_URL + MNIST_TRAIN_IMAGES, 'train_images'),
-        this.loadFile(MNIST_BASE_URL + MNIST_TRAIN_LABELS, 'train_labels'),
-        this.loadFile(MNIST_BASE_URL + MNIST_TEST_IMAGES, 'test_images'),
-        this.loadFile(MNIST_BASE_URL + MNIST_TEST_LABELS, 'test_labels')
-      ])
-
-      // IDX 파일 파싱
-      this.trainImages = parseIDXImages(trainImagesData)
-      this.trainLabels = parseIDXLabels(trainLabelsData, LABEL_FLAT_SIZE)
-      this.testImages = parseIDXImages(testImagesData)
-      this.testLabels = parseIDXLabels(testLabelsData, LABEL_FLAT_SIZE)
-
-      console.log('✅ MNIST data loaded successfully')
-      console.log(`📊 Train: ${this.trainImages.length} images, Test: ${this.testImages.length} images`)
-    } catch (error) {
-      console.error('❌ Failed to load MNIST data:', error)
-      throw error
+    // 라벨 데이터 로드
+    onProgress?.(20, 'downloading', '라벨 데이터 다운로드 중...')
+    const labelsResponse = await fetch(MNIST_LABELS_PATH)
+    if (!labelsResponse.ok) {
+      throw new Error(`라벨 데이터 로드 실패: ${labelsResponse.status}`)
     }
-  }
+    const labelsBuffer = await labelsResponse.arrayBuffer()
+    const labels = new Uint8Array(labelsBuffer)
 
-  private async loadFile(url: string, type: string): Promise<ArrayBuffer> {
-    const cacheKey = getCacheKey(url)
+    // 캔버스 설정
+    const canvas = document.createElement('canvas')
+    canvas.width = IMAGE_WIDTH
+    canvas.height = IMAGE_HEIGHT
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      throw new Error('Canvas context 생성 실패')
+    }
+
+    // 이미지 데이터 추출
+    onProgress?.(30, 'processing', '이미지 데이터 추출 중...')
+    const imageData = new Float32Array(NUM_DATASET_ELEMENTS * IMAGE_HEIGHT * IMAGE_WIDTH)
     
-    // 캐시 확인
-    if (!isCacheExpired(cacheKey)) {
-      const cached = loadFromCache(cacheKey)
-      if (cached) {
-        console.log(`💾 Using cached ${type} data`)
-        return cached
+    for (let i = 0; i < NUM_DATASET_ELEMENTS; i++) {
+      const imagePixels = loadImageFromSprite(ctx, img, i)
+      imageData.set(imagePixels, i * IMAGE_HEIGHT * IMAGE_WIDTH)
+      
+      if (i % 1000 === 0) {
+        const progress = 30 + Math.round((i / NUM_DATASET_ELEMENTS) * 40)
+        onProgress?.(progress, 'processing', `이미지 처리 중... ${i}/${NUM_DATASET_ELEMENTS}`)
       }
     }
 
-    // 새로 다운로드
-    console.log(`📥 Downloading ${type} from ${url}`)
-    const buffer = await fetchAndDecompress(url)
-    
-    // 캐시 저장
-    saveToCache(cacheKey, buffer)
-    
-    return buffer
-  }
+    // 텐서 생성
+    onProgress?.(70, 'converting', '텐서 변환 중...')
+    const imagesTensor = tf.tensor4d(imageData, [NUM_DATASET_ELEMENTS, IMAGE_HEIGHT, IMAGE_WIDTH, 1])
+    const labelsTensor = tf.oneHot(Array.from(labels), NUM_CLASSES)
 
-  getTrainData(): { images: Float32Array[], labels: Uint8Array[] } {
-    if (!this.trainImages || !this.trainLabels) {
-      throw new Error('Data not loaded. Call load() first.')
-    }
-    return { images: this.trainImages, labels: this.trainLabels }
-  }
+    // 훈련/테스트 분할
+    onProgress?.(80, 'splitting', '데이터 분할 중...')
+    const trainInputs = imagesTensor.slice([0, 0, 0, 0], [NUM_TRAIN_ELEMENTS, IMAGE_HEIGHT, IMAGE_WIDTH, 1])
+    const trainLabels = labelsTensor.slice([0, 0], [NUM_TRAIN_ELEMENTS, NUM_CLASSES])
+    const testInputs = imagesTensor.slice([NUM_TRAIN_ELEMENTS, 0, 0, 0], [NUM_TEST_ELEMENTS, IMAGE_HEIGHT, IMAGE_WIDTH, 1])
+    const testLabels = labelsTensor.slice([NUM_TRAIN_ELEMENTS, 0], [NUM_TEST_ELEMENTS, NUM_CLASSES])
 
-  getTestData(): { images: Float32Array[], labels: Uint8Array[] } {
-    if (!this.testImages || !this.testLabels) {
-      throw new Error('Data not loaded. Call load() first.')
-    }
-    return { images: this.testImages, labels: this.testLabels }
-  }
-}
-
-/**
- * MNIST 데이터셋 로더 (실제 URL에서 로드)
- */
-export async function loadMNIST(): Promise<IDataset> {
-  console.log('🚀 Loading MNIST dataset from remote URLs...')
-
-  try {
-    const loader = new MNISTDataLoader()
-    await loader.load()
-
-    const trainData = loader.getTrainData()
-    const testData = loader.getTestData()
-
-    // 이미지 텐서 생성 (4D: [batch, height, width, channels])
-    const trainImagesTensor = tf.tensor4d(
-      trainData.images.reduce((acc, img) => acc.concat(Array.from(img)), [] as number[]),
-      [trainData.images.length, IMAGE_HEIGHT, IMAGE_WIDTH, 1]
-    )
-
-    const testImagesTensor = tf.tensor4d(
-      testData.images.reduce((acc, img) => acc.concat(Array.from(img)), [] as number[]),
-      [testData.images.length, IMAGE_HEIGHT, IMAGE_WIDTH, 1]
-    )
-
-    // 라벨 텐서 생성 (이미 원-핫 인코딩됨)
-    const trainLabelsTensor = tf.tensor2d(
-      trainData.labels.reduce((acc, label) => acc.concat(Array.from(label)), [] as number[]),
-      [trainData.labels.length, LABEL_FLAT_SIZE]
-    ).toFloat()
-
-    const testLabelsTensor = tf.tensor2d(
-      testData.labels.reduce((acc, label) => acc.concat(Array.from(label)), [] as number[]),
-      [testData.labels.length, LABEL_FLAT_SIZE]
-    ).toFloat()
-
+    // 데이터셋 생성
+    onProgress?.(90, 'creating', '데이터셋 생성 중...')
     const dataset = new MNISTDataset(
-      trainImagesTensor,
-      trainLabelsTensor,
-      testImagesTensor,
-      testLabelsTensor
+      imagesTensor,
+      labelsTensor,
+      trainInputs,
+      trainLabels,
+      testInputs,
+      testLabels
     )
 
+    onProgress?.(100, 'completed', '로딩 완료!')
     console.log('✅ MNIST dataset loaded successfully')
     console.log(`📊 Train samples: ${dataset.trainCount}, Test samples: ${dataset.testCount}`)
-
+    
     return dataset
+    
   } catch (error) {
     console.error('❌ Failed to load MNIST dataset:', error)
-    // 실패 시 폴백으로 샘플 데이터 생성
-    console.log('🔄 Falling back to sample data...')
-    return loadMNISTSample()
+    throw error
   }
-}
-
-/**
- * 폴백용 샘플 MNIST 데이터 생성
- */
-function generateSampleMNISTData(numSamples: number): {
-  images: Float32Array[]
-  labels: number[]
-} {
-  const images: Float32Array[] = []
-  const labels: number[] = []
-
-  for (let i = 0; i < numSamples; i++) {
-    const image = new Float32Array(IMAGE_FLAT_SIZE)
-    const digit = i % 10
-    
-    for (let j = 0; j < IMAGE_FLAT_SIZE; j++) {
-      const row = Math.floor(j / IMAGE_WIDTH)
-      const col = j % IMAGE_WIDTH
-      
-      if (row >= 8 && row <= 20 && col >= 8 && col <= 20) {
-        switch (digit) {
-          case 0:
-            const centerX = 14, centerY = 14
-            const distance = Math.sqrt((row - centerY) ** 2 + (col - centerX) ** 2)
-            image[j] = distance >= 4 && distance <= 6 ? 0.8 + Math.random() * 0.2 : Math.random() * 0.1
-            break
-          case 1:
-            image[j] = col >= 13 && col <= 15 ? 0.8 + Math.random() * 0.2 : Math.random() * 0.1
-            break
-          default:
-            image[j] = Math.random() > 0.7 ? 0.6 + Math.random() * 0.4 : Math.random() * 0.1
-        }
-      } else {
-        image[j] = Math.random() * 0.1
-      }
-    }
-    
-    images.push(image)
-    labels.push(digit)
-  }
-
-  return { images, labels }
-}
-
-/**
- * 폴백용 샘플 MNIST 데이터셋 로더
- */
-async function loadMNISTSample(): Promise<IDataset> {
-  console.log('📊 Generating sample MNIST data...')
-  
-  const trainData = generateSampleMNISTData(1000)
-  const testData = generateSampleMNISTData(200)
-
-  const trainImagesTensor = tf.tensor4d(
-    trainData.images.reduce((acc, img) => acc.concat(Array.from(img)), [] as number[]),
-    [trainData.images.length, IMAGE_HEIGHT, IMAGE_WIDTH, 1]
-  )
-
-  const trainLabelsTensor = tf
-    .oneHot(tf.tensor1d(trainData.labels, 'int32'), LABEL_FLAT_SIZE)
-    .toFloat()
-
-  const testImagesTensor = tf.tensor4d(
-    testData.images.reduce((acc, img) => acc.concat(Array.from(img)), [] as number[]),
-    [testData.images.length, IMAGE_HEIGHT, IMAGE_WIDTH, 1]
-  )
-
-  const testLabelsTensor = tf.oneHot(tf.tensor1d(testData.labels, 'int32'), LABEL_FLAT_SIZE).toFloat()
-
-  return new MNISTDataset(
-    trainImagesTensor,
-    trainLabelsTensor,
-    testImagesTensor,
-    testLabelsTensor
-  )
 }

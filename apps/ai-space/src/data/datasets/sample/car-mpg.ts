@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
-import { IDataset } from '../../types'
+import { IDataset, ProgressCallback } from '../../types'
 
 /**
  * Car MPG 데이터 인터페이스
@@ -127,18 +127,23 @@ function convertToTensors(data: CarData[], testSplit: number = 0.2): [tf.Tensor,
 /**
  * Car MPG 데이터셋 로더
  */
-export async function loadCarMPG(): Promise<IDataset> {
+export async function loadCarMPG(onProgress?: ProgressCallback): Promise<IDataset> {
   console.log('🚗 Loading Car MPG dataset...')
+  onProgress?.(0, 'initializing', 'Car MPG 데이터셋 초기화...')
   
   try {
     // 데이터 다운로드
+    onProgress?.(20, 'downloading', '데이터 다운로드 중...')
     const data = await getData()
     
     // 텐서로 변환 및 분할
+    onProgress?.(60, 'processing', '데이터 변환 중...')
     const [trainInputs, trainLabels, testInputs, testLabels] = convertToTensors(data, 0.2)
     
+    onProgress?.(90, 'creating', '데이터셋 생성 중...')
     const dataset = new CarMPGDataset(trainInputs, trainLabels, testInputs, testLabels)
     
+    onProgress?.(100, 'completed', '로딩 완료!')
     console.log('✅ Car MPG dataset loaded successfully')
     console.log(`📊 Train samples: ${dataset.trainCount}, Test samples: ${dataset.testCount}`)
     console.log('📈 Task: Predict MPG from Horsepower (regression)')
