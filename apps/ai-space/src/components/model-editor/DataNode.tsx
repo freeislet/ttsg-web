@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
-import { Database, Eye, BarChart3, RefreshCw, Settings } from 'lucide-react'
+import { Database, Eye, BarChart3, RefreshCw, Settings, X } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
 import { getDataPreset, getDefaultVisualization } from '@/data'
 import DatasetSelector from '@/components/DatasetSelector'
@@ -11,6 +11,32 @@ import DatasetSelector from '@/components/DatasetSelector'
 import { DataNodeData, DataSplitConfig } from '@/types/DataNode'
 
 export type { DataNodeData }
+
+/**
+ * 난이도 색상 매핑
+ */
+const DIFFICULTY_COLORS: Record<string, string> = {
+  beginner: 'bg-green-100 text-green-800',
+  intermediate: 'bg-yellow-100 text-yellow-800',
+  advanced: 'bg-red-100 text-red-800'
+}
+
+/**
+ * 난이도 배지 컴포넌트
+ */
+const DifficultyBadge: React.FC<{ difficulty: string }> = ({ difficulty }) => (
+  <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${DIFFICULTY_COLORS[difficulty] || 'bg-gray-100 text-gray-800'}`}>
+    {difficulty}
+  </span>
+)
+
+/**
+ * 난이도 관련 태그들을 필터링하는 함수
+ */
+const filterNonDifficultyTags = (tags: string[]): string[] => {
+  const difficultyTags = ['beginner', 'intermediate', 'advanced']
+  return tags.filter(tag => !difficultyTags.includes(tag.toLowerCase()))
+}
 
 /**
  * 간소화된 데이터 노드 컴포넌트
@@ -165,26 +191,57 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           <>
             {/* 데이터셋 정보 */}
             <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-800 mb-2">
-                {preset?.name || '데이터셋'}
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-800">
+                  {preset?.name || '데이터셋'}
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDatasetSelect(null)
+                  }}
+                  className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded nodrag"
+                  title="데이터셋 언로드"
+                >
+                  <X className="w-3 h-3" />
+                </button>
               </div>
 
-              {/* 태그 표시 */}
-              {preset?.tags && preset.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {preset.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-block px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {preset.tags.length > 3 && (
-                    <span className="text-xs text-gray-500">+{preset.tags.length - 3}</span>
-                  )}
+              {/* 데이터셋 설명 */}
+              {preset?.description && (
+                <div className="text-xs text-gray-600 mb-2 line-clamp-2">
+                  {preset.description}
                 </div>
               )}
+
+              {/* 태그 및 난이도 배지 표시 */}
+              {(preset?.tags && preset.tags.length > 0) || preset?.difficulty ? (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {/* 난이도 배지 */}
+                  {preset?.difficulty && <DifficultyBadge difficulty={preset.difficulty} />}
+                  
+                  {/* 태그들 */}
+                  {preset?.tags && preset.tags.length > 0 && (() => {
+                    const filteredTags = filterNonDifficultyTags(preset.tags)
+                    return filteredTags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-block px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  })()}
+                  
+                  {/* 추가 태그 개수 표시 */}
+                  {preset?.tags && preset.tags.length > 0 && (() => {
+                    const filteredTags = filterNonDifficultyTags(preset.tags)
+                    return filteredTags.length > 3 && (
+                      <span className="text-xs text-gray-500">+{filteredTags.length - 3}</span>
+                    )
+                  })()}
+                </div>
+              ) : null}
 
               {/* 통계 정보 */}
               <div className="space-y-1">

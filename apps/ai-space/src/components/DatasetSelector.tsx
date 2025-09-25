@@ -39,32 +39,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   computed: '🧮 계산된 데이터'
 }
 
-/**
- * 난이도 색상 매핑
- */
-const DIFFICULTY_COLORS: Record<string, string> = {
-  beginner: 'bg-green-100 text-green-800',
-  intermediate: 'bg-yellow-100 text-yellow-800',
-  advanced: 'bg-red-100 text-red-800'
-}
-
-/**
- * 태그 컴포넌트
- */
-const TagBadge: React.FC<{ tag: string }> = ({ tag }: { tag: string }) => (
-  <span className="inline-block px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded mr-1">
-    {tag}
-  </span>
-)
-
-/**
- * 난이도 배지 컴포넌트
- */
-const DifficultyBadge: React.FC<{ difficulty: string }> = ({ difficulty }) => (
-  <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${DIFFICULTY_COLORS[difficulty] || 'bg-gray-100 text-gray-800'}`}>
-    {difficulty}
-  </span>
-)
 
 /**
  * 커스텀 옵션 컴포넌트
@@ -73,23 +47,16 @@ const CustomOption: React.FC<any> = ({ data, ...props }) => {
   const { preset } = data
   
   return (
-    <div {...props.innerProps} className={`p-3 cursor-pointer hover:bg-gray-50 ${props.isFocused ? 'bg-blue-50' : ''}`}>
+    <div {...props.innerProps} className={`px-3 py-2 cursor-pointer hover:bg-gray-50 ${props.isFocused ? 'bg-blue-50' : ''}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-gray-900 mb-1">{preset.name}</div>
-          <div className="text-sm text-gray-600 mb-2 line-clamp-2">{preset.description}</div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {preset.difficulty && <DifficultyBadge difficulty={preset.difficulty} />}
-            {preset.tags?.slice(0, 3).map((tag: string) => (
-              <TagBadge key={tag} tag={tag} />
-            ))}
-            {preset.tags && preset.tags.length > 3 && (
-              <span className="text-xs text-gray-500">+{preset.tags.length - 3}</span>
-            )}
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-sm font-medium text-gray-900">{preset.name}</span>
+            <span className="text-xs text-gray-500 flex-shrink-0">
+              {preset.estimatedSize}
+            </span>
           </div>
-        </div>
-        <div className="ml-2 text-xs text-gray-500 flex-shrink-0">
-          {preset.estimatedSize}
+          <div className="text-xs text-gray-600 truncate">{preset.description}</div>
         </div>
       </div>
     </div>
@@ -100,7 +67,7 @@ const CustomOption: React.FC<any> = ({ data, ...props }) => {
  * 커스텀 그룹 헤더 컴포넌트
  */
 const CustomGroupHeading: React.FC<any> = ({ children, ...props }) => (
-  <div {...props.innerProps} className="px-3 py-2 bg-gray-100 font-semibold text-gray-700 text-sm border-b">
+  <div {...props.innerProps} className="px-3 py-1.5 bg-gray-100 font-semibold text-gray-700 text-xs border-b">
     {children}
   </div>
 )
@@ -158,6 +125,8 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
         isClearable
         isSearchable
         menuPortalTarget={document.body}
+        menuPlacement="auto"
+        menuPosition="fixed"
         components={{
           Option: CustomOption,
           GroupHeading: CustomGroupHeading
@@ -174,6 +143,9 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
           }),
           menu: (base) => ({
             ...base,
+            minWidth: '280px',
+            right: 0,
+            left: 'auto',
             zIndex: 99999
           }),
           menuPortal: (base) => ({
