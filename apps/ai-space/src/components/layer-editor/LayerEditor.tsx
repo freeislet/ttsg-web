@@ -379,19 +379,54 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ isOpen, onClose, initialLayer
     return selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : null
   }, [selectedNodeId, nodes])
 
+  /**
+   * 키보드 이벤트 핸들러 (이벤트 전파 차단)
+   */
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // 모든 키보드 이벤트의 전파를 차단하여 부모 컴포넌트로 전달되지 않도록 함
+    e.stopPropagation()
+    
+    // ESC 키는 모달 닫기로 처리
+    if (e.key === 'Escape') {
+      onClose()
+    }
+  }, [onClose])
+
+  /**
+   * Modal이 열릴 때 포커스 설정
+   */
+  React.useEffect(() => {
+    if (isOpen) {
+      // 약간의 지연 후 포커스 설정 (Modal 렌더링 완료 대기)
+      setTimeout(() => {
+        const modalElement = document.querySelector('[data-layer-editor-modal]') as HTMLElement
+        if (modalElement) {
+          modalElement.focus()
+        }
+      }, 100)
+    }
+  }, [isOpen])
+
   return (
     <ReactFlowProvider>
       <Modal
         isOpen={isOpen}
         onRequestClose={onClose}
         shouldCloseOnOverlayClick={true}
-        shouldCloseOnEsc={true}
+        shouldCloseOnEsc={false}
         className="bg-white rounded-lg shadow-xl w-[90vw] h-[80vh] flex flex-col outline-none"
         overlayClassName="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
         ariaHideApp={false}
       >
-        {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div 
+          className="flex flex-col h-full"
+          onKeyDown={handleKeyDown}
+          tabIndex={-1}
+          style={{ outline: 'none' }}
+          data-layer-editor-modal
+        >
+          {/* 헤더 */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800">레이어 구성 에디터</h2>
           <div className="flex items-center gap-2">
             <button
@@ -490,6 +525,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ isOpen, onClose, initialLayer
             )}
           </div>
         </LayerEditorContext.Provider>
+        </div>
       </Modal>
     </ReactFlowProvider>
   )
