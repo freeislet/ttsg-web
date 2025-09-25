@@ -1,4 +1,4 @@
-import { Panel } from '@xyflow/react'
+import { Panel, Connection, Node } from '@xyflow/react'
 
 import { useModelStore } from '@/stores/modelStore'
 import { Flow } from '../Flow'
@@ -9,6 +9,43 @@ import ModelNode from './ModelNode'
 const nodeTypes = {
   data: DataNode,
   model: ModelNode,
+}
+
+/**
+ * Connection 타입 가드
+ */
+const isConnection = (connection: any): connection is Connection => {
+  return connection && typeof connection.source === 'string' && typeof connection.target === 'string'
+}
+
+/**
+ * 모델 에디터용 연결 유효성 검사 함수
+ * 모델 노드의 data-input 핸들에는 데이터 노드만 연결 가능
+ */
+const isValidModelConnection = (connection: any, nodes: Node[]) => {
+  // Connection 타입인지 확인
+  if (!isConnection(connection)) {
+    return false
+  }
+  
+  const { source, target, targetHandle } = connection
+  
+  // 소스와 타겟 노드 찾기
+  const sourceNode = nodes.find(node => node.id === source)
+  const targetNode = nodes.find(node => node.id === target)
+  
+  if (!sourceNode || !targetNode) {
+    return false
+  }
+  
+  // 모델 노드의 data-input 핸들에 연결하는 경우
+  if (targetNode.type === 'model' && targetHandle === 'data-input') {
+    // 소스가 데이터 노드이고 data-output 핸들인 경우만 허용
+    return sourceNode.type === 'data' && connection.sourceHandle === 'data-output'
+  }
+  
+  // 다른 연결은 모두 허용
+  return true
 }
 
 /**
@@ -38,6 +75,9 @@ export const ModelEditor = () => {
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
       onSelectionChange={onSelectionChange as any}
+      isValidConnection={(connection) => 
+        isValidModelConnection(connection, nodes as unknown as Node[])
+      }
     >
       {/* 툴바 패널 */}
       <Panel

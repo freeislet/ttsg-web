@@ -1,6 +1,15 @@
 import { Node } from '@xyflow/react'
 
 /**
+ * 데이터 분할 설정 인터페이스
+ */
+export interface DataSplitConfig {
+  trainRatio: number      // 학습 데이터 비율 (0-1)
+  validationRatio: number // 검증 데이터 비율 (0-1)
+  testRatio: number       // 테스트 데이터 비율 (0-1)
+}
+
+/**
  * 데이터 노드 데이터 인터페이스
  */
 export interface DataNodeData {
@@ -16,6 +25,9 @@ export interface DataNodeData {
   outputShape?: number[]
   selectedPresetId?: string
   dataset?: any
+  
+  // 데이터 분할 설정
+  splitConfig?: DataSplitConfig
 }
 
 /**

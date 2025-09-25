@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
-import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play } from 'lucide-react'
+import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play, Database } from 'lucide-react'
 import { ModelNodeData, ModelNodeState } from '@/types/ModelNode'
 import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
@@ -166,14 +166,6 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         hover:shadow-xl cursor-pointer
       `}
     >
-      {/* 입력 핸들 */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="w-3 h-3 bg-blue-500 border-2 border-white"
-        style={{ left: -6 }}
-      />
-
       {/* 출력 핸들 */}
       <Handle
         type="source"
@@ -204,24 +196,53 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             {nodeData.modelType === 'neural-network' ? '신경망' : String(nodeData.modelType)}
           </span>
         </div>
+
+        {/* 데이터 연결 섹션 */}
+        <div className="mt-2 relative">
+          <div className="flex items-center gap-2">
+            <Database className="w-3 h-3 text-gray-400" />
+            <span className="text-xs text-gray-500">데이터</span>
+            {/* 데이터 입력 핸들 */}
+            <Handle
+              type="target"
+              position={Position.Left}
+              id="data-input"
+              className="w-2 h-2 bg-purple-500 border border-white !absolute !left-[-8px] !top-[2px]"
+            />
+          </div>
+          
+          {/* 데이터 연결 정보 표시 */}
+          {nodeData.connectedDataNode ? (
+            <div className="mt-1 text-xs text-gray-600 bg-purple-50 p-2 rounded border border-purple-200">
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-medium text-purple-700">연결된 데이터</span>
+                <span className="text-purple-600">{nodeData.connectedDataNode.name}</span>
+              </div>
+              {nodeData.inputShape && (
+                <div className="flex justify-between">
+                  <span>Input Shape:</span>
+                  <span className="font-mono text-purple-700">{nodeData.inputShape.join('×')}</span>
+                </div>
+              )}
+              {nodeData.outputUnits && (
+                <div className="flex justify-between">
+                  <span>Output Units:</span>
+                  <span className="font-mono text-purple-700">{String(nodeData.outputUnits)}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="mt-1 text-xs text-gray-400 italic">
+              데이터 노드를 연결하세요
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 본문 */}
       <div className="p-3 space-y-2">
         {/* 모델 구조 정보 */}
         <div className="text-xs text-gray-600">
-          {nodeData.inputShape && (
-            <div className="flex justify-between">
-              <span>입력:</span>
-              <span className="font-mono">{nodeData.inputShape.join('×')}</span>
-            </div>
-          )}
-          {nodeData.outputUnits && (
-            <div className="flex justify-between">
-              <span>출력:</span>
-              <span className="font-mono">{String(nodeData.outputUnits)}</span>
-            </div>
-          )}
           <div className="flex justify-between items-center">
             <span>레이어:</span>
             <div className="flex items-center gap-1">
@@ -250,8 +271,8 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               >
                 <span className="font-medium">{layer.type}</span>
                 <span className="text-gray-500">
-                  {layer.units && `${layer.units}u`}
-                  {layer.filters && `${layer.filters}f`}
+                  {layer.units && `${layer.units} units`}
+                  {layer.filters && `${layer.filters} filters`}
                   {layer.rate && `${(layer.rate * 100).toFixed(0)}%`}
                 </span>
               </div>

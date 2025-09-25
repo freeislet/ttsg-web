@@ -65,6 +65,17 @@ export interface ModelMetrics {
 }
 
 /**
+ * 연결된 데이터 노드 정보 인터페이스
+ */
+export interface ConnectedDataNode {
+  id: string
+  name: string
+  type: string
+  shape?: number[]
+  size?: number
+}
+
+/**
  * 통합 모델 노드 데이터 인터페이스
  */
 export interface ModelNodeData {
@@ -91,8 +102,9 @@ export interface ModelNodeData {
   // 성능 지표
   metrics?: ModelMetrics
   
-  // 연결된 데이터 노드 ID
+  // 연결된 데이터 노드 정보
   dataNodeId?: string
+  connectedDataNode?: ConnectedDataNode
   
   // 오류 정보
   error?: string
