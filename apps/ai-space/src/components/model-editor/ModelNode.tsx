@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
-import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play, Database } from 'lucide-react'
-import { ModelNodeData, ModelNodeState } from '@/types/ModelNode'
+import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play, Database, Settings, ChevronDown, ChevronUp } from 'lucide-react'
+import { ModelNodeData, ModelNodeState, TrainingConfig } from '@/types/ModelNode'
 import { DataNodeData } from '@/types/DataNode'
 import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
+import { NNModel } from '@/models/NNModel'
+import { createNeuralNetworkConfig } from '@/models/training'
 
 /**
  * 상태별 스타일 설정
@@ -88,9 +90,24 @@ const getStateLabel = (state: ModelNodeState) => {
 const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const nodeData = data as ModelNodeData
   const [isLayerEditorOpen, setIsLayerEditorOpen] = useState(false)
+  const [isTrainingConfigOpen, setIsTrainingConfigOpen] = useState(false)
   const { updateNodeData, nodes, edges } = useModelStore()
   const style = getStateStyle(nodeData.state)
   const StateIcon = style.icon
+
+  // 기본 학습 설정값
+  const defaultTrainingConfig: TrainingConfig = {
+    optimizer: 'adam',
+    loss: 'categoricalCrossentropy',
+    metrics: ['accuracy'],
+    epochs: 10,
+    batchSize: 32,
+    validationSplit: 0.2,
+    learningRate: 0.001
+  }
+
+  // 현재 학습 설정 (기본값 사용하거나 저장된 값 사용)
+  const currentTrainingConfig = nodeData.trainingConfig || defaultTrainingConfig
 
   // 연결된 데이터 노드 정보 계산
   const connectedDataInfo = useMemo(() => {
@@ -130,6 +147,38 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   }
 
   /**
+   * 학습 설정 업데이트
+   */
+  const updateTrainingConfig = (config: Partial<TrainingConfig>) => {
+    const updatedConfig = { ...currentTrainingConfig, ...config }
+    updateNodeData(id, { trainingConfig: updatedConfig })
+  }
+
+  /**
+   * 연결된 데이터 노드에서 데이터셋 가져오기
+   */
+  const getConnectedDataset = () => {
+    // 현재 모델 노드로 연결되는 엣지 찾기
+    const incomingEdges = edges.filter((edge) => edge.target === id && edge.targetHandle === 'data-input')
+    
+    if (incomingEdges.length === 0) {
+      return null
+    }
+    
+    // 연결된 데이터 노드 찾기
+    const connectedDataNode = nodes.find((node) => 
+      node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
+    )
+    
+    if (!connectedDataNode) {
+      return null
+    }
+    
+    const dataNodeData = connectedDataNode.data as DataNodeData
+    return dataNodeData.dataset || null
+  }
+
+  /**
    * 모델 학습 시작
    */
   const handleStartTraining = async () => {
@@ -143,13 +192,20 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       return
     }
 
+    // 연결된 데이터셋 확인
+    const dataset = getConnectedDataset()
+    if (!dataset) {
+      console.warn('No dataset connected for training')
+      return
+    }
+
     try {
       // 상태를 학습 중으로 변경
       updateNodeData(id, {
         state: 'training',
         trainingProgress: {
           epoch: 0,
-          totalEpochs: nodeData.trainingConfig?.epochs || 10,
+          totalEpochs: currentTrainingConfig.epochs,
           loss: 0,
           isTraining: true,
           startTime: new Date(),
@@ -158,25 +214,87 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
       console.log('🚀 Starting model training for node:', id)
 
-      // TODO: 실제 데이터 연결 및 학습 구현
-      // 현재는 시뮬레이션만 수행
-      setTimeout(() => {
+      // NNModel 인스턴스 생성 (타입 안전성을 위해 명시적 변환)
+      const nnModel = new NNModel({
+        inputShape: nodeData.inputShape,
+        outputUnits: nodeData.outputUnits,
+        layers: nodeData.layers as any, // LayerConfig 타입 호환성을 위한 임시 변환
+        name: nodeData.label || 'Model'
+      })
+
+      // 학습 설정을 ModelTrainingConfig로 변환 (loss 함수 이름 매핑)
+      const lossMapping: Record<string, string> = {
+        'meanSquaredError': 'mse',
+        'categoricalCrossentropy': 'categoricalCrossentropy',
+        'binaryCrossentropy': 'binaryCrossentropy'
+      }
+      
+      const modelTrainingConfig = createNeuralNetworkConfig({
+        optimizer: currentTrainingConfig.optimizer,
+        learningRate: currentTrainingConfig.learningRate || 0.001,
+        loss: (lossMapping[currentTrainingConfig.loss] || currentTrainingConfig.loss) as any,
+        metrics: currentTrainingConfig.metrics,
+        epochs: currentTrainingConfig.epochs,
+        batchSize: currentTrainingConfig.batchSize,
+        validationSplit: currentTrainingConfig.validationSplit
+      })
+
+      // 진행 상황 콜백 함수
+      const onProgress = (epoch: number, logs: any) => {
         updateNodeData(id, {
-          state: 'trained',
           trainingProgress: {
-            epoch: nodeData.trainingConfig?.epochs || 10,
-            totalEpochs: nodeData.trainingConfig?.epochs || 10,
-            loss: 0.1,
-            isTraining: false,
+            epoch: epoch + 1,
+            totalEpochs: currentTrainingConfig.epochs,
+            loss: logs.loss || 0,
+            accuracy: logs.accuracy,
+            valLoss: logs.val_loss,
+            valAccuracy: logs.val_accuracy,
+            isTraining: true,
             startTime: nodeData.trainingProgress?.startTime || new Date(),
           },
         })
-        console.log('✅ Training completed for node:', id)
-      }, 3000)
+      }
+
+      // 실제 모델 학습 실행
+      const { result } = await nnModel.createAndTrain(
+        dataset,
+        modelTrainingConfig,
+        onProgress
+      )
+
+      // 학습 완료 상태로 업데이트
+      updateNodeData(id, {
+        state: 'trained',
+        trainingProgress: {
+          epoch: result.epochs,
+          totalEpochs: currentTrainingConfig.epochs,
+          loss: result.finalMetrics.loss || 0,
+          accuracy: result.finalMetrics.accuracy,
+          valLoss: result.finalMetrics.valLoss,
+          valAccuracy: result.finalMetrics.valAccuracy,
+          isTraining: false,
+          startTime: nodeData.trainingProgress?.startTime || new Date(),
+          endTime: new Date(),
+        },
+        metrics: {
+          loss: result.finalMetrics.loss || 0,
+          accuracy: result.finalMetrics.accuracy,
+          valLoss: result.finalMetrics.valLoss,
+          valAccuracy: result.finalMetrics.valAccuracy,
+          trainTime: result.duration,
+        },
+        lossHistory: result.history.loss,
+        accuracyHistory: result.history.accuracy,
+      })
+
+      console.log('✅ Training completed for node:', id)
+      console.log('📊 Final metrics:', result.finalMetrics)
+
     } catch (error) {
       console.error('❌ Training failed:', error)
       updateNodeData(id, {
         state: 'error',
+        error: error instanceof Error ? error.message : String(error),
         trainingProgress: {
           ...nodeData.trainingProgress,
           isTraining: false,
@@ -320,18 +438,136 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           </div>
         )}
 
-        {/* 학습 버튼 */}
+        {/* 학습 파라미터 설정 */}
         {nodeData.state === 'definition' && nodeData.layers && nodeData.layers.length > 0 && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              handleStartTraining()
-            }}
-            className="w-full mt-2 px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center gap-1"
-          >
-            <Play className="w-3 h-3" />
-            모델 학습 시작
-          </button>
+          <div className="mt-2 space-y-2">
+            {/* 학습 설정 토글 버튼 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsTrainingConfigOpen(!isTrainingConfigOpen)
+              }}
+              className="w-full px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-1">
+                <Settings className="w-3 h-3" />
+                학습 설정
+              </div>
+              {isTrainingConfigOpen ? 
+                <ChevronUp className="w-3 h-3" /> : 
+                <ChevronDown className="w-3 h-3" />
+              }
+            </button>
+
+            {/* 학습 설정 패널 */}
+            {isTrainingConfigOpen && (
+              <div className="space-y-2 p-2 bg-gray-50 rounded border">
+                {/* Optimizer */}
+                <div className="grid grid-cols-2 gap-1 items-center">
+                  <label className="text-xs text-gray-600">Optimizer:</label>
+                  <select
+                    value={currentTrainingConfig.optimizer}
+                    onChange={(e) => updateTrainingConfig({ optimizer: e.target.value as any })}
+                    className="text-xs border rounded px-1 py-0.5"
+                  >
+                    <option value="adam">Adam</option>
+                    <option value="sgd">SGD</option>
+                    <option value="rmsprop">RMSprop</option>
+                  </select>
+                </div>
+
+                {/* Loss Function */}
+                <div className="grid grid-cols-2 gap-1 items-center">
+                  <label className="text-xs text-gray-600">Loss:</label>
+                  <select
+                    value={currentTrainingConfig.loss}
+                    onChange={(e) => updateTrainingConfig({ loss: e.target.value as any })}
+                    className="text-xs border rounded px-1 py-0.5"
+                  >
+                    <option value="categoricalCrossentropy">Categorical</option>
+                    <option value="binaryCrossentropy">Binary</option>
+                    <option value="meanSquaredError">MSE</option>
+                  </select>
+                </div>
+
+                {/* Epochs */}
+                <div className="grid grid-cols-2 gap-1 items-center">
+                  <label className="text-xs text-gray-600">Epochs:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={currentTrainingConfig.epochs}
+                    onChange={(e) => updateTrainingConfig({ epochs: parseInt(e.target.value) || 10 })}
+                    className="text-xs border rounded px-1 py-0.5 w-full"
+                  />
+                </div>
+
+                {/* Batch Size */}
+                <div className="grid grid-cols-2 gap-1 items-center">
+                  <label className="text-xs text-gray-600">Batch Size:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="512"
+                    value={currentTrainingConfig.batchSize}
+                    onChange={(e) => updateTrainingConfig({ batchSize: parseInt(e.target.value) || 32 })}
+                    className="text-xs border rounded px-1 py-0.5 w-full"
+                  />
+                </div>
+
+                {/* Learning Rate */}
+                <div className="grid grid-cols-2 gap-1 items-center">
+                  <label className="text-xs text-gray-600">Learn Rate:</label>
+                  <input
+                    type="number"
+                    min="0.0001"
+                    max="1"
+                    step="0.0001"
+                    value={currentTrainingConfig.learningRate}
+                    onChange={(e) => updateTrainingConfig({ learningRate: parseFloat(e.target.value) || 0.001 })}
+                    className="text-xs border rounded px-1 py-0.5 w-full"
+                  />
+                </div>
+
+                {/* Validation Split */}
+                <div className="grid grid-cols-2 gap-1 items-center">
+                  <label className="text-xs text-gray-600">Val Split:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="0.5"
+                    step="0.1"
+                    value={currentTrainingConfig.validationSplit}
+                    onChange={(e) => updateTrainingConfig({ validationSplit: parseFloat(e.target.value) || 0.2 })}
+                    className="text-xs border rounded px-1 py-0.5 w-full"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 학습 시작 버튼 */}
+            {connectedDataInfo && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleStartTraining()
+                }}
+                className="w-full px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={nodeData.state !== 'definition'}
+              >
+                <Play className="w-3 h-3" />
+                모델 학습 시작
+              </button>
+            )}
+
+            {/* 데이터 연결 필요 메시지 */}
+            {!connectedDataInfo && (
+              <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded border border-orange-200">
+                ⚠️ 학습을 위해 데이터 노드를 연결하세요
+              </div>
+            )}
+          </div>
         )}
 
         {/* 학습 진행 상황 */}
