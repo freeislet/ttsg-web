@@ -158,7 +158,9 @@ export const combineCallbacks = (...callbacks: TrainingCallbacks[]): TrainingCal
     if (methodCallbacks.length > 0) {
       combined[method] = async (...args: any[]) => {
         for (const fn of methodCallbacks) {
-          await fn(...args)
+          if (fn) {
+            await (fn as Function)(...args)
+          }
         }
       }
     }

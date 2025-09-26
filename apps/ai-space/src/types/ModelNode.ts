@@ -126,25 +126,6 @@ export type ModelNode = Node<ModelNodeData, 'model'>
  */
 export type ModelComponentMode = 'node' | 'panel'
 
-/**
- * 모델 컴포넌트 인터페이스
- */
-export interface IModelComponent {
-  // 컴포넌트 정보
-  type: string
-  name: string
-  description: string
-  
-  // 렌더링 메서드
-  renderNode: (data: ModelNodeData, onUpdate: (data: Partial<ModelNodeData>) => void) => React.ReactNode
-  renderPanel: (data: ModelNodeData, onUpdate: (data: Partial<ModelNodeData>) => void) => React.ReactNode
-  
-  // 기본 설정 제공
-  getDefaultConfig: () => Partial<ModelNodeData>
-  
-  // 검증 메서드
-  validateConfig: (data: ModelNodeData) => { isValid: boolean; errors: string[] }
-}
 
 /**
  * 모델 액션 인터페이스

@@ -69,10 +69,6 @@ export class ModelTrainer {
         shuffle: config.shuffle ?? true,
         verbose: config.verbose ?? 0,
         callbacks: {
-          onEpochStart: async (epoch: number) => {
-            await combinedCallbacks.onEpochStart?.(epoch)
-          },
-          
           onEpochEnd: async (epoch: number, logs?: tf.Logs) => {
             const logRecord = logs || {}
             

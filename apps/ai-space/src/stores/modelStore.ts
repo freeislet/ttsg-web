@@ -8,7 +8,6 @@ import {
   addEdge,
 } from '@xyflow/react'
 import { AppNode, AppEdge } from '@/types/AppNodes'
-import { NodeRegistry } from '@/components/nodes/NodeRegistry'
 import { updateModelShapes } from '@/utils/modelShapeInference'
 
 /**
@@ -299,7 +298,7 @@ export const modelStore = {
    * 등록된 모델 타입 가져오기
    */
   getAvailableModelTypes: () => {
-    return NodeRegistry.getRegisteredTypes()
+    return ['neural-network']
   },
 
   /**
@@ -307,7 +306,7 @@ export const modelStore = {
    */
   getNodeTypes: () => {
     return {
-      ...NodeRegistry.createNodeTypes(),
+      model: () => import('@/components/model-editor/ModelNode').then((m) => m.default),
       data: () => import('@/components/model-editor/DataNode').then((m) => m.default),
     }
   },
@@ -326,8 +325,8 @@ export const modelStore = {
     nodeCount: modelState.nodes.length,
     edgeCount: modelState.edges.length,
     modelInstanceCount: modelState.modelInstances.size,
-    registeredModelTypes: NodeRegistry.getRegisteredTypes(),
-    registeredNodeTypes: NodeRegistry.getRegisteredTypes(),
+    registeredModelTypes: ['neural-network'],
+    registeredNodeTypes: ['model', 'data'],
   }),
 }
 

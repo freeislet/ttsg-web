@@ -43,39 +43,19 @@ export const createOptimizerWithConfig = (config: OptimizerConfig): tf.Optimizer
 
   switch (type) {
     case 'adam':
-      return tf.train.adam({
-        learningRate,
-        beta1: beta1 ?? 0.9,
-        beta2: beta2 ?? 0.999,
-        epsilon: epsilon ?? 1e-8,
-      })
+      return tf.train.adam(learningRate, beta1 ?? 0.9, beta2 ?? 0.999, epsilon ?? 1e-8)
     
     case 'sgd':
-      return tf.train.sgd({
-        learningRate,
-        momentum: momentum ?? 0,
-      })
+      return tf.train.sgd(learningRate)
     
     case 'rmsprop':
-      return tf.train.rmsprop({
-        learningRate,
-        decay: decay ?? 0.9,
-        momentum: momentum ?? 0,
-        epsilon: epsilon ?? 1e-8,
-      })
+      return tf.train.rmsprop(learningRate, decay ?? 0.9, momentum ?? 0, epsilon ?? 1e-8)
     
     case 'adagrad':
-      return tf.train.adagrad({
-        learningRate,
-        initialAccumulatorValue: 0.1,
-      })
+      return tf.train.adagrad(learningRate)
     
     case 'adadelta':
-      return tf.train.adadelta({
-        learningRate,
-        rho: 0.95,
-        epsilon: epsilon ?? 1e-8,
-      })
+      return tf.train.adadelta(learningRate, 0.95, epsilon ?? 1e-8)
     
     default:
       return createOptimizer(type, learningRate)

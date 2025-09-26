@@ -127,7 +127,7 @@ export const analyzeTrainingProgress = (history: TrainingHistory) => {
       current: values[values.length - 1],
       isImproving,
       trend,
-      stability: std / Math.abs(mean) // 변동계수
+      stability: stats.std / Math.abs(stats.mean) // 변동계수
     }
   })
   
