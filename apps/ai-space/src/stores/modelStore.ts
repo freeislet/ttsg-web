@@ -1,4 +1,6 @@
-import { proxy, useSnapshot } from 'valtio'
+import { create } from 'zustand'
+import { devtools, subscribeWithSelector } from 'zustand/middleware'
+import { mutative } from 'zustand-mutative'
 import {
   NodeChange,
   EdgeChange,
@@ -19,8 +21,8 @@ interface ModelState {
   edges: AppEdge[]
   selectedNodeId: string | null
 
-  // 모델 인스턴스 관리
-  modelInstances: Map<string, any>
+  // 모델 인스턴스 관리 (일반 객체 사용)
+  modelInstances: Record<string, any>
 
   // UI 상태
   isLoading: boolean
@@ -28,329 +30,281 @@ interface ModelState {
 }
 
 /**
- * 모델 상태 (Valtio proxy)
+ * 모델 액션 인터페이스
  */
-const modelState = proxy<ModelState>({
-  nodes: [],
-  edges: [],
-  selectedNodeId: null,
-  modelInstances: new Map(),
-  isLoading: false,
-  error: null,
-})
+interface ModelActions {
+  // === React Flow 이벤트 핸들러 ===
+  onNodesChange: (changes: NodeChange[]) => void
+  onEdgesChange: (changes: EdgeChange[]) => void
+  onConnect: (connection: Connection) => void
+  onSelectionChange: (params: { nodes: AppNode[]; edges: AppEdge[] }) => void
+
+  // === 노드 관리 ===
+  addDataNode: (position: { x: number; y: number }) => void
+  addModelNode: (modelType: string, position: { x: number; y: number }) => void
+  addVisualizationNode: (position: { x: number; y: number }) => void
+  updateNodeData: (nodeId: string, data: Partial<any>) => void
+  setSelectedNode: (nodeId: string | null) => void
+
+  // === 모델 인스턴스 관리 ===
+  setModelInstance: (nodeId: string, instance: any) => void
+  getModelInstance: (nodeId: string) => any
+  clearModelInstance: (nodeId: string) => void
+
+  // === UI 상태 ===
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+
+  // === 유틸리티 ===
+  getStats: () => {
+    nodeCount: number
+    edgeCount: number
+    modelInstanceCount: number
+    registeredModelTypes: string[]
+    registeredNodeTypes: string[]
+  }
+}
+
+type ModelStore = ModelState & ModelActions
 
 /**
- * 새로운 모델 스토어
+ * Zustand + mutative 기반 모델 스토어
  */
-export const modelStore = {
-  // === React Flow 이벤트 핸들러 ===
+export const useModelStore = create<ModelStore>()(
+  devtools(
+    subscribeWithSelector(
+      mutative((set, get) => ({
+        // === 초기 상태 ===
+        nodes: [],
+        edges: [],
+        selectedNodeId: null,
+        modelInstances: {},
+        isLoading: false,
+        error: null,
 
-  onNodesChange: (changes: NodeChange[]) => {
-    // 삭제되는 노드들의 리소스 정리
-    changes.forEach((change) => {
-      if (change.type === 'remove') {
-        const nodeToRemove = modelState.nodes.find(node => node.id === change.id)
-        if (nodeToRemove) {
-          // 데이터 노드의 경우 데이터셋 정리
-          if (nodeToRemove.type === 'data' && nodeToRemove.data.dataset) {
-            try {
-              if (typeof nodeToRemove.data.dataset.dispose === 'function') {
-                nodeToRemove.data.dataset.dispose()
-                console.log(`🧹 Disposed dataset for removed node: ${change.id}`)
+        // === React Flow 이벤트 핸들러 ===
+        onNodesChange: (changes: NodeChange[]) => {
+          set((state) => {
+            // 삭제되는 노드들의 리소스 정리
+            changes.forEach((change) => {
+              if (change.type === 'remove') {
+                const nodeToRemove = state.nodes.find(node => node.id === change.id)
+                if (nodeToRemove) {
+                  // 데이터 노드의 경우 데이터셋 정리
+                  if (nodeToRemove.type === 'data' && nodeToRemove.data.dataset) {
+                    try {
+                      if (typeof nodeToRemove.data.dataset.dispose === 'function') {
+                        nodeToRemove.data.dataset.dispose()
+                        console.log(`🧹 Disposed dataset for removed node: ${change.id}`)
+                      }
+                    } catch (error) {
+                      console.warn('Failed to dispose dataset:', error)
+                    }
+                  }
+                  
+                  // 모델 인스턴스 정리
+                  if (state.modelInstances[change.id]) {
+                    const modelInstance = state.modelInstances[change.id]
+                    if (modelInstance && typeof modelInstance.dispose === 'function') {
+                      try {
+                        modelInstance.dispose()
+                        console.log(`🧹 Disposed model instance for removed node: ${change.id}`)
+                      } catch (error) {
+                        console.warn('Failed to dispose model instance:', error)
+                      }
+                    }
+                  }
+                }
               }
-            } catch (error) {
-              console.warn('Failed to dispose dataset:', error)
-            }
+            })
+
+            // mutative를 사용하므로 직접 수정 가능
+            state.nodes = applyNodeChanges(changes, state.nodes) as AppNode[]
+            const updatedNodes = updateModelShapes(state.nodes, state.edges)
+            state.nodes = updatedNodes
+            
+            // 삭제된 노드들의 모델 인스턴스 제거
+            changes.forEach((change) => {
+              if (change.type === 'remove') {
+                delete state.modelInstances[change.id]
+              }
+            })
+          })
+        },
+
+        onEdgesChange: (changes: EdgeChange[]) => {
+          set((state) => {
+            state.edges = applyEdgeChanges(changes, state.edges) as AppEdge[]
+            const updatedNodes = updateModelShapes(state.nodes, state.edges)
+            state.nodes = updatedNodes
+          })
+        },
+
+        onConnect: (connection: Connection) => {
+          set((state) => {
+            state.edges = addEdge(connection, state.edges) as AppEdge[]
+            const updatedNodes = updateModelShapes(state.nodes, state.edges)
+            state.nodes = updatedNodes
+          })
+        },
+
+        onSelectionChange: ({ nodes: selectedNodes }) => {
+          set((state) => {
+            state.selectedNodeId = selectedNodes.length === 1 ? selectedNodes[0].id : null
+          })
+        },
+
+        // === 노드 관리 ===
+        addDataNode: (position) => {
+          const newNode: AppNode = {
+            id: `data_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            type: 'data',
+            position,
+            data: {
+              label: '데이터',
+              samples: 0,
+              inputFeatures: 0,
+              outputFeatures: 0,
+              dataType: 'unknown',
+            },
           }
-          
-          // 모델 인스턴스 정리
-          if (modelState.modelInstances.has(change.id)) {
-            const modelInstance = modelState.modelInstances.get(change.id)
-            if (modelInstance && typeof modelInstance.dispose === 'function') {
+
+          set((state) => {
+            state.nodes.push(newNode)
+          })
+        },
+
+        addModelNode: (modelType, position) => {
+          const newNode: AppNode = {
+            id: `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            type: 'model',
+            position,
+            data: {
+              label: `${modelType} 모델`,
+              modelType,
+              modelId: `nn_model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              state: 'definition',
+              layers: [],
+              inputShape: [1],
+              outputUnits: 1,
+            },
+          }
+
+          set((state) => {
+            state.nodes.push(newNode)
+          })
+        },
+
+        addVisualizationNode: (position) => {
+          const newNode: AppNode = {
+            id: `vis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            type: 'visualization',
+            position,
+            data: {
+              label: '시각화',
+              type: 'weights',
+            },
+          }
+
+          set((state) => {
+            state.nodes.push(newNode)
+          })
+        },
+
+        updateNodeData: (nodeId, data) => {
+          set((state) => {
+            const nodeIndex = state.nodes.findIndex(node => node.id === nodeId)
+            if (nodeIndex !== -1) {
+              // mutative를 사용하므로 직접 수정 가능
+              Object.assign(state.nodes[nodeIndex].data, data)
+            }
+          })
+        },
+
+        setSelectedNode: (nodeId) => {
+          set((state) => {
+            state.selectedNodeId = nodeId
+          })
+        },
+
+        // === 모델 인스턴스 관리 ===
+        setModelInstance: (nodeId, instance) => {
+          set((state) => {
+            state.modelInstances[nodeId] = instance
+          })
+        },
+
+        getModelInstance: (nodeId) => {
+          return get().modelInstances[nodeId]
+        },
+
+        clearModelInstance: (nodeId) => {
+          set((state) => {
+            const instance = state.modelInstances[nodeId]
+            if (instance && typeof instance.dispose === 'function') {
               try {
-                modelInstance.dispose()
-                console.log(`🧹 Disposed model instance for removed node: ${change.id}`)
+                instance.dispose()
+                console.log(`🧹 Disposed model instance: ${nodeId}`)
               } catch (error) {
                 console.warn('Failed to dispose model instance:', error)
               }
             }
-            modelState.modelInstances.delete(change.id)
+            
+            delete state.modelInstances[nodeId]
+          })
+        },
+
+        // === UI 상태 ===
+        setLoading: (loading) => {
+          set((state) => {
+            state.isLoading = loading
+          })
+        },
+
+        setError: (error) => {
+          set((state) => {
+            state.error = error
+          })
+        },
+
+        // === 유틸리티 ===
+        getStats: () => {
+          const state = get()
+          return {
+            nodeCount: state.nodes.length,
+            edgeCount: state.edges.length,
+            modelInstanceCount: Object.keys(state.modelInstances).length,
+            registeredModelTypes: ['neural-network'],
+            registeredNodeTypes: ['model', 'data', 'visualization'],
           }
-        }
-      }
-    })
-    
-    modelState.nodes = applyNodeChanges(changes, modelState.nodes as any) as AppNode[]
-  },
-
-  onEdgesChange: (changes: EdgeChange[]) => {
-    modelState.edges = applyEdgeChanges(changes, modelState.edges as any) as AppEdge[]
-  },
-
-  onConnect: (connection: Connection) => {
-    modelState.edges = addEdge(connection, modelState.edges as any) as AppEdge[]
-    // 연결 후 모델 shape 자동 업데이트
-    modelState.nodes = updateModelShapes(modelState.nodes, modelState.edges) as AppNode[]
-  },
-
-  onSelectionChange: (params: any) => {
-    modelState.selectedNodeId = params.nodes[0]?.id || null
-    console.log('🔍 Node selected:', modelState.selectedNodeId)
-  },
-
-  /**
-   * 노드 선택
-   */
-  selectNode: (nodeId: string) => {
-    modelState.selectedNodeId = nodeId
-    console.log('🔍 Node selected manually:', nodeId)
-  },
-
-  /**
-   * 시각화 노드 추가
-   */
-  addVisualizationNode: (
-    sourceNodeId: string,
-    position: { x: number; y: number },
-    visualizationConfig?: any
-  ) => {
-    const nodeId = `viz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const edgeId = `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-    // 소스 노드 위치 기준으로 시각화 노드 위치 계산
-    const sourceNode = modelState.nodes.find((node) => node.id === sourceNodeId)
-    const calculatedPosition = sourceNode
-      ? {
-          x: sourceNode.position.x + 350,
-          y: sourceNode.position.y,
-        }
-      : position
-
-    const node: AppNode = {
-      id: nodeId,
-      type: 'visualization',
-      position: calculatedPosition,
-      data: {
-        label: visualizationConfig?.title || '데이터 시각화',
-        sourceNodeId,
-        mode: visualizationConfig?.type || 'table',
-        isExpanded: false,
-        visualizationConfig,
-      },
-    } as AppNode
-
-    // 연결 엣지 추가
-    const edge: AppEdge = {
-      id: edgeId,
-      source: sourceNodeId,
-      target: nodeId,
-      type: 'default',
-    }
-
-    modelState.nodes.push(node)
-    modelState.edges.push(edge)
-    console.log(`✅ Visualization node added: ${node.id} for source: ${sourceNodeId}`)
-    console.log(`✅ Edge added: ${sourceNodeId} -> ${nodeId}`)
-  },
-
-  // === 노드 관리 ===
-
-  /**
-   * 통합 모델 노드 추가
-   */
-  addModelNode: (modelType: string, position: { x: number; y: number }) => {
-    console.log(`🔧 Adding model node: ${modelType}`)
-    const nodeId = `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-    // 기본 레이어 설정
-    const defaultLayers = [
-      {
-        type: 'dense' as const,
-        units: 8,
-        activation: 'relu'
-      },
-      {
-        type: 'dense' as const,
-        units: 4,
-        activation: 'relu'
-      }
-    ]
-
-    const node: AppNode = {
-      id: nodeId,
-      type: 'model',
-      position,
-      draggable: true,
-      selectable: true,
-      data: {
-        label: '신경망 모델',
-        modelType,
-        modelId: nodeId,
-        state: 'definition',
-        layers: defaultLayers,
-      },
-    } as AppNode
-
-    modelState.nodes.push(node)
-    console.log(`✅ Model node added: ${node.id} (${modelType}) with ${defaultLayers.length} default layers`)
-  },
-
-  /**
-   * 데이터 노드 추가
-   */
-  addDataNode: (position: { x: number; y: number }) => {
-    const nodeId = `data_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-    const node: AppNode = {
-      id: nodeId,
-      type: 'data',
-      position,
-      draggable: true,
-      selectable: true,
-      data: {
-        label: '훈련 데이터',
-        samples: 1000,
-        inputFeatures: 10,
-        outputFeatures: 1,
-        dataType: 'training',
-        inputShape: [10],
-        outputShape: [1],
-      },
-    } as AppNode
-
-    modelState.nodes.push(node)
-    console.log(`✅ Data node added: ${node.id}`)
-  },
-
-  /**
-   * 노드 제거
-   */
-  removeNode: (nodeId: string) => {
-    // 노드 제거
-    modelState.nodes = modelState.nodes.filter((node) => node.id !== nodeId)
-
-    // 관련 엣지 제거
-    modelState.edges = modelState.edges.filter(
-      (edge) => edge.source !== nodeId && edge.target !== nodeId
-    )
-
-    // 모델 인스턴스 정리
-    const node = modelState.nodes.find((n) => n.id === nodeId)
-    if (node?.data && 'modelId' in node.data && typeof node.data.modelId === 'string') {
-      const model = modelState.modelInstances.get(node.data.modelId)
-      if (model && typeof model.dispose === 'function') {
-        model.dispose()
-      }
-      modelState.modelInstances.delete(node.data.modelId)
-    }
-
-    console.log(`🗑️ Node removed: ${nodeId}`)
-  },
-
-  /**
-   * 모든 노드 제거
-   */
-  clearAll: () => {
-    // 모든 모델 인스턴스 정리
-    modelState.modelInstances.forEach((model) => {
-      if (model && typeof model.dispose === 'function') {
-        model.dispose()
-      }
-    })
-
-    modelState.nodes = []
-    modelState.edges = []
-    modelState.modelInstances.clear()
-    modelState.selectedNodeId = null
-    modelState.error = null
-
-    console.log('🧹 All nodes cleared')
-  },
-
-  // === 모델 관리 ===
-
-  /**
-   * 모델 인스턴스 가져오기
-   */
-  getModelInstance: (modelId: string) => {
-    return modelState.modelInstances.get(modelId)
-  },
-
-  /**
-   * 모델 노드 데이터 업데이트
-   */
-  updateModelNodeData: (modelId: string, updates: any) => {
-    const nodeIndex = modelState.nodes.findIndex((node) => node.data?.modelId === modelId)
-    if (nodeIndex !== -1) {
-      modelState.nodes[nodeIndex] = {
-        ...modelState.nodes[nodeIndex],
-        data: {
-          ...modelState.nodes[nodeIndex].data,
-          ...updates,
         },
-      }
+      }))
+    ),
+    {
+      name: 'ai-space-model-store',
     }
-  },
-
-  /**
-   * 노드 데이터 업데이트 (일반적인 노드용)
-   */
-  updateNodeData: (nodeId: string, updates: any) => {
-    const nodeIndex = modelState.nodes.findIndex((node) => node.id === nodeId)
-    if (nodeIndex !== -1) {
-      modelState.nodes[nodeIndex] = {
-        ...modelState.nodes[nodeIndex],
-        data: {
-          ...modelState.nodes[nodeIndex].data,
-          ...updates,
-        },
-      }
-    }
-  },
-
-  /**
-   * 등록된 모델 타입 가져오기
-   */
-  getAvailableModelTypes: () => {
-    return ['neural-network']
-  },
-
-  /**
-   * 노드 컴포넌트 타입 맵 가져오기
-   */
-  getNodeTypes: () => {
-    return {
-      model: () => import('@/components/model-editor/ModelNode').then((m) => m.default),
-      data: () => import('@/components/model-editor/DataNode').then((m) => m.default),
-    }
-  },
-
-  // === 유틸리티 ===
-
-  /**
-   * 상태 스냅샷 가져오기
-   */
-  getSnapshot: () => useSnapshot(modelState),
-
-  /**
-   * 디버그 정보
-   */
-  getDebugInfo: () => ({
-    nodeCount: modelState.nodes.length,
-    edgeCount: modelState.edges.length,
-    modelInstanceCount: modelState.modelInstances.size,
-    registeredModelTypes: ['neural-network'],
-    registeredNodeTypes: ['model', 'data'],
-  }),
-}
+  )
+)
 
 /**
- * React Hook for using the model store
+ * 스토어의 특정 부분만 구독하는 헬퍼 훅들
  */
-export const useModelStore = () => {
-  const snapshot = useSnapshot(modelState)
-  return {
-    ...snapshot,
-    ...modelStore,
-  }
+
+// 노드만 구독
+export const useNodes = () => useModelStore((state) => state.nodes)
+
+// 엣지만 구독
+export const useEdges = () => useModelStore((state) => state.edges)
+
+// 선택된 노드만 구독
+export const useSelectedNode = () => {
+  const selectedNodeId = useModelStore((state) => state.selectedNodeId)
+  const nodes = useModelStore((state) => state.nodes)
+  return selectedNodeId ? nodes.find(node => node.id === selectedNodeId) : null
 }
+
+// 로딩 상태만 구독
+export const useLoading = () => useModelStore((state) => state.isLoading)
+
+// 에러 상태만 구독  
+export const useError = () => useModelStore((state) => state.error)

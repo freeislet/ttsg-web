@@ -6,9 +6,9 @@ import { BarChart3, Brain, Database, Activity } from 'lucide-react'
  * 간단한 대시보드 컴포넌트
  */
 const Dashboard: React.FC = () => {
-  const { nodes, getDebugInfo } = useModelStore()
+  const { nodes, getStats } = useModelStore()
   
-  const debugInfo = getDebugInfo()
+  const debugInfo = getStats()
   const dataNodes = nodes.filter(node => node.type === 'data')
   const modelNodes = nodes.filter(node => node.type === 'model')
 

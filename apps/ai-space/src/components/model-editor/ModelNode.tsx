@@ -222,7 +222,22 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     }
 
     const dataNodeData = connectedDataNode.data as DataNodeData
-    return dataNodeData.dataset || null
+    const dataset = dataNodeData.dataset
+    
+    if (!dataset) {
+      return null
+    }
+    
+    // Valtio Proxy 객체 감지 및 변환 (TensorFlow.js 호환성)
+    console.log(`🔧 [ModelNode] Dataset type check:`, {
+      type: typeof dataset,
+      constructor: dataset.constructor?.name,
+      isProxy: dataset.constructor?.name === 'Object' && '__valtio_state' in dataset
+    })
+    
+    // 이제 Zustand를 사용하므로 Proxy 문제 없이 직접 반환
+    console.log(`🔧 [ModelNode] Dataset (Zustand - no proxy issues):`, dataset)
+    return dataset
   }
 
   /**

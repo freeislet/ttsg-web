@@ -14,9 +14,9 @@ interface BottomPanelProps {
  */
 const BottomPanel: React.FC<BottomPanelProps> = ({ height }) => {
   const [activeTab, setActiveTab] = useState('dashboard')
-  const { getDebugInfo } = useModelStore()
+  const { getStats } = useModelStore()
 
-  const debugInfo = getDebugInfo()
+  const debugInfo = getStats()
 
   const renderLogPanel = () => (
     <div className="p-4 h-full overflow-auto">
