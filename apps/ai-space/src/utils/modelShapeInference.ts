@@ -9,7 +9,7 @@ const DATA_TYPE_SHAPES: Record<string, number[]> = {
   // 샘플 데이터
   mnist: [28, 28, 1], // MNIST 이미지
   iris: [4], // Iris 특성 4개
-  'car-mpg': [7], // Car MPG 특성 7개
+  'car-mpg': [1], // Car MPG 특성 1개 (horsepower)
 
   // 계산된 데이터
   linear: [1], // 1차원 입력
@@ -60,9 +60,17 @@ export function inferInputShapeFromDataNode(
     return null
   }
 
-  // 데이터셋 ID에서 shape 추론
+  // 실제 데이터셋에서 shape 추론 (우선)
+  if (connectedDataNode.data.dataset && connectedDataNode.data.dataset.inputShape) {
+    console.log(`📊 Using actual dataset inputShape: ${connectedDataNode.data.dataset.inputShape}`)
+    return connectedDataNode.data.dataset.inputShape
+  }
+
+  // 데이터셋 ID에서 shape 추론 (fallback)
   const datasetId = connectedDataNode.data.selectedPresetId
-  return DATA_TYPE_SHAPES[datasetId] || [1]
+  const inferredShape = DATA_TYPE_SHAPES[datasetId] || [1]
+  console.log(`📊 Fallback to preset shape for ${datasetId}: ${inferredShape}`)
+  return inferredShape
 }
 
 /**
@@ -89,9 +97,18 @@ export function inferOutputUnitsFromDataNode(
     return null
   }
 
-  // 데이터셋 ID에서 출력 유닛 수 추론
+  // 실제 데이터셋에서 출력 shape 추론 (우선)
+  if (connectedDataNode.data.dataset && connectedDataNode.data.dataset.outputShape) {
+    const outputUnits = connectedDataNode.data.dataset.outputShape.reduce((a: number, b: number) => a * b, 1)
+    console.log(`🎯 Using actual dataset outputShape: ${connectedDataNode.data.dataset.outputShape} -> ${outputUnits} units`)
+    return outputUnits
+  }
+
+  // 데이터셋 ID에서 출력 유닛 수 추론 (fallback)
   const datasetId = connectedDataNode.data.selectedPresetId
-  return DATA_TYPE_OUTPUT_UNITS[datasetId] || 1
+  const inferredUnits = DATA_TYPE_OUTPUT_UNITS[datasetId] || 1
+  console.log(`🎯 Fallback to preset output units for ${datasetId}: ${inferredUnits}`)
+  return inferredUnits
 }
 
 /**

@@ -1,12 +1,26 @@
 import React, { useState, useMemo } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
-import { Brain, Clock, BarChart3, CheckCircle, AlertCircle, Edit3, Play, Database, Settings, ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  Brain,
+  Clock,
+  BarChart3,
+  CheckCircle,
+  AlertCircle,
+  Edit3,
+  Play,
+  Database,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react'
 import { ModelNodeData, ModelNodeState, TrainingConfig } from '@/types/ModelNode'
 import { DataNodeData } from '@/types/DataNode'
 import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
 import { NNModel } from '@/models/NNModel'
 import { createNeuralNetworkConfig } from '@/models/training'
+import * as tf from '@tensorflow/tfjs'
+import { testTensorFlowBasic, testTensorFlowComplex } from '@/utils/tensorflowTest'
 
 /**
  * 상태별 스타일 설정
@@ -95,15 +109,15 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const style = getStateStyle(nodeData.state)
   const StateIcon = style.icon
 
-  // 기본 학습 설정값
+  // 기본 학습 설정값 (loss 함수는 데이터셋에 따라 자동 추론)
   const defaultTrainingConfig: TrainingConfig = {
     optimizer: 'adam',
-    loss: 'categoricalCrossentropy',
+    loss: '', // 비워두면 데이터셋에 따라 자동 추론
     metrics: ['accuracy'],
     epochs: 10,
     batchSize: 32,
     validationSplit: 0.2,
-    learningRate: 0.001
+    learningRate: 0.001,
   }
 
   // 현재 학습 설정 (기본값 사용하거나 저장된 값 사용)
@@ -112,21 +126,23 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   // 연결된 데이터 노드 정보 계산
   const connectedDataInfo = useMemo(() => {
     // 현재 모델 노드로 연결되는 엣지 찾기
-    const incomingEdges = edges.filter((edge) => edge.target === id && edge.targetHandle === 'data-input')
-    
+    const incomingEdges = edges.filter(
+      (edge) => edge.target === id && edge.targetHandle === 'data-input'
+    )
+
     if (incomingEdges.length === 0) {
       return null
     }
-    
+
     // 연결된 데이터 노드 찾기
-    const connectedDataNode = nodes.find((node) => 
-      node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
+    const connectedDataNode = nodes.find(
+      (node) => node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
     )
-    
+
     if (!connectedDataNode) {
       return null
     }
-    
+
     const dataNodeData = connectedDataNode.data as DataNodeData
     return {
       name: dataNodeData.selectedPresetId || '데이터셋',
@@ -137,9 +153,38 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   }, [id, nodes, edges])
 
   /**
+   * 데이터 타입에 따른 적절한 loss 함수 추론
+   */
+  const inferLossFunctionFromDataset = (dataset: any): string => {
+    if (!dataset || !dataset.outputShape) {
+      return 'categoricalCrossentropy' // 기본값
+    }
+
+    const outputUnits = dataset.outputShape.reduce((a: number, b: number) => a * b, 1)
+    
+    // 출력 유닛 수에 따라 분류/회귀 문제 판단
+    if (outputUnits === 1) {
+      // 1개 출력 = 회귀 문제 또는 이진 분류
+      // Car MPG, Linear regression 등
+      console.log('📊 Inferred loss function: meanSquaredError (regression problem)')
+      return 'meanSquaredError'
+    } else if (outputUnits > 1) {
+      // 여러 개 출력 = 다중 분류 문제
+      // Iris, MNIST 등
+      console.log(`📊 Inferred loss function: categoricalCrossentropy (${outputUnits}-class classification)`)
+      return 'categoricalCrossentropy'
+    }
+
+    return 'categoricalCrossentropy'
+  }
+
+  /**
    * 레이어 설정 저장 핸들러
    */
-  const handleLayersSave = (layers: import('@/types/ModelNode').LayerConfig[], modelNodeId?: string) => {
+  const handleLayersSave = (
+    layers: import('@/types/ModelNode').LayerConfig[],
+    modelNodeId?: string
+  ) => {
     // modelNodeId가 제공되면 해당 ID 사용, 아니면 현재 노드 ID 사용
     const targetNodeId = modelNodeId || id
     updateNodeData(targetNodeId, { layers })
@@ -159,21 +204,23 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
    */
   const getConnectedDataset = () => {
     // 현재 모델 노드로 연결되는 엣지 찾기
-    const incomingEdges = edges.filter((edge) => edge.target === id && edge.targetHandle === 'data-input')
-    
+    const incomingEdges = edges.filter(
+      (edge) => edge.target === id && edge.targetHandle === 'data-input'
+    )
+
     if (incomingEdges.length === 0) {
       return null
     }
-    
+
     // 연결된 데이터 노드 찾기
-    const connectedDataNode = nodes.find((node) => 
-      node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
+    const connectedDataNode = nodes.find(
+      (node) => node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
     )
-    
+
     if (!connectedDataNode) {
       return null
     }
-    
+
     const dataNodeData = connectedDataNode.data as DataNodeData
     return dataNodeData.dataset || null
   }
@@ -196,10 +243,34 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     const dataset = getConnectedDataset()
     if (!dataset) {
       console.warn('No dataset connected for training')
+      updateNodeData(id, {
+        state: 'error',
+        error: '데이터셋이 연결되지 않았습니다. 데이터 노드를 연결해주세요.',
+      })
+      return
+    }
+
+    // 데이터셋 유효성 검사
+    if (!dataset.inputs || !dataset.labels) {
+      console.warn('Dataset inputs or labels are missing')
+      updateNodeData(id, {
+        state: 'error',
+        error: '데이터셋에 입력 또는 레이블 데이터가 없습니다.',
+      })
       return
     }
 
     try {
+      // TensorFlow.js 백엔드 초기화 확인
+      await tf.ready()
+
+      if (!tf.getBackend()) {
+        console.warn('TensorFlow.js backend not available, initializing...')
+        await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'))
+      }
+
+      console.log('🔧 TensorFlow.js backend:', tf.getBackend())
+
       // 상태를 학습 중으로 변경
       updateNodeData(id, {
         state: 'training',
@@ -210,37 +281,51 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           isTraining: true,
           startTime: new Date(),
         },
+        error: undefined, // 이전 오류 삭제
       })
 
       console.log('🚀 Starting model training for node:', id)
+      console.log('📊 Dataset info:', {
+        inputShape: dataset.inputs.shape,
+        labelShape: dataset.labels.shape,
+        sampleCount: dataset.sampleCount,
+      })
 
       // NNModel 인스턴스 생성 (타입 안전성을 위해 명시적 변환)
       const nnModel = new NNModel({
         inputShape: nodeData.inputShape,
         outputUnits: nodeData.outputUnits,
         layers: nodeData.layers as any, // LayerConfig 타입 호환성을 위한 임시 변환
-        name: nodeData.label || 'Model'
+        name: nodeData.label || 'Model',
       })
 
+      // 데이터셋에 따라 적절한 loss 함수 자동 추론
+      const inferredLoss = inferLossFunctionFromDataset(dataset)
+      
       // 학습 설정을 ModelTrainingConfig로 변환 (loss 함수 이름 매핑)
       const lossMapping: Record<string, string> = {
-        'meanSquaredError': 'mse',
-        'categoricalCrossentropy': 'categoricalCrossentropy',
-        'binaryCrossentropy': 'binaryCrossentropy'
+        meanSquaredError: 'mse',
+        categoricalCrossentropy: 'categoricalCrossentropy',
+        binaryCrossentropy: 'binaryCrossentropy',
       }
-      
+
+      // 추론된 loss 함수를 우선 사용, 사용자 설정이 없으면 추론된 값 사용
+      const finalLoss = currentTrainingConfig.loss || inferredLoss
+      console.log(`🎯 Final loss function: ${finalLoss} (user: ${currentTrainingConfig.loss || 'auto'}, inferred: ${inferredLoss})`)
+
       const modelTrainingConfig = createNeuralNetworkConfig({
         optimizer: currentTrainingConfig.optimizer,
         learningRate: currentTrainingConfig.learningRate || 0.001,
-        loss: (lossMapping[currentTrainingConfig.loss] || currentTrainingConfig.loss) as any,
+        loss: (lossMapping[finalLoss] || finalLoss) as any,
         metrics: currentTrainingConfig.metrics,
         epochs: currentTrainingConfig.epochs,
         batchSize: currentTrainingConfig.batchSize,
-        validationSplit: currentTrainingConfig.validationSplit
+        validationSplit: currentTrainingConfig.validationSplit,
       })
 
       // 진행 상황 콜백 함수
       const onProgress = (epoch: number, logs: any) => {
+        console.log(`📈 Epoch ${epoch + 1}:`, logs)
         updateNodeData(id, {
           trainingProgress: {
             epoch: epoch + 1,
@@ -256,11 +341,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       }
 
       // 실제 모델 학습 실행
-      const { result } = await nnModel.createAndTrain(
-        dataset,
-        modelTrainingConfig,
-        onProgress
-      )
+      const { result } = await nnModel.createAndTrain(dataset, modelTrainingConfig, onProgress)
 
       // 학습 완료 상태로 업데이트
       updateNodeData(id, {
@@ -289,7 +370,6 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
       console.log('✅ Training completed for node:', id)
       console.log('📊 Final metrics:', result.finalMetrics)
-
     } catch (error) {
       console.error('❌ Training failed:', error)
       updateNodeData(id, {
@@ -357,7 +437,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               className="w-2 h-2 bg-purple-500 border border-white !absolute !left-[-10px] !top-[1px]"
             />
           </div>
-          
+
           {/* 데이터 연결 정보 표시 */}
           {connectedDataInfo ? (
             <div className="mt-1 text-xs text-gray-600 bg-purple-50 p-2 rounded border border-purple-200">
@@ -368,26 +448,30 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               {connectedDataInfo.samples > 0 && (
                 <div className="flex justify-between">
                   <span>샘플 수:</span>
-                  <span className="font-mono text-purple-700">{connectedDataInfo.samples.toLocaleString()}</span>
+                  <span className="font-mono text-purple-700">
+                    {connectedDataInfo.samples.toLocaleString()}
+                  </span>
                 </div>
               )}
               {connectedDataInfo.inputShape && (
                 <div className="flex justify-between">
                   <span>Input Shape:</span>
-                  <span className="font-mono text-purple-700">{connectedDataInfo.inputShape.join('×')}</span>
+                  <span className="font-mono text-purple-700">
+                    {connectedDataInfo.inputShape.join('×')}
+                  </span>
                 </div>
               )}
               {connectedDataInfo.outputShape && (
                 <div className="flex justify-between">
                   <span>Output Shape:</span>
-                  <span className="font-mono text-purple-700">{connectedDataInfo.outputShape.join('×')}</span>
+                  <span className="font-mono text-purple-700">
+                    {connectedDataInfo.outputShape.join('×')}
+                  </span>
                 </div>
               )}
             </div>
           ) : (
-            <div className="mt-1 text-xs text-gray-400 italic">
-              데이터 노드를 연결하세요
-            </div>
+            <div className="mt-1 text-xs text-gray-400 italic">데이터 노드를 연결하세요</div>
           )}
         </div>
       </div>
@@ -421,47 +505,43 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             {nodeData.inputShape && (
               <div className="text-xs bg-blue-50 border border-blue-200 px-2 py-1 rounded flex justify-between">
                 <span className="font-medium text-blue-700">Input</span>
-                <span className="text-blue-600">
-                  {nodeData.inputShape.join('×')}
-                </span>
+                <span className="text-blue-600">{nodeData.inputShape.join('×')}</span>
               </div>
             )}
-            
+
             {/* Hidden Layers */}
             {nodeData.layers.slice(0, 3).map((layer: any, index: number) => {
               // activation 함수 정보 추출
               const getLayerDetails = (layer: any) => {
                 const details = []
-                
+
                 if (layer.units) details.push(`${layer.units} units`)
                 if (layer.filters) details.push(`${layer.filters} filters`)
                 if (layer.rate) details.push(`${(layer.rate * 100).toFixed(0)}%`)
                 if (layer.activation && layer.activation !== 'linear') {
                   details.push(`${layer.activation}`)
                 }
-                
+
                 return details.join(' • ')
               }
-              
+
               return (
                 <div
                   key={index}
                   className="text-xs bg-gray-100 px-2 py-1 rounded flex justify-between"
                 >
                   <span className="font-medium capitalize">{layer.type}</span>
-                  <span className="text-gray-500">
-                    {getLayerDetails(layer)}
-                  </span>
+                  <span className="text-gray-500">{getLayerDetails(layer)}</span>
                 </div>
               )
             })}
-            
+
             {nodeData.layers.length > 3 && (
               <div className="text-xs text-gray-500 text-center">
                 +{nodeData.layers.length - 3} more hidden layers
               </div>
             )}
-            
+
             {/* Output Layer */}
             {nodeData.outputUnits && (
               <div className="text-xs bg-green-50 border border-green-200 px-2 py-1 rounded flex justify-between">
@@ -474,6 +554,31 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             )}
           </div>
         )}
+
+        {/* TensorFlow.js 테스트 버튼 */}
+        <div className="mt-2 space-y-1">
+          <button
+            onClick={async (e) => {
+              e.stopPropagation()
+              console.log('=== TensorFlow.js Basic Test ===')
+              await testTensorFlowBasic()
+            }}
+            className="w-full px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+          >
+            🧪 TF.js 기본 테스트
+          </button>
+
+          <button
+            onClick={async (e) => {
+              e.stopPropagation()
+              console.log('=== TensorFlow.js Complex Test ===')
+              await testTensorFlowComplex()
+            }}
+            className="w-full px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
+          >
+            🧪 TF.js 복잡 모델 테스트
+          </button>
+        </div>
 
         {/* 학습 파라미터 설정 */}
         {nodeData.state === 'definition' && nodeData.layers && nodeData.layers.length > 0 && (
@@ -490,10 +595,11 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 <Settings className="w-3 h-3" />
                 학습 설정
               </div>
-              {isTrainingConfigOpen ? 
-                <ChevronUp className="w-3 h-3" /> : 
+              {isTrainingConfigOpen ? (
+                <ChevronUp className="w-3 h-3" />
+              ) : (
                 <ChevronDown className="w-3 h-3" />
-              }
+              )}
             </button>
 
             {/* 학습 설정 패널 */}
@@ -535,7 +641,9 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                     min="1"
                     max="1000"
                     value={currentTrainingConfig.epochs}
-                    onChange={(e) => updateTrainingConfig({ epochs: parseInt(e.target.value) || 10 })}
+                    onChange={(e) =>
+                      updateTrainingConfig({ epochs: parseInt(e.target.value) || 10 })
+                    }
                     className="text-xs border rounded px-1 py-0.5 w-full"
                   />
                 </div>
@@ -548,7 +656,9 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                     min="1"
                     max="512"
                     value={currentTrainingConfig.batchSize}
-                    onChange={(e) => updateTrainingConfig({ batchSize: parseInt(e.target.value) || 32 })}
+                    onChange={(e) =>
+                      updateTrainingConfig({ batchSize: parseInt(e.target.value) || 32 })
+                    }
                     className="text-xs border rounded px-1 py-0.5 w-full"
                   />
                 </div>
@@ -562,7 +672,9 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                     max="1"
                     step="0.0001"
                     value={currentTrainingConfig.learningRate}
-                    onChange={(e) => updateTrainingConfig({ learningRate: parseFloat(e.target.value) || 0.001 })}
+                    onChange={(e) =>
+                      updateTrainingConfig({ learningRate: parseFloat(e.target.value) || 0.001 })
+                    }
                     className="text-xs border rounded px-1 py-0.5 w-full"
                   />
                 </div>
@@ -576,7 +688,9 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                     max="0.5"
                     step="0.1"
                     value={currentTrainingConfig.validationSplit}
-                    onChange={(e) => updateTrainingConfig({ validationSplit: parseFloat(e.target.value) || 0.2 })}
+                    onChange={(e) =>
+                      updateTrainingConfig({ validationSplit: parseFloat(e.target.value) || 0.2 })
+                    }
                     className="text-xs border rounded px-1 py-0.5 w-full"
                   />
                 </div>

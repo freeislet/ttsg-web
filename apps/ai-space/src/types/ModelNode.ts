@@ -29,7 +29,7 @@ export interface LayerConfig {
  */
 export interface TrainingConfig {
   optimizer: 'adam' | 'sgd' | 'rmsprop'
-  loss: 'meanSquaredError' | 'categoricalCrossentropy' | 'binaryCrossentropy'
+  loss: 'meanSquaredError' | 'categoricalCrossentropy' | 'binaryCrossentropy' | '' // 빈 문자열은 자동 추론 의미
   metrics: string[]
   epochs: number
   batchSize: number
