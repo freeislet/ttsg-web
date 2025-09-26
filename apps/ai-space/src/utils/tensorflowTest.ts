@@ -19,7 +19,21 @@ export async function testTensorFlowBasic(): Promise<boolean> {
     console.log('✅ Model created successfully')
 
     // Prepare the model for training: Specify the loss and the optimizer.
-    model.compile({loss: 'meanSquaredError', optimizer: 'sgd'})
+    console.log('🔧 Testing loss function names...')
+    
+    // Test different loss function names
+    try {
+      model.compile({loss: 'meanSquaredError', optimizer: 'sgd'})
+      console.log('✅ meanSquaredError works')
+    } catch (e) {
+      console.log('❌ meanSquaredError failed:', e)
+      try {
+        model.compile({loss: 'mse', optimizer: 'sgd'})
+        console.log('✅ mse works')
+      } catch (e2) {
+        console.log('❌ mse also failed:', e2)
+      }
+    }
     
     console.log('✅ Model compiled successfully')
 

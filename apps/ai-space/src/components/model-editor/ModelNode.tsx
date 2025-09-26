@@ -302,21 +302,34 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       // 데이터셋에 따라 적절한 loss 함수 자동 추론
       const inferredLoss = inferLossFunctionFromDataset(dataset)
       
-      // 학습 설정을 ModelTrainingConfig로 변환 (loss 함수 이름 매핑)
-      const lossMapping: Record<string, string> = {
-        meanSquaredError: 'mse',
-        categoricalCrossentropy: 'categoricalCrossentropy',
-        binaryCrossentropy: 'binaryCrossentropy',
-      }
-
       // 추론된 loss 함수를 우선 사용, 사용자 설정이 없으면 추론된 값 사용
       const finalLoss = currentTrainingConfig.loss || inferredLoss
       console.log(`🎯 Final loss function: ${finalLoss} (user: ${currentTrainingConfig.loss || 'auto'}, inferred: ${inferredLoss})`)
 
+      // TensorFlow.js에서 인식하는 loss 함수 이름 매핑 및 검증
+      const getTensorFlowLoss = (lossName: string): string => {
+        // TensorFlow.js에서 사용하는 정확한 이름들
+        const validLosses: Record<string, string> = {
+          'meanSquaredError': 'meanSquaredError',
+          'categoricalCrossentropy': 'categoricalCrossentropy', 
+          'binaryCrossentropy': 'binaryCrossentropy',
+          // 별칭들도 지원
+          'mse': 'meanSquaredError',
+          'categorical_crossentropy': 'categoricalCrossentropy',
+          'binary_crossentropy': 'binaryCrossentropy'
+        }
+        
+        const mappedLoss = validLosses[lossName] || lossName
+        console.log(`🔧 Loss mapping: ${lossName} -> ${mappedLoss}`)
+        return mappedLoss
+      }
+
+      const tensorflowLoss = getTensorFlowLoss(finalLoss)
+      
       const modelTrainingConfig = createNeuralNetworkConfig({
         optimizer: currentTrainingConfig.optimizer,
         learningRate: currentTrainingConfig.learningRate || 0.001,
-        loss: (lossMapping[finalLoss] || finalLoss) as any,
+        loss: tensorflowLoss as any,
         metrics: currentTrainingConfig.metrics,
         epochs: currentTrainingConfig.epochs,
         batchSize: currentTrainingConfig.batchSize,
