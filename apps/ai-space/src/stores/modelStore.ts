@@ -162,6 +162,20 @@ export const modelStore = {
     console.log(`🔧 Adding model node: ${modelType}`)
     const nodeId = `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
+    // 기본 레이어 설정
+    const defaultLayers = [
+      {
+        type: 'dense' as const,
+        units: 8,
+        activation: 'relu'
+      },
+      {
+        type: 'dense' as const,
+        units: 4,
+        activation: 'relu'
+      }
+    ]
+
     const node: AppNode = {
       id: nodeId,
       type: 'model',
@@ -173,12 +187,12 @@ export const modelStore = {
         modelType,
         modelId: nodeId,
         state: 'definition',
-        layers: [],
+        layers: defaultLayers,
       },
     } as AppNode
 
     modelState.nodes.push(node)
-    console.log(`✅ Model node added: ${node.id} (${modelType})`)
+    console.log(`✅ Model node added: ${node.id} (${modelType}) with ${defaultLayers.length} default layers`)
   },
 
   /**
