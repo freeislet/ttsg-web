@@ -414,25 +414,62 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           </div>
         </div>
 
-        {/* 레이어 요약 정보 */}
+        {/* 모델 구조 요약 정보 */}
         {nodeData.layers && nodeData.layers.length > 0 && (
           <div className="mt-2 space-y-1">
-            {nodeData.layers.slice(0, 3).map((layer: any, index: number) => (
-              <div
-                key={index}
-                className="text-xs bg-gray-100 px-2 py-1 rounded flex justify-between"
-              >
-                <span className="font-medium">{layer.type}</span>
-                <span className="text-gray-500">
-                  {layer.units && `${layer.units} units`}
-                  {layer.filters && `${layer.filters} filters`}
-                  {layer.rate && `${(layer.rate * 100).toFixed(0)}%`}
+            {/* Input Layer */}
+            {nodeData.inputShape && (
+              <div className="text-xs bg-blue-50 border border-blue-200 px-2 py-1 rounded flex justify-between">
+                <span className="font-medium text-blue-700">Input</span>
+                <span className="text-blue-600">
+                  {nodeData.inputShape.join('×')}
                 </span>
               </div>
-            ))}
+            )}
+            
+            {/* Hidden Layers */}
+            {nodeData.layers.slice(0, 3).map((layer: any, index: number) => {
+              // activation 함수 정보 추출
+              const getLayerDetails = (layer: any) => {
+                const details = []
+                
+                if (layer.units) details.push(`${layer.units} units`)
+                if (layer.filters) details.push(`${layer.filters} filters`)
+                if (layer.rate) details.push(`${(layer.rate * 100).toFixed(0)}%`)
+                if (layer.activation && layer.activation !== 'linear') {
+                  details.push(`${layer.activation}`)
+                }
+                
+                return details.join(' • ')
+              }
+              
+              return (
+                <div
+                  key={index}
+                  className="text-xs bg-gray-100 px-2 py-1 rounded flex justify-between"
+                >
+                  <span className="font-medium capitalize">{layer.type}</span>
+                  <span className="text-gray-500">
+                    {getLayerDetails(layer)}
+                  </span>
+                </div>
+              )
+            })}
+            
             {nodeData.layers.length > 3 && (
               <div className="text-xs text-gray-500 text-center">
-                +{nodeData.layers.length - 3} more layers
+                +{nodeData.layers.length - 3} more hidden layers
+              </div>
+            )}
+            
+            {/* Output Layer */}
+            {nodeData.outputUnits && (
+              <div className="text-xs bg-green-50 border border-green-200 px-2 py-1 rounded flex justify-between">
+                <span className="font-medium text-green-700">Output</span>
+                <span className="text-green-600">
+                  {nodeData.outputUnits} {nodeData.outputUnits === 1 ? 'unit' : 'units'}
+                  {nodeData.outputUnits === 1 ? ' (sigmoid)' : ' (softmax)'}
+                </span>
               </div>
             )}
           </div>
