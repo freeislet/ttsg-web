@@ -1,11 +1,11 @@
 import * as tf from '@tensorflow/tfjs'
 import { LayerConfig, createLayer, validateLayerConfig } from './layers'
-import { 
-  ModelTrainer, 
-  ModelTrainingConfig, 
+import {
+  ModelTrainer,
+  ModelTrainingConfig,
   TrainingResult as NewTrainingResult,
   createNeuralNetworkConfig,
-  createDefaultCallbacks
+  createDefaultCallbacks,
 } from './training'
 import { IDataset } from '../data/types'
 
@@ -63,7 +63,7 @@ function convertToModelTrainingConfig(config: NNTrainingConfig): ModelTrainingCo
     metrics: config.metrics,
     epochs: config.epochs,
     batchSize: config.batchSize,
-    validationSplit: config.validationSplit
+    validationSplit: config.validationSplit,
   })
 }
 
@@ -76,11 +76,11 @@ function convertToLegacyTrainingResult(result: NewTrainingResult): TrainingResul
       loss: result.history.loss || [],
       accuracy: result.history.accuracy,
       valLoss: result.history.valLoss,
-      valAccuracy: result.history.valAccuracy
+      valAccuracy: result.history.valAccuracy,
     },
     finalLoss: result.finalMetrics.loss || 0,
     finalAccuracy: result.finalMetrics.accuracy,
-    epochs: result.epochs
+    epochs: result.epochs,
   }
 }
 
@@ -98,7 +98,7 @@ export class NNModel {
   public layers: LayerConfig[]
   public outputUnits: number
   public name?: string
-  
+
   // 새로운 훈련 시스템
   private trainer: ModelTrainer
 
@@ -109,7 +109,7 @@ export class NNModel {
     this.layers = config.layers
     this.outputUnits = config.outputUnits
     this.name = config.name
-    
+
     // 새로운 훈련 시스템 초기화
     this.trainer = new ModelTrainer()
   }
@@ -133,7 +133,7 @@ export class NNModel {
     // 첫 번째 레이어 (입력 형태 지정)
     if (this.layers.length > 0) {
       const firstLayer = this.layers[0]
-      
+
       if (firstLayer.type === 'dense') {
         // Dense 레이어는 inputShape 설정 필요
         model.add(
@@ -164,14 +164,16 @@ export class NNModel {
       })
     )
 
-    console.log(`🧠 Neural Network model created: ${this.id} with ${this.layers.length} hidden layers`)
+    console.log(
+      `🧠 Neural Network model created: ${this.id} with ${this.layers.length} hidden layers`
+    )
     return model
   }
 
   /**
    * 모델 학습 실행 (개선된 버전)
    * 외부에서 생성된 모델과 데이터셋을 받아 학습 수행
-   * 
+   *
    * 새로운 training 모듈을 사용하여 개선된 훈련 기능 제공:
    * - 조기 종료 (Early Stopping)
    * - 과적합 감지 (Overfitting Detection)
@@ -184,37 +186,38 @@ export class NNModel {
     trainingConfig: ModelTrainingConfig,
     onProgress?: (epoch: number, logs: any) => void
   ): Promise<{ model: tf.Sequential; result: NewTrainingResult }> {
-    console.log(`🏃 Starting training with modern system: ${this.id}`)
+    const nnTrainId = `nn_train_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
+    console.log(`🏃 [${nnTrainId}] Starting training with modern system: ${this.id}`)
 
     // 콜백 설정
+    console.log(`🏃 [${nnTrainId}] Creating callbacks for onProgress`)
     const callbacks = createDefaultCallbacks(onProgress)
-
     try {
       // 훈련 데이터 추출 (훈련용 데이터가 있으면 사용, 없으면 전체 데이터 사용)
       const trainX = dataset.trainInputs || dataset.inputs
       const trainY = dataset.trainLabels || dataset.labels
 
-      console.log(`📊 Training data shape: inputs ${trainX.shape}, labels ${trainY.shape}`)
-      
-      // 새로운 훈련 시스템으로 학습 실행
-      const result = await this.trainer.train(
-        model,
-        trainX,
-        trainY,
-        trainingConfig,
-        callbacks
+      console.log(
+        `🏃 [${nnTrainId}] Training data shape: inputs ${trainX.shape}, labels ${trainY.shape}`
       )
+
+      // 새로운 훈련 시스템으로 학습 실행
+      console.log(`🏃 [${nnTrainId}] Calling trainer.train...`)
+      const result = await this.trainer.train(model, trainX, trainY, trainingConfig, callbacks)
+
+      console.log(`🏃 [${nnTrainId}] trainer.train completed`)
 
       console.log(`✅ Training completed: ${this.id}`)
       console.log(`📊 Final metrics:`, result.finalMetrics)
-      
+
       // 과적합 경고 표시
       if (result.stoppedReason === 'early_stopping') {
-        console.log(`⏹️ Training stopped early at epoch ${result.epochs} (best: ${result.bestEpoch! + 1})`)
+        console.log(
+          `⏹️ Training stopped early at epoch ${result.epochs} (best: ${result.bestEpoch! + 1})`
+        )
       }
 
       return { model, result }
-      
     } catch (error) {
       console.error(`❌ Training failed for ${this.id}:`, error)
       throw error
@@ -238,33 +241,28 @@ export class NNModel {
 
     // 기존 설정을 새로운 형식으로 변환
     const modernConfig = convertToModelTrainingConfig(trainingConfig)
-    
+
     // 콜백 설정 (기존 onProgress와 호환)
     const callbacks = createDefaultCallbacks(onProgress)
 
     try {
       // 새로운 훈련 시스템으로 학습 실행
-      const newResult = await this.trainer.train(
-        model,
-        trainX,
-        trainY,
-        modernConfig,
-        callbacks
-      )
+      const newResult = await this.trainer.train(model, trainX, trainY, modernConfig, callbacks)
 
       // 기존 형식으로 결과 변환 (하위 호환성)
       const legacyResult = convertToLegacyTrainingResult(newResult)
 
       console.log(`✅ Training completed with new system: ${this.id}`)
       console.log(`📊 Final metrics:`, newResult.finalMetrics)
-      
+
       // 과적합 경고 표시
       if (newResult.stoppedReason === 'early_stopping') {
-        console.log(`⏹️ Training stopped early at epoch ${newResult.epochs} (best: ${newResult.bestEpoch! + 1})`)
+        console.log(
+          `⏹️ Training stopped early at epoch ${newResult.epochs} (best: ${newResult.bestEpoch! + 1})`
+        )
       }
 
       return { model, result: legacyResult }
-      
     } catch (error) {
       console.error(`❌ Training failed for ${this.id}:`, error)
       throw error
@@ -280,14 +278,18 @@ export class NNModel {
     trainingConfig: ModelTrainingConfig,
     onProgress?: (epoch: number, logs: any) => void
   ): Promise<{ model: tf.Sequential; result: NewTrainingResult }> {
-    console.log(`🚀 Creating model and starting training: ${this.id}`)
+    const createAndTrainId = `create_train_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
+    console.log(`🚀 [${createAndTrainId}] Creating model and starting training: ${this.id}`)
 
     // 모델 생성
+    console.log(`🚀 [${createAndTrainId}] Creating TensorFlow model...`)
     const model = this.createTFModel()
-    
+
     // 훈련 실행
+    console.log(`🚀 [${createAndTrainId}] Starting training...`)
     const result = await this.train(model, dataset, trainingConfig, onProgress)
-    
+
+    console.log(`🚀 [${createAndTrainId}] Training completed`)
     return result
   }
 
@@ -326,10 +328,7 @@ export class NNModel {
    * 모델 예측
    * 새로운 training 모듈의 predict 기능 사용
    */
-  predict(
-    model: tf.Sequential,
-    inputData: tf.Tensor
-  ): tf.Tensor | tf.Tensor[] {
+  predict(model: tf.Sequential, inputData: tf.Tensor): tf.Tensor | tf.Tensor[] {
     console.log(`🔮 Making prediction: ${this.id}`)
     return this.trainer.predict(model, inputData)
   }
@@ -340,33 +339,35 @@ export class NNModel {
   getMemoryUsage(): number {
     // 레이어별 파라미터 수 계산
     let totalParams = 0
-    
+
     // 입력 레이어 파라미터
     if (this.layers.length > 0 && this.layers[0].type === 'dense') {
       const firstLayer = this.layers[0] as any
-      const inputSize = Array.isArray(this.inputShapes) ? this.inputShapes.reduce((a, b) => a * b, 1) : 1
+      const inputSize = Array.isArray(this.inputShapes)
+        ? this.inputShapes.reduce((a, b) => a * b, 1)
+        : 1
       totalParams += inputSize * (firstLayer.units || 32) + (firstLayer.units || 32) // weights + bias
     }
-    
+
     // 히든 레이어들
     for (let i = 0; i < this.layers.length - 1; i++) {
       const currentLayer = this.layers[i] as any
       const nextLayer = this.layers[i + 1] as any
-      
+
       if (currentLayer.type === 'dense' && nextLayer.type === 'dense') {
         const currentUnits = currentLayer.units || 32
         const nextUnits = nextLayer.units || 32
         totalParams += currentUnits * nextUnits + nextUnits
       }
     }
-    
+
     // 출력 레이어
     if (this.layers.length > 0) {
       const lastLayer = this.layers[this.layers.length - 1] as any
       const lastUnits = lastLayer.units || 32
       totalParams += lastUnits * this.outputUnits + this.outputUnits
     }
-    
+
     // 4바이트(float32) * 파라미터 수
     return totalParams * 4
   }
