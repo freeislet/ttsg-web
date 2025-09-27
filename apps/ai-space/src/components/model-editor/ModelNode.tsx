@@ -12,6 +12,9 @@ import {
   Settings,
   ChevronDown,
   ChevronUp,
+  Target,
+  Eye,
+  Loader2,
 } from 'lucide-react'
 import { ModelNodeData, ModelNodeState, TrainingConfig } from '@/types/ModelNode'
 import { DataNodeData } from '@/types/DataNode'
@@ -19,6 +22,8 @@ import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
 import { NNModel } from '@/models/NNModel'
 import { createNeuralNetworkConfig } from '@/models/training'
+import { getPredictionConfig } from '@/data/presets'
+import { generateModelPredictions } from '@/utils/modelPrediction'
 import * as tf from '@tensorflow/tfjs'
 
 /**
@@ -233,6 +238,98 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   }
 
   /**
+   * 예측 생성 시작
+   */
+  const handleGeneratePredictions = async () => {
+    if (nodeData.state !== 'trained') {
+      console.warn('Model must be trained before generating predictions')
+      return
+    }
+
+    // 연결된 데이터셋 확인
+    const dataset = getConnectedDataset()
+    if (!dataset) {
+      console.warn('No dataset connected for predictions')
+      return
+    }
+
+    // 연결된 데이터 노드 정보 가져오기
+    const connectedDataNode = nodes.find(
+      (node) => node.type === 'data' && edges.some((edge) => edge.source === node.id && edge.target === id)
+    )
+    
+    if (!connectedDataNode) {
+      console.warn('Connected data node not found')
+      return
+    }
+
+    const dataNodeData = connectedDataNode.data as DataNodeData
+    const datasetId = dataNodeData.selectedPresetId
+
+    if (!datasetId) {
+      console.warn('Dataset ID not found')
+      return
+    }
+
+    try {
+      // 예측 생성 상태로 설정
+      updateNodeData(id, {
+        isGeneratingPredictions: true,
+        error: undefined,
+      })
+
+      console.log('🔮 Generating predictions for dataset:', datasetId)
+
+      // 현재 학습된 모델 인스턴스 가져오기
+      const { getModelInstance } = useModelStore.getState()
+      const modelInstance = getModelInstance(id)
+      
+      if (!modelInstance || !modelInstance.tfModel) {
+        throw new Error('학습된 모델 인스턴스를 찾을 수 없습니다')
+      }
+
+      const predictionConfig = getPredictionConfig(datasetId)
+      const defaultSamples = predictionConfig?.defaultSamples
+
+      console.log('🔮 Using trained model for predictions:', {
+        modelType: nodeData.modelType,
+        layers: nodeData.layers?.length,
+        datasetId,
+        sampleCount: defaultSamples?.count || 10
+      })
+
+      // 실제 모델 예측 수행
+      const predictions = await generateModelPredictions(
+        modelInstance.tfModel,
+        dataset,
+        datasetId,
+        {
+          sampleCount: defaultSamples?.count || 10,
+          useTestSet: defaultSamples?.useTestSet ?? true,
+          shuffled: defaultSamples?.shuffled ?? true,
+        }
+      )
+
+      // 예측 결과 저장
+      updateNodeData(id, {
+        predictions: predictions,
+        isGeneratingPredictions: false,
+        lastPredictionTime: new Date(),
+      })
+
+      console.log('✅ Predictions generated successfully:', predictions.length)
+      
+    } catch (error) {
+      console.error('❌ Prediction generation failed:', error)
+      updateNodeData(id, {
+        isGeneratingPredictions: false,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+
+  /**
    * 모델 학습 시작
    */
   const handleStartTraining = async () => {
@@ -363,7 +460,18 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       }
 
       // 실제 모델 학습 실행
-      const { result } = await nnModel.createAndTrain(dataset, modelTrainingConfig, onProgress)
+      const { model: trainedModel, result } = await nnModel.createAndTrain(dataset, modelTrainingConfig, onProgress)
+
+      // 학습된 모델 인스턴스를 스토어에 저장
+      const { setModelInstance } = useModelStore.getState()
+      setModelInstance(id, {
+        tfModel: trainedModel, // 학습된 TensorFlow.js 모델 인스턴스
+        nnModel: nnModel, // NNModel 인스턴스
+        dataset: dataset, // 학습에 사용된 데이터셋
+        trainingConfig: modelTrainingConfig,
+        trainingResult: result,
+      })
+
 
       // 학습 완료 상태로 업데이트
       updateNodeData(id, {
@@ -749,7 +857,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
         {/* 학습 완료 지표 */}
         {nodeData.state === 'trained' && nodeData.metrics && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-green-600">
               <BarChart3 className="w-3 h-3" />
               <span>학습 완료</span>
@@ -764,6 +872,110 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 <div className="flex justify-between">
                   <span>Accuracy:</span>
                   <span className="font-mono">{(nodeData.metrics.accuracy * 100).toFixed(1)}%</span>
+                </div>
+              )}
+            </div>
+
+            {/* 예측 섹션 */}
+            <div className="space-y-1 pt-1 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-blue-600">
+                  <Target className="w-3 h-3" />
+                  <span>예측</span>
+                </div>
+                
+                {/* 예측 생성 버튼 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleGeneratePredictions()
+                  }}
+                  disabled={nodeData.isGeneratingPredictions}
+                  className="p-1 text-xs text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50"
+                  title="예측 결과 생성"
+                >
+                  {nodeData.isGeneratingPredictions ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Target className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
+
+              {/* 예측 결과 미리보기 */}
+              {nodeData.predictions && nodeData.predictions.length > 0 && (
+                <div className="space-y-1">
+                  <div className="text-xs text-gray-500">
+                    {nodeData.predictions.length}개 샘플 예측 완료
+                    {nodeData.lastPredictionTime && (
+                      <span className="ml-1">
+                        ({new Date(nodeData.lastPredictionTime).toLocaleTimeString()})
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* 첫 번째 예측 결과 미리보기 */}
+                  <div className="bg-blue-50 border border-blue-200 p-2 rounded text-xs">
+                    <div className="font-medium text-blue-700 mb-1">샘플 예측:</div>
+                    {(() => {
+                      const firstPrediction = nodeData.predictions[0]
+                      const datasetId = connectedDataInfo?.name?.toLowerCase()
+                      
+                      if (datasetId === 'mnist') {
+                        return (
+                          <div className="flex justify-between items-center">
+                            <span>예측: {firstPrediction.predictedClass}</span>
+                            <span>신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%</span>
+                          </div>
+                        )
+                      } else if (datasetId?.includes('iris')) {
+                        return (
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <span>예측: {firstPrediction.predictedClass}</span>
+                              <span>신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%</span>
+                            </div>
+                          </div>
+                        )
+                      } else if (datasetId?.includes('car') || datasetId?.includes('mpg')) {
+                        return (
+                          <div className="flex justify-between">
+                            <span>예측 연비: {firstPrediction.predictedClass} MPG</span>
+                            {firstPrediction.error && (
+                              <span>오차: ±{firstPrediction.error.toFixed(1)}</span>
+                            )}
+                          </div>
+                        )
+                      } else {
+                        return (
+                          <div className="flex justify-between">
+                            <span>예측값: {String(firstPrediction.predictedClass).substring(0, 10)}</span>
+                            <span>신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%</span>
+                          </div>
+                        )
+                      }
+                    })()}
+                  </div>
+
+                  {/* 상세보기 버튼 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // 속성 패널에서 상세 예측 결과 보기 (추후 구현)
+                      console.log('Show detailed predictions in properties panel')
+                    }}
+                    className="w-full px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 flex items-center justify-center gap-1"
+                  >
+                    <Eye className="w-3 h-3" />
+                    상세 결과 보기 ({nodeData.predictions.length})
+                  </button>
+                </div>
+              )}
+
+              {/* 예측 결과가 없을 때 */}
+              {!nodeData.predictions && !nodeData.isGeneratingPredictions && (
+                <div className="text-xs text-gray-400 italic">
+                  예측 버튼을 클릭하여 테스트해보세요
                 </div>
               )}
             </div>

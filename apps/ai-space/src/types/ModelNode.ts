@@ -53,6 +53,19 @@ export interface TrainingProgress {
 }
 
 /**
+ * 예측 결과 인터페이스
+ */
+export interface PredictionResult {
+  input: any // 입력 데이터 (이미지 텐서, 숫자 배열 등)
+  output: number[] // 모델 예측 출력
+  predictedClass?: string | number // 분류 결과
+  confidence?: number // 신뢰도 점수
+  actualClass?: string | number // 실제 라벨 (테스트 데이터인 경우)
+  error?: number // 회귀 문제의 경우 오차
+  metadata?: Record<string, any> // 추가 메타데이터
+}
+
+/**
  * 모델 성능 지표 인터페이스
  */
 export interface ModelMetrics {
@@ -61,7 +74,7 @@ export interface ModelMetrics {
   valLoss?: number
   valAccuracy?: number
   trainTime?: number
-  predictions?: any[]
+  predictions?: PredictionResult[]
 }
 
 /**
@@ -114,6 +127,11 @@ export interface ModelNodeData {
   activations?: number[]
   lossHistory?: number[]
   accuracyHistory?: number[]
+  
+  // 예측 관련
+  predictions?: PredictionResult[]
+  isGeneratingPredictions?: boolean
+  lastPredictionTime?: Date
 }
 
 /**

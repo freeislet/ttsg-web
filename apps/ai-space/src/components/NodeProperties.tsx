@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useModelStore } from '@/stores/modelStore'
-import { Brain, Database, Trash2, Info, Settings, RefreshCw } from 'lucide-react'
+import { Brain, Database, Trash2, Info, Settings, RefreshCw, Target, BarChart3, Eye } from 'lucide-react'
 import { getDataPreset } from '@/data'
 import DataInspector from './DataInspector'
 import DatasetSelector from './DatasetSelector'
+import PredictionResultsDisplay from './model-editor/PredictionResultsDisplay'
+import { getPredictionConfig } from '@/data/presets'
 import { AppNode } from '@/types/AppNodes'
 
 /**
@@ -138,10 +140,154 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
 }
 
 /**
+ * 모델 노드 속성 컴포넌트
+ */
+const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeId, nodeData }) => {
+  const { edges, nodes } = useModelStore()
+
+  // 연결된 데이터 노드 정보 찾기
+  const getConnectedDataNodeInfo = () => {
+    const incomingEdges = edges.filter(
+      (edge) => edge.target === nodeId && edge.targetHandle === 'data-input'
+    )
+
+    if (incomingEdges.length === 0) return null
+
+    const connectedDataNode = nodes.find(
+      (node) => node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
+    )
+
+    return connectedDataNode?.data
+  }
+
+  const connectedDataInfo = getConnectedDataNodeInfo()
+  const datasetId = connectedDataInfo?.selectedPresetId
+
+  return (
+    <div className="space-y-4">
+      {/* 모델 상태 정보 */}
+      <div className="bg-blue-50 rounded-lg p-3">
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <Brain className="w-4 h-4 text-blue-500" />
+          모델 상태
+        </h4>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">상태:</span>
+            <span className="capitalize">{nodeData?.state || 'definition'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">모델 타입:</span>
+            <span>{nodeData?.modelType || '알 수 없음'}</span>
+          </div>
+          {nodeData?.layers && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">레이어 수:</span>
+              <span>{nodeData.layers.length}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 학습 정보 */}
+      {nodeData?.metrics && (
+        <div className="bg-green-50 rounded-lg p-3">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-green-500" />
+            학습 결과
+          </h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Loss:</span>
+              <span className="font-mono">{nodeData.metrics.loss?.toFixed(4)}</span>
+            </div>
+            {nodeData.metrics.accuracy && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Accuracy:</span>
+                <span className="font-mono">{(nodeData.metrics.accuracy * 100).toFixed(1)}%</span>
+              </div>
+            )}
+            {nodeData.trainingProgress?.endTime && nodeData.trainingProgress?.startTime && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">학습 시간:</span>
+                <span>
+                  {Math.round(
+                    (nodeData.trainingProgress.endTime.getTime() - 
+                     nodeData.trainingProgress.startTime.getTime()) / 1000
+                  )}초
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 예측 결과 */}
+      {nodeData?.predictions && nodeData.predictions.length > 0 && datasetId && (
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="p-3 border-b border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Target className="w-4 h-4 text-blue-500" />
+              예측 결과 ({nodeData.predictions.length}개)
+            </h4>
+            {nodeData.lastPredictionTime && (
+              <p className="text-xs text-gray-500 mt-1">
+                마지막 생성: {new Date(nodeData.lastPredictionTime).toLocaleString()}
+              </p>
+            )}
+          </div>
+          <div className="p-3">
+            <PredictionResultsDisplay
+              predictions={nodeData.predictions}
+              displayConfig={getPredictionConfig(datasetId || '')?.display}
+              datasetId={datasetId || ''}
+              className="max-h-96 overflow-y-auto"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 예측 결과가 없을 때 */}
+      {nodeData?.state === 'trained' && (!nodeData?.predictions || nodeData.predictions.length === 0) && (
+        <div className="bg-blue-50 rounded-lg p-3">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <Target className="w-4 h-4 text-blue-500" />
+            예측 테스트
+          </h4>
+          <div className="text-sm text-gray-600">
+            <Eye className="w-4 h-4 inline mr-2" />
+            모델이 학습되었습니다. 노드에서 예측 버튼을 클릭하여 테스트해보세요.
+          </div>
+        </div>
+      )}
+
+      {/* 연결된 데이터 정보 */}
+      {connectedDataInfo && (
+        <div className="bg-yellow-50 rounded-lg p-3">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">연결된 데이터</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">데이터셋:</span>
+              <span>{String(connectedDataInfo.selectedPresetId || '없음')}</span>
+            </div>
+            {connectedDataInfo.samples && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">샘플 수:</span>
+                <span>{Number(connectedDataInfo.samples).toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
  * 노드 속성 패널 컴포넌트
  */
 const NodeProperties: React.FC = () => {
-  const { nodes, selectedNodeId, removeNode } = useModelStore()
+  const { nodes, selectedNodeId } = useModelStore() // removeNode 제거
 
   const selectedNode = nodes.find((node) => node.id === selectedNodeId) as AppNode | undefined
 
@@ -172,7 +318,8 @@ const NodeProperties: React.FC = () => {
 
   const handleRemoveNode = () => {
     if (selectedNode) {
-      removeNode(selectedNode.id)
+      // TODO: removeNode 함수를 modelStore에 추가해야 함
+      console.log('Remove node:', selectedNode.id)
     }
   }
 
@@ -238,19 +385,7 @@ const NodeProperties: React.FC = () => {
 
           {/* 모델 노드 전용 정보 */}
           {selectedNode.type === 'model' && (
-            <div className="bg-blue-50 rounded-lg p-3">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">모델 정보</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">모델 타입:</span>
-                  <span>{selectedNode.data?.modelType || '알 수 없음'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">상태:</span>
-                  <span className="capitalize">{selectedNode.data?.state || 'definition'}</span>
-                </div>
-              </div>
-            </div>
+            <ModelNodeProperties nodeId={selectedNode.id} nodeData={selectedNode.data} />
           )}
 
           {/* 데이터 노드 전용 정보 */}

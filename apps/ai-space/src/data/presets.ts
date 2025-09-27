@@ -1,4 +1,4 @@
-import { DataPreset, VisualizationConfig } from './types'
+import { DataPreset, VisualizationConfig, PredictionConfig } from './types'
 import { loadMNIST } from './datasets/sample/mnist'
 import { loadIris } from './datasets/sample/iris'
 import { loadCarMPG } from './datasets/sample/car-mpg'
@@ -47,6 +47,71 @@ export const DATA_PRESETS: DataPreset[] = [
         description: '이미지 데이터와 라벨 정보',
       },
     ],
+    prediction: {
+      display: {
+        type: 'image-classification',
+        title: 'MNIST 숫자 예측 결과',
+        description: '28x28 이미지와 예측된 숫자를 함께 표시',
+        imageConfig: {
+          width: 28,
+          height: 28,
+          channels: 1,
+          colormap: 'grayscale',
+          showOriginal: true,
+        },
+        columns: [
+          {
+            key: 'image',
+            label: '이미지',
+            type: 'image',
+            format: {
+              width: 56, // 2배 크기로 표시
+              height: 56,
+              channels: 1,
+              colormap: 'grayscale',
+            },
+          },
+          {
+            key: 'predicted_class',
+            label: '예측 숫자',
+            type: 'text',
+          },
+          {
+            key: 'confidence',
+            label: '신뢰도',
+            type: 'probability',
+            format: {
+              precision: 2,
+              percentage: true,
+            },
+          },
+          {
+            key: 'actual_class',
+            label: '실제 숫자',
+            type: 'text',
+          },
+        ],
+        sampleLimit: 20,
+        supportsRealtime: false,
+      },
+      input: {
+        type: 'canvas',
+        title: '손글씨 숫자 그리기',
+        description: '캔버스에 0-9 숫자를 그려서 예측해보세요',
+        canvasConfig: {
+          width: 280,
+          height: 280,
+          backgroundColor: '#000000',
+          strokeColor: '#ffffff',
+          strokeWidth: 20,
+        },
+      },
+      defaultSamples: {
+        count: 10,
+        useTestSet: true,
+        shuffled: true,
+      },
+    },
   },
 
   {
@@ -89,6 +154,108 @@ export const DATA_PRESETS: DataPreset[] = [
         description: '붓꽃 특성 및 품종 정보',
       },
     ],
+    prediction: {
+      display: {
+        type: 'tabular',
+        title: 'Iris 품종 예측 결과',
+        description: '꽃잎/꽃받침 특성에 따른 붓꽃 품종 분류 결과',
+        columns: [
+          {
+            key: 'sepal_length',
+            label: '꽃받침 길이 (cm)',
+            type: 'number',
+            format: { precision: 1 },
+          },
+          {
+            key: 'sepal_width',
+            label: '꽃받침 너비 (cm)',
+            type: 'number',
+            format: { precision: 1 },
+          },
+          {
+            key: 'petal_length',
+            label: '꽃잎 길이 (cm)',
+            type: 'number',
+            format: { precision: 1 },
+          },
+          {
+            key: 'petal_width',
+            label: '꽃잎 너비 (cm)',
+            type: 'number',
+            format: { precision: 1 },
+          },
+          {
+            key: 'predicted_class',
+            label: '예측 품종',
+            type: 'text',
+          },
+          {
+            key: 'confidence',
+            label: '신뢰도',
+            type: 'probability',
+            format: {
+              precision: 2,
+              percentage: true,
+            },
+          },
+          {
+            key: 'actual_class',
+            label: '실제 품종',
+            type: 'text',
+          },
+        ],
+        sampleLimit: 15,
+        supportsRealtime: true,
+      },
+      input: {
+        type: 'form',
+        title: '붓꽃 특성 입력',
+        description: '꽃받침과 꽃잎의 크기를 입력하여 품종을 예측해보세요',
+        formFields: [
+          {
+            key: 'sepal_length',
+            label: '꽃받침 길이 (cm)',
+            type: 'number',
+            min: 3.0,
+            max: 8.0,
+            step: 0.1,
+            defaultValue: 5.8,
+          },
+          {
+            key: 'sepal_width',
+            label: '꽃받침 너비 (cm)',
+            type: 'number',
+            min: 1.5,
+            max: 5.0,
+            step: 0.1,
+            defaultValue: 3.0,
+          },
+          {
+            key: 'petal_length',
+            label: '꽃잎 길이 (cm)',
+            type: 'number',
+            min: 0.5,
+            max: 7.0,
+            step: 0.1,
+            defaultValue: 3.8,
+          },
+          {
+            key: 'petal_width',
+            label: '꽃잎 너비 (cm)',
+            type: 'number',
+            min: 0.1,
+            max: 3.0,
+            step: 0.1,
+            defaultValue: 1.2,
+          },
+        ],
+      },
+      defaultSamples: {
+        count: 15,
+        useTestSet: true,
+        shuffled: true,
+      },
+    },
   },
 
   {
@@ -129,6 +296,62 @@ export const DATA_PRESETS: DataPreset[] = [
         description: '자동차 특성 및 연비 정보',
       },
     ],
+    prediction: {
+      display: {
+        type: 'tabular',
+        title: '자동차 연비 예측 결과',
+        description: '자동차 특성에 따른 연비(MPG) 예측 결과',
+        columns: [
+          {
+            key: 'horsepower',
+            label: '마력 (HP)',
+            type: 'number',
+            format: { precision: 0 },
+          },
+          {
+            key: 'predicted_mpg',
+            label: '예측 연비 (MPG)',
+            type: 'number',
+            format: { precision: 1 },
+          },
+          {
+            key: 'actual_mpg',
+            label: '실제 연비 (MPG)',
+            type: 'number',
+            format: { precision: 1 },
+          },
+          {
+            key: 'error',
+            label: '오차',
+            type: 'number',
+            format: { precision: 2 },
+          },
+        ],
+        sampleLimit: 20,
+        supportsRealtime: true,
+      },
+      input: {
+        type: 'form',
+        title: '자동차 특성 입력',
+        description: '자동차의 마력을 입력하여 연비를 예측해보세요',
+        formFields: [
+          {
+            key: 'horsepower',
+            label: '마력 (HP)',
+            type: 'number',
+            min: 40,
+            max: 250,
+            step: 5,
+            defaultValue: 120,
+          },
+        ],
+      },
+      defaultSamples: {
+        count: 20,
+        useTestSet: true,
+        shuffled: true,
+      },
+    },
   },
 
   // Computed 데이터 (프로그래밍 방식으로 생성)
@@ -438,4 +661,28 @@ export const getDefaultVisualization = (presetId: string): VisualizationConfig |
 export const getVisualizationConfigs = (presetId: string): VisualizationConfig[] => {
   const preset = getDataPreset(presetId)
   return preset?.visualizations || []
+}
+
+/**
+ * 프리셋의 예측 설정 반환
+ */
+export const getPredictionConfig = (presetId: string): PredictionConfig | undefined => {
+  const preset = getDataPreset(presetId)
+  return preset?.prediction
+}
+
+/**
+ * 프리셋의 예측 표시 설정 반환
+ */
+export const getPredictionDisplayConfig = (presetId: string) => {
+  const preset = getDataPreset(presetId)
+  return preset?.prediction?.display
+}
+
+/**
+ * 프리셋의 예측 입력 설정 반환
+ */
+export const getPredictionInputConfig = (presetId: string) => {
+  const preset = getDataPreset(presetId)
+  return preset?.prediction?.input
 }
