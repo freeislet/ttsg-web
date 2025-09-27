@@ -5,7 +5,7 @@ import {
   PanelResizeHandleHorizontal,
   PanelResizeHandleVertical,
 } from '@/components/PanelResize'
-import { ModelEditor } from '@/components/model-editor'
+import { ModelFlow } from '@/components/model-editor'
 import NodeProperties from '@/components/NodeProperties'
 import BottomPanel from '@/components/BottomPanel'
 
@@ -28,7 +28,7 @@ function App() {
               {/* 플로우 에디터 */}
               <Panel defaultSize={75} minSize={60}>
                 <div className="h-full flex flex-col">
-                  <ModelEditor />
+                  <ModelFlow />
                 </div>
               </Panel>
 

@@ -51,9 +51,9 @@ const isValidModelConnection = (connection: any, nodes: Node[]) => {
 }
 
 /**
- * Model Editor 컴포넌트
+ * Model Flow 컴포넌트
  */
-export const ModelEditor = () => {
+export const ModelFlow = () => {
   const {
     nodes,
     edges,
@@ -69,16 +69,14 @@ export const ModelEditor = () => {
 
   return (
     <Flow
-      nodes={nodes as any}
-      edges={edges as any}
+      nodes={nodes}
+      edges={edges}
       nodeTypes={nodeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
-      onSelectionChange={onSelectionChange as any}
-      isValidConnection={(connection) =>
-        isValidModelConnection(connection, nodes as unknown as Node[])
-      }
+      onSelectionChange={onSelectionChange}
+      isValidConnection={(connection) => isValidModelConnection(connection, nodes)}
     >
       {/* 툴바 패널 */}
       <Panel
