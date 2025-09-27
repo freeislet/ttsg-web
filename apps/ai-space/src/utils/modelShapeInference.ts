@@ -1,6 +1,9 @@
-import { Node, Edge } from '@xyflow/react'
-import { ModelNodeData } from '@/types/ModelNode'
-import { DataNodeData } from '@/types/DataNode'
+import {
+  AppNode,
+  AppEdge,
+  DataNode,
+  ModelNode,
+} from '@/types/AppNodes'
 
 /**
  * 데이터 타입별 기본 shape 매핑
@@ -40,9 +43,9 @@ const DATA_TYPE_OUTPUT_UNITS: Record<string, number> = {
  * 연결된 데이터 노드에서 입력 shape 추론
  */
 export function inferInputShapeFromDataNode(
-  modelNode: Node<ModelNodeData>,
-  dataNodes: Node<DataNodeData>[],
-  edges: Edge[]
+  modelNode: ModelNode,
+  dataNodes: DataNode[],
+  edges: AppEdge[]
 ): number[] | null {
   // 모델 노드로 연결되는 엣지 찾기
   const incomingEdges = edges.filter((edge) => edge.target === modelNode.id)
@@ -77,9 +80,9 @@ export function inferInputShapeFromDataNode(
  * 연결된 데이터 노드에서 출력 유닛 수 추론
  */
 export function inferOutputUnitsFromDataNode(
-  modelNode: Node<ModelNodeData>,
-  dataNodes: Node<DataNodeData>[],
-  edges: Edge[]
+  modelNode: ModelNode,
+  dataNodes: DataNode[],
+  edges: AppEdge[]
 ): number | null {
   // 모델 노드로 연결되는 엣지 찾기
   const incomingEdges = edges.filter((edge) => edge.target === modelNode.id)
@@ -99,8 +102,13 @@ export function inferOutputUnitsFromDataNode(
 
   // 실제 데이터셋에서 출력 shape 추론 (우선)
   if (connectedDataNode.data.dataset && connectedDataNode.data.dataset.outputShape) {
-    const outputUnits = connectedDataNode.data.dataset.outputShape.reduce((a: number, b: number) => a * b, 1)
-    console.log(`🎯 Using actual dataset outputShape: ${connectedDataNode.data.dataset.outputShape} -> ${outputUnits} units`)
+    const outputUnits = connectedDataNode.data.dataset.outputShape.reduce(
+      (a: number, b: number) => a * b,
+      1
+    )
+    console.log(
+      `🎯 Using actual dataset outputShape: ${connectedDataNode.data.dataset.outputShape} -> ${outputUnits} units`
+    )
     return outputUnits
   }
 
@@ -114,15 +122,15 @@ export function inferOutputUnitsFromDataNode(
 /**
  * 모든 모델 노드의 shape 자동 업데이트
  */
-export function updateModelShapes(nodes: Node[], edges: Edge[]): Node[] {
-  const dataNodes = nodes.filter((node) => node.type === 'data') as Node<DataNodeData>[]
+export function updateModelShapes(nodes: AppNode[], edges: AppEdge[]): AppNode[] {
+  const dataNodes = nodes.filter((node) => node.type === 'data') as DataNode[]
 
   return nodes.map((node) => {
     if (node.type !== 'model') {
       return node
     }
 
-    const modelNode = node as Node<ModelNodeData>
+    const modelNode = node as ModelNode
     const inputShape = inferInputShapeFromDataNode(modelNode, dataNodes, edges)
     const outputUnits = inferOutputUnitsFromDataNode(modelNode, dataNodes, edges)
 

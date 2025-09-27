@@ -1,15 +1,8 @@
 import { create } from 'zustand'
 import { devtools, subscribeWithSelector } from 'zustand/middleware'
 import { mutative } from 'zustand-mutative'
-import {
-  NodeChange,
-  EdgeChange,
-  Connection,
-  applyNodeChanges,
-  applyEdgeChanges,
-  addEdge,
-} from '@xyflow/react'
-import { AppNode, AppEdge } from '@/types/AppNodes'
+import { Connection, applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react'
+import { AppNode, AppEdge, AppNodeChange, AppEdgeChange } from '@/types/AppNodes'
 import { updateModelShapes } from '@/utils/modelShapeInference'
 
 /**
@@ -34,8 +27,8 @@ interface ModelState {
  */
 interface ModelActions {
   // === React Flow 이벤트 핸들러 ===
-  onNodesChange: (changes: NodeChange[]) => void
-  onEdgesChange: (changes: EdgeChange[]) => void
+  onNodesChange: (changes: AppNodeChange[]) => void
+  onEdgesChange: (changes: AppEdgeChange[]) => void
   onConnect: (connection: Connection) => void
   onSelectionChange: (params: { nodes: AppNode[]; edges: AppEdge[] }) => void
 
@@ -68,7 +61,7 @@ interface ModelActions {
 type ModelStore = ModelState & ModelActions
 
 /**
- * Zustand + mutative 기반 모델 스토어
+ * 모델 스토어
  */
 export const useModelStore = create<ModelStore>()(
   devtools(
@@ -83,12 +76,12 @@ export const useModelStore = create<ModelStore>()(
         error: null,
 
         // === React Flow 이벤트 핸들러 ===
-        onNodesChange: (changes: NodeChange[]) => {
+        onNodesChange: (changes: AppNodeChange[]) => {
           set((state) => {
             // 삭제되는 노드들의 리소스 정리
             changes.forEach((change) => {
               if (change.type === 'remove') {
-                const nodeToRemove = state.nodes.find(node => node.id === change.id)
+                const nodeToRemove = state.nodes.find((node) => node.id === change.id)
                 if (nodeToRemove) {
                   // 데이터 노드의 경우 데이터셋 정리
                   if (nodeToRemove.type === 'data' && nodeToRemove.data.dataset) {
@@ -101,7 +94,7 @@ export const useModelStore = create<ModelStore>()(
                       console.warn('Failed to dispose dataset:', error)
                     }
                   }
-                  
+
                   // 모델 인스턴스 정리
                   if (state.modelInstances[change.id]) {
                     const modelInstance = state.modelInstances[change.id]
@@ -119,10 +112,12 @@ export const useModelStore = create<ModelStore>()(
             })
 
             // mutative를 사용하므로 직접 수정 가능
-            state.nodes = applyNodeChanges(changes, state.nodes) as AppNode[]
-            const updatedNodes = updateModelShapes(state.nodes, state.edges)
-            state.nodes = updatedNodes
-            
+            // const newNodes = applyNodeChanges(changes, state.nodes as any[])
+            // state.nodes = newNodes as AppNode[]
+            state.nodes = applyNodeChanges(changes, state.nodes)
+            // const updatedNodes = updateModelShapes(state.nodes, state.edges) as AppNode[]
+            state.nodes = updateModelShapes(state.nodes, state.edges)
+
             // 삭제된 노드들의 모델 인스턴스 제거
             changes.forEach((change) => {
               if (change.type === 'remove') {
@@ -132,19 +127,17 @@ export const useModelStore = create<ModelStore>()(
           })
         },
 
-        onEdgesChange: (changes: EdgeChange[]) => {
+        onEdgesChange: (changes: AppEdgeChange[]) => {
           set((state) => {
-            state.edges = applyEdgeChanges(changes, state.edges) as AppEdge[]
-            const updatedNodes = updateModelShapes(state.nodes, state.edges)
-            state.nodes = updatedNodes
+            state.edges = applyEdgeChanges(changes, state.edges)
+            state.nodes = updateModelShapes(state.nodes, state.edges)
           })
         },
 
         onConnect: (connection: Connection) => {
           set((state) => {
-            state.edges = addEdge(connection, state.edges) as AppEdge[]
-            const updatedNodes = updateModelShapes(state.nodes, state.edges)
-            state.nodes = updatedNodes
+            state.edges = addEdge(connection, state.edges)
+            state.nodes = updateModelShapes(state.nodes, state.edges)
           })
         },
 
@@ -175,6 +168,20 @@ export const useModelStore = create<ModelStore>()(
         },
 
         addModelNode: (modelType, position) => {
+          // 기본 dense 레이어 두 개 생성
+          const defaultLayers = [
+            {
+              type: 'dense' as const,
+              units: 64,
+              activation: 'relu',
+            },
+            {
+              type: 'dense' as const,
+              units: 1,
+              activation: 'linear',
+            },
+          ]
+
           const newNode: AppNode = {
             id: `model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             type: 'model',
@@ -184,7 +191,7 @@ export const useModelStore = create<ModelStore>()(
               modelType,
               modelId: `nn_model_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               state: 'definition',
-              layers: [],
+              layers: defaultLayers,
               inputShape: [1],
               outputUnits: 1,
             },
@@ -213,7 +220,7 @@ export const useModelStore = create<ModelStore>()(
 
         updateNodeData: (nodeId, data) => {
           set((state) => {
-            const nodeIndex = state.nodes.findIndex(node => node.id === nodeId)
+            const nodeIndex = state.nodes.findIndex((node) => node.id === nodeId)
             if (nodeIndex !== -1) {
               // mutative를 사용하므로 직접 수정 가능
               Object.assign(state.nodes[nodeIndex].data, data)
@@ -249,7 +256,7 @@ export const useModelStore = create<ModelStore>()(
                 console.warn('Failed to dispose model instance:', error)
               }
             }
-            
+
             delete state.modelInstances[nodeId]
           })
         },
@@ -300,11 +307,11 @@ export const useEdges = () => useModelStore((state) => state.edges)
 export const useSelectedNode = () => {
   const selectedNodeId = useModelStore((state) => state.selectedNodeId)
   const nodes = useModelStore((state) => state.nodes)
-  return selectedNodeId ? nodes.find(node => node.id === selectedNodeId) : null
+  return selectedNodeId ? nodes.find((node) => node.id === selectedNodeId) : null
 }
 
 // 로딩 상태만 구독
 export const useLoading = () => useModelStore((state) => state.isLoading)
 
-// 에러 상태만 구독  
+// 에러 상태만 구독
 export const useError = () => useModelStore((state) => state.error)
