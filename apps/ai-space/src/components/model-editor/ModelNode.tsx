@@ -20,7 +20,6 @@ import { useModelStore } from '@/stores/modelStore'
 import { NNModel } from '@/models/NNModel'
 import { createNeuralNetworkConfig } from '@/models/training'
 import * as tf from '@tensorflow/tfjs'
-import { testTensorFlowBasic, testTensorFlowComplex } from '@/utils/tensorflowTest'
 
 /**
  * 상태별 스타일 설정
@@ -161,7 +160,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     }
 
     const outputUnits = dataset.outputShape.reduce((a: number, b: number) => a * b, 1)
-    
+
     // 출력 유닛 수에 따라 분류/회귀 문제 판단
     if (outputUnits === 1) {
       // 1개 출력 = 회귀 문제 또는 이진 분류
@@ -171,7 +170,9 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     } else if (outputUnits > 1) {
       // 여러 개 출력 = 다중 분류 문제
       // Iris, MNIST 등
-      console.log(`📊 Inferred loss function: categoricalCrossentropy (${outputUnits}-class classification)`)
+      console.log(
+        `📊 Inferred loss function: categoricalCrossentropy (${outputUnits}-class classification)`
+      )
       return 'categoricalCrossentropy'
     }
 
@@ -223,20 +224,11 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
     const dataNodeData = connectedDataNode.data as DataNodeData
     const dataset = dataNodeData.dataset
-    
+
     if (!dataset) {
       return null
     }
-    
-    // Valtio Proxy 객체 감지 및 변환 (TensorFlow.js 호환성)
-    console.log(`🔧 [ModelNode] Dataset type check:`, {
-      type: typeof dataset,
-      constructor: dataset.constructor?.name,
-      isProxy: dataset.constructor?.name === 'Object' && '__valtio_state' in dataset
-    })
-    
-    // 이제 Zustand를 사용하므로 Proxy 문제 없이 직접 반환
-    console.log(`🔧 [ModelNode] Dataset (Zustand - no proxy issues):`, dataset)
+
     return dataset
   }
 
@@ -316,31 +308,33 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
       // 데이터셋에 따라 적절한 loss 함수 자동 추론
       const inferredLoss = inferLossFunctionFromDataset(dataset)
-      
+
       // 추론된 loss 함수를 우선 사용, 사용자 설정이 없으면 추론된 값 사용
       const finalLoss = currentTrainingConfig.loss || inferredLoss
-      console.log(`🎯 Final loss function: ${finalLoss} (user: ${currentTrainingConfig.loss || 'auto'}, inferred: ${inferredLoss})`)
+      console.log(
+        `🎯 Final loss function: ${finalLoss} (user: ${currentTrainingConfig.loss || 'auto'}, inferred: ${inferredLoss})`
+      )
 
       // TensorFlow.js에서 인식하는 loss 함수 이름 매핑 및 검증
       const getTensorFlowLoss = (lossName: string): string => {
         // TensorFlow.js에서 사용하는 정확한 이름들
         const validLosses: Record<string, string> = {
-          'meanSquaredError': 'meanSquaredError',
-          'categoricalCrossentropy': 'categoricalCrossentropy', 
-          'binaryCrossentropy': 'binaryCrossentropy',
+          meanSquaredError: 'meanSquaredError',
+          categoricalCrossentropy: 'categoricalCrossentropy',
+          binaryCrossentropy: 'binaryCrossentropy',
           // 별칭들도 지원
-          'mse': 'meanSquaredError',
-          'categorical_crossentropy': 'categoricalCrossentropy',
-          'binary_crossentropy': 'binaryCrossentropy'
+          mse: 'meanSquaredError',
+          categorical_crossentropy: 'categoricalCrossentropy',
+          binary_crossentropy: 'binaryCrossentropy',
         }
-        
+
         const mappedLoss = validLosses[lossName] || lossName
         console.log(`🔧 Loss mapping: ${lossName} -> ${mappedLoss}`)
         return mappedLoss
       }
 
       const tensorflowLoss = getTensorFlowLoss(finalLoss)
-      
+
       const modelTrainingConfig = createNeuralNetworkConfig({
         optimizer: currentTrainingConfig.optimizer,
         learningRate: currentTrainingConfig.learningRate || 0.001,
@@ -582,31 +576,6 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             )}
           </div>
         )}
-
-        {/* TensorFlow.js 테스트 버튼 */}
-        <div className="mt-2 space-y-1">
-          <button
-            onClick={async (e) => {
-              e.stopPropagation()
-              console.log('=== TensorFlow.js Basic Test ===')
-              await testTensorFlowBasic()
-            }}
-            className="w-full px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-          >
-            🧪 TF.js 기본 테스트
-          </button>
-
-          <button
-            onClick={async (e) => {
-              e.stopPropagation()
-              console.log('=== TensorFlow.js Complex Test ===')
-              await testTensorFlowComplex()
-            }}
-            className="w-full px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
-          >
-            🧪 TF.js 복잡 모델 테스트
-          </button>
-        </div>
 
         {/* 학습 파라미터 설정 */}
         {nodeData.state === 'definition' && nodeData.layers && nodeData.layers.length > 0 && (
