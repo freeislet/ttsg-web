@@ -2,13 +2,13 @@ import { Panel, Connection, Node } from '@xyflow/react'
 
 import { useModelStore } from '@/stores/modelStore'
 import { Flow } from '../Flow'
-import DataNode from './DataNode'
-import ModelNode from './ModelNode'
+import { DataNodeComponent } from './DataNodeComponent'
+import { ModelNodeComponent } from './ModelNodeComponent'
 
 // 노드 타입 정의
 const nodeTypes = {
-  data: DataNode,
-  model: ModelNode,
+  data: DataNodeComponent,
+  model: ModelNodeComponent,
 }
 
 /**

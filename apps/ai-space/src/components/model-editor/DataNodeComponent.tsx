@@ -2,15 +2,13 @@ import React, { useCallback, useState, useEffect } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Database, Eye, BarChart3, RefreshCw, Settings, X } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
-import { dataRegistry, getDefaultVisualization } from '@/data'
+import { dataRegistry } from '@/data'
 import DatasetSelector from '@/components/DatasetSelector'
 
 /**
  * 데이터 노드 데이터 인터페이스
  */
-import { DataNodeData, DataSplitConfig } from '@/types/DataNode'
-
-export type { DataNodeData }
+import { DataSplitConfig, DataNode } from '@/types/DataNode'
 
 /**
  * 난이도 색상 매핑
@@ -43,11 +41,10 @@ const filterNonDifficultyTags = (tags: string[]): string[] => {
 /**
  * 간소화된 데이터 노드 컴포넌트
  */
-const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
-  const nodeData = data as DataNodeData
+export const DataNodeComponent: React.FC<NodeProps<DataNode>> = ({ id, data, selected }) => {
   const { addVisualizationNode, updateNodeData } = useModelStore()
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(
-    nodeData.selectedPresetId || null
+    data.selectedPresetId || null
   )
   const [isLoading, setIsLoading] = useState(false)
   const [showSplitConfig, setShowSplitConfig] = useState(false)
@@ -65,31 +62,31 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     testRatio: 0.1,
   }
 
-  const splitConfig = nodeData.splitConfig || defaultSplitConfig
+  const splitConfig = data.splitConfig || defaultSplitConfig
 
   // props 변경 감지하여 로컬 상태 동기화
   useEffect(() => {
-    setSelectedPresetId(nodeData.selectedPresetId || null)
+    setSelectedPresetId(data.selectedPresetId || null)
     // 데이터가 성공적으로 로드되면 에러 상태 초기화
-    if (nodeData.dataset) {
+    if (data.dataset) {
       setError(null)
     }
-  }, [nodeData.selectedPresetId, nodeData.dataset])
+  }, [data.selectedPresetId, data.dataset])
 
   // 컴포넌트 언마운트 시 메모리 정리
   useEffect(() => {
     return () => {
       // 데이터셋이 있고 dispose 메서드가 있으면 호출
-      if (nodeData.dataset && typeof nodeData.dataset.dispose === 'function') {
+      if (data.dataset && typeof data.dataset.dispose === 'function') {
         try {
-          nodeData.dataset.dispose()
+          data.dataset.dispose()
           console.log(`🧹 Disposed dataset for node: ${id}`)
         } catch (error) {
           console.warn('Failed to dispose dataset:', error)
         }
       }
     }
-  }, [id, nodeData.dataset])
+  }, [id, data.dataset])
 
   // 시각화 노드 생성 핸들러
   const handleCreateVisualization = useCallback(
@@ -120,11 +117,11 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       }
 
       updateNodeData(id, {
-        ...nodeData,
+        ...data,
         splitConfig: updatedConfig,
       })
     },
-    [id, nodeData, splitConfig, updateNodeData]
+    [id, data, splitConfig, updateNodeData]
   )
 
   // 데이터셋 선택 핸들러
@@ -135,7 +132,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       if (!presetId) {
         // 데이터셋 선택 해제
         updateNodeData(id, {
-          ...nodeData,
+          ...data,
           selectedPresetId: null,
           dataset: null,
           samples: 0,
@@ -161,7 +158,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
           // 노드 데이터 업데이트
           updateNodeData(id, {
-            ...nodeData,
+            ...data,
             selectedPresetId: presetId,
             dataset: loadedDataset,
             samples: loadedDataset.sampleCount,
@@ -181,7 +178,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         // 에러 발생 시 선택 상태 초기화
         setSelectedPresetId(null)
         updateNodeData(id, {
-          ...nodeData,
+          ...data,
           selectedPresetId: null,
           dataset: null,
           samples: 0,
@@ -193,15 +190,15 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         setProgress(null)
       }
     },
-    [id, nodeData, updateNodeData]
+    [id, data, updateNodeData]
   )
 
   // 데이터 상태 확인
-  const hasData = nodeData.selectedPresetId && nodeData.dataset
-  const sampleCount = nodeData.samples || 0
-  const inputCount = nodeData.inputFeatures || 0
-  const outputCount = nodeData.outputFeatures || 0
-  const preset = nodeData.selectedPresetId ? dataRegistry.getById(nodeData.selectedPresetId) : null
+  const hasData = data.selectedPresetId && data.dataset
+  const sampleCount = data.samples || 0
+  const inputCount = data.inputFeatures || 0
+  const outputCount = data.outputFeatures || 0
+  const preset = data.selectedPresetId ? dataRegistry.getById(data.selectedPresetId) : null
 
   return (
     <div
@@ -217,7 +214,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Database className="w-5 h-5 text-yellow-600" />
-            <span className="font-semibold text-gray-800">{nodeData.label}</span>
+            <span className="font-semibold text-gray-800">{data.label}</span>
           </div>
           <div
             className={`
@@ -475,5 +472,3 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
     </div>
   )
 }
-
-export default DataNode

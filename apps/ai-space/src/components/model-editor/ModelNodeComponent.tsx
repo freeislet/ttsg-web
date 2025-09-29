@@ -16,7 +16,7 @@ import {
   Eye,
   Loader2,
 } from 'lucide-react'
-import { ModelNodeData, ModelNodeState, TrainingConfig } from '@/types/ModelNode'
+import { ModelNode, ModelNodeState, TrainingConfig } from '@/types/ModelNode'
 import { DataNodeData } from '@/types/DataNode'
 import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
@@ -105,12 +105,11 @@ const getStateLabel = (state: ModelNodeState) => {
 /**
  * 통합 모델 노드 컴포넌트
  */
-const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
-  const nodeData = data as ModelNodeData
+export const ModelNodeComponent: React.FC<NodeProps<ModelNode>> = ({ id, data, selected }) => {
   const [isLayerEditorOpen, setIsLayerEditorOpen] = useState(false)
   const [isTrainingConfigOpen, setIsTrainingConfigOpen] = useState(false)
   const { updateNodeData, nodes, edges } = useModelStore()
-  const style = getStateStyle(nodeData.state)
+  const style = getStateStyle(data.state)
   const StateIcon = style.icon
 
   // 기본 학습 설정값 (loss 함수는 데이터셋에 따라 자동 추론)
@@ -125,7 +124,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   }
 
   // 현재 학습 설정 (기본값 사용하거나 저장된 값 사용)
-  const currentTrainingConfig = nodeData.trainingConfig || defaultTrainingConfig
+  const currentTrainingConfig = data.trainingConfig || defaultTrainingConfig
 
   // 연결된 데이터 노드 정보 계산
   const connectedDataInfo = useMemo(() => {
@@ -241,7 +240,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
    * 예측 생성 시작
    */
   const handleGeneratePredictions = async () => {
-    if (nodeData.state !== 'trained') {
+    if (data.state !== 'trained') {
       console.warn('Model must be trained before generating predictions')
       return
     }
@@ -293,8 +292,8 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       const defaultSamples = predictionConfig?.defaultSamples
 
       console.log('🔮 Using trained model for predictions:', {
-        modelType: nodeData.modelType,
-        layers: nodeData.layers?.length,
+        modelType: data.modelType,
+        layers: data.layers?.length,
         datasetId,
         sampleCount: defaultSamples?.count || 10,
       })
@@ -332,12 +331,12 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
    * 모델 학습 시작
    */
   const handleStartTraining = async () => {
-    if (!nodeData.layers || nodeData.layers.length === 0) {
+    if (!data.layers || data.layers.length === 0) {
       console.warn('No layers defined for training')
       return
     }
 
-    if (!nodeData.inputShape || !nodeData.outputUnits) {
+    if (!data.inputShape || !data.outputUnits) {
       console.warn('Input shape or output units not defined')
       return
     }
@@ -396,10 +395,10 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
       // NNModel 인스턴스 생성 (타입 안전성을 위해 명시적 변환)
       const nnModel = new NNModel({
-        inputShape: nodeData.inputShape,
-        outputUnits: nodeData.outputUnits,
-        layers: nodeData.layers as any, // LayerConfig 타입 호환성을 위한 임시 변환
-        name: nodeData.label || 'Model',
+        inputShape: data.inputShape,
+        outputUnits: data.outputUnits,
+        layers: data.layers as any, // LayerConfig 타입 호환성을 위한 임시 변환
+        name: data.label || 'Model',
       })
 
       // 데이터셋에 따라 적절한 loss 함수 자동 추론
@@ -453,7 +452,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             valLoss: logs.val_loss,
             valAccuracy: logs.val_accuracy,
             isTraining: true,
-            startTime: nodeData.trainingProgress?.startTime || new Date(),
+            startTime: data.trainingProgress?.startTime || new Date(),
           },
         })
       }
@@ -486,7 +485,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           valLoss: result.finalMetrics.valLoss,
           valAccuracy: result.finalMetrics.valAccuracy,
           isTraining: false,
-          startTime: nodeData.trainingProgress?.startTime || new Date(),
+          startTime: data.trainingProgress?.startTime || new Date(),
           endTime: new Date(),
         },
         metrics: {
@@ -508,7 +507,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         state: 'error',
         error: error instanceof Error ? error.message : String(error),
         trainingProgress: {
-          ...nodeData.trainingProgress,
+          ...data.trainingProgress,
           isTraining: false,
         },
       })
@@ -538,21 +537,21 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <StateIcon className={`w-4 h-4 ${style.iconColor}`} />
-            <span className={`text-sm font-medium ${style.text}`}>{nodeData.label || '모델'}</span>
+            <span className={`text-sm font-medium ${style.text}`}>{data.label || '모델'}</span>
           </div>
 
           {/* 상태 배지 */}
           <div
             className={`px-2 py-1 text-xs rounded-full ${style.bg} ${style.text} border ${style.border}`}
           >
-            {getStateLabel(nodeData.state)}
+            {getStateLabel(data.state)}
           </div>
         </div>
 
         {/* 모델 타입 */}
         <div className="mt-1">
           <span className="text-xs text-gray-500">
-            {nodeData.modelType === 'neural-network' ? '신경망' : String(nodeData.modelType)}
+            {data.modelType === 'neural-network' ? '신경망' : String(data.modelType)}
           </span>
         </div>
 
@@ -615,7 +614,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           <div className="flex justify-between items-center">
             <span>레이어:</span>
             <div className="flex items-center gap-1">
-              <span className="font-mono">{nodeData.layers?.length || 0}</span>
+              <span className="font-mono">{data.layers?.length || 0}</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -631,18 +630,18 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         </div>
 
         {/* 모델 구조 요약 정보 */}
-        {nodeData.layers && nodeData.layers.length > 0 && (
+        {data.layers && data.layers.length > 0 && (
           <div className="mt-2 space-y-1">
             {/* Input Layer */}
-            {nodeData.inputShape && (
+            {data.inputShape && (
               <div className="text-xs bg-blue-50 border border-blue-200 px-2 py-1 rounded flex justify-between">
                 <span className="font-medium text-blue-700">Input</span>
-                <span className="text-blue-600">{nodeData.inputShape.join('×')}</span>
+                <span className="text-blue-600">{data.inputShape.join('×')}</span>
               </div>
             )}
 
             {/* Hidden Layers */}
-            {nodeData.layers.slice(0, 3).map((layer: any, index: number) => {
+            {data.layers.slice(0, 3).map((layer: any, index: number) => {
               // activation 함수 정보 추출
               const getLayerDetails = (layer: any) => {
                 const details = []
@@ -668,19 +667,19 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               )
             })}
 
-            {nodeData.layers.length > 3 && (
+            {data.layers.length > 3 && (
               <div className="text-xs text-gray-500 text-center">
-                +{nodeData.layers.length - 3} more hidden layers
+                +{data.layers.length - 3} more hidden layers
               </div>
             )}
 
             {/* Output Layer */}
-            {nodeData.outputUnits && (
+            {data.outputUnits && (
               <div className="text-xs bg-green-50 border border-green-200 px-2 py-1 rounded flex justify-between">
                 <span className="font-medium text-green-700">Output</span>
                 <span className="text-green-600">
-                  {nodeData.outputUnits} {nodeData.outputUnits === 1 ? 'unit' : 'units'}
-                  {nodeData.outputUnits === 1 ? ' (sigmoid)' : ' (softmax)'}
+                  {data.outputUnits} {data.outputUnits === 1 ? 'unit' : 'units'}
+                  {data.outputUnits === 1 ? ' (sigmoid)' : ' (softmax)'}
                 </span>
               </div>
             )}
@@ -688,7 +687,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         )}
 
         {/* 학습 파라미터 설정 */}
-        {nodeData.state === 'definition' && nodeData.layers && nodeData.layers.length > 0 && (
+        {data.state === 'definition' && data.layers && data.layers.length > 0 && (
           <div className="mt-2 space-y-2">
             {/* 학습 설정 토글 버튼 */}
             <button
@@ -812,7 +811,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                   handleStartTraining()
                 }}
                 className="w-full px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={nodeData.state !== 'definition'}
+                disabled={data.state !== 'definition'}
               >
                 <Play className="w-3 h-3" />
                 모델 학습 시작
@@ -829,12 +828,12 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         )}
 
         {/* 학습 진행 상황 */}
-        {nodeData.state === 'training' && nodeData.trainingProgress && (
+        {data.state === 'training' && data.trainingProgress && (
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs text-yellow-600">
               <Clock className="w-3 h-3" />
               <span>
-                에포크 {nodeData.trainingProgress.epoch}/{nodeData.trainingProgress.totalEpochs}
+                에포크 {data.trainingProgress.epoch}/{data.trainingProgress.totalEpochs}
               </span>
             </div>
 
@@ -843,22 +842,22 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               <div
                 className="bg-yellow-500 h-1.5 rounded-full transition-all duration-300"
                 style={{
-                  width: `${(nodeData.trainingProgress.epoch / nodeData.trainingProgress.totalEpochs) * 100}%`,
+                  width: `${(data.trainingProgress.epoch / data.trainingProgress.totalEpochs) * 100}%`,
                 }}
               />
             </div>
 
             {/* 손실값 */}
-            {nodeData.trainingProgress.loss !== undefined && (
+            {data.trainingProgress.loss !== undefined && (
               <div className="text-xs text-gray-600">
-                Loss: {nodeData.trainingProgress.loss.toFixed(4)}
+                Loss: {data.trainingProgress.loss.toFixed(4)}
               </div>
             )}
           </div>
         )}
 
         {/* 학습 완료 지표 */}
-        {nodeData.state === 'trained' && nodeData.metrics && (
+        {data.state === 'trained' && data.metrics && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-green-600">
               <BarChart3 className="w-3 h-3" />
@@ -868,12 +867,12 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             <div className="text-xs text-gray-600 space-y-0.5">
               <div className="flex justify-between">
                 <span>Loss:</span>
-                <span className="font-mono">{nodeData.metrics.loss?.toFixed(4)}</span>
+                <span className="font-mono">{data.metrics.loss?.toFixed(4)}</span>
               </div>
-              {nodeData.metrics.accuracy && (
+              {data.metrics.accuracy && (
                 <div className="flex justify-between">
                   <span>Accuracy:</span>
-                  <span className="font-mono">{(nodeData.metrics.accuracy * 100).toFixed(1)}%</span>
+                  <span className="font-mono">{(data.metrics.accuracy * 100).toFixed(1)}%</span>
                 </div>
               )}
             </div>
@@ -892,11 +891,11 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                     e.stopPropagation()
                     handleGeneratePredictions()
                   }}
-                  disabled={nodeData.isGeneratingPredictions}
+                  disabled={data.isGeneratingPredictions}
                   className="p-1 text-xs text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50"
                   title="예측 결과 생성"
                 >
-                  {nodeData.isGeneratingPredictions ? (
+                  {data.isGeneratingPredictions ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
                     <Target className="w-3 h-3" />
@@ -905,13 +904,13 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               </div>
 
               {/* 예측 결과 미리보기 */}
-              {nodeData.predictions && nodeData.predictions.length > 0 && (
+              {data.predictions && data.predictions.length > 0 && (
                 <div className="space-y-1">
                   <div className="text-xs text-gray-500">
-                    {nodeData.predictions.length}개 샘플 예측 완료
-                    {nodeData.lastPredictionTime && (
+                    {data.predictions.length}개 샘플 예측 완료
+                    {data.lastPredictionTime && (
                       <span className="ml-1">
-                        ({new Date(nodeData.lastPredictionTime).toLocaleTimeString()})
+                        ({new Date(data.lastPredictionTime).toLocaleTimeString()})
                       </span>
                     )}
                   </div>
@@ -920,7 +919,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                   <div className="bg-blue-50 border border-blue-200 p-2 rounded text-xs">
                     <div className="font-medium text-blue-700 mb-1">샘플 예측:</div>
                     {(() => {
-                      const firstPrediction = nodeData.predictions[0]
+                      const firstPrediction = data.predictions[0]
                       const datasetId = connectedDataInfo?.name?.toLowerCase()
 
                       if (datasetId === 'mnist') {
@@ -977,13 +976,13 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                     className="w-full px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 flex items-center justify-center gap-1"
                   >
                     <Eye className="w-3 h-3" />
-                    상세 결과 보기 ({nodeData.predictions.length})
+                    상세 결과 보기 ({data.predictions.length})
                   </button>
                 </div>
               )}
 
               {/* 예측 결과가 없을 때 */}
-              {!nodeData.predictions && !nodeData.isGeneratingPredictions && (
+              {!data.predictions && !data.isGeneratingPredictions && (
                 <div className="text-xs text-gray-400 italic">
                   예측 버튼을 클릭하여 테스트해보세요
                 </div>
@@ -993,8 +992,8 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         )}
 
         {/* 오류 메시지 */}
-        {nodeData.state === 'error' && nodeData.error && (
-          <div className="text-xs text-red-600 bg-red-100 p-2 rounded">{nodeData.error}</div>
+        {data.state === 'error' && data.error && (
+          <div className="text-xs text-red-600 bg-red-100 p-2 rounded">{data.error}</div>
         )}
       </div>
 
@@ -1002,12 +1001,10 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <LayerEditor
         isOpen={isLayerEditorOpen}
         onClose={() => setIsLayerEditorOpen(false)}
-        initialLayers={nodeData.layers || []}
+        initialLayers={data.layers || []}
         onSave={handleLayersSave}
         modelNodeId={id}
       />
     </div>
   )
 }
-
-export default ModelNode
