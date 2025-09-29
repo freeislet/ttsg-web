@@ -2,6 +2,11 @@ import React, { useRef, useEffect, useState } from 'react'
 import * as d3 from 'd3'
 import { useModelStore } from '@/stores/modelStore'
 
+// TensorFlow Playground 스타일 상수들
+const RECT_SIZE = 30
+const BIAS_SIZE = 5
+const NEURON_CANVAS_SIZE = 24
+
 /**
  * 신경망 레이어 정보
  */
@@ -21,35 +26,39 @@ interface ConnectionInfo {
   targetLayer: number
   targetNode: number
   weight: number
+  id: string
 }
 
 /**
- * TensorFlow Playground 스타일의 신경망 시각화 컴포넌트
+ * TensorFlow Playground 완전 재현 컴포넌트
  */
 export const NeuralNetworkVisualization: React.FC<{
   modelId?: string
   width?: number
   height?: number
   className?: string
+  showNodeOutputs?: boolean
 }> = ({ 
   modelId, 
-  width = 800, 
+  width = 600, 
   height = 400, 
-  className 
+  className,
+  showNodeOutputs = true
 }) => {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [hoveredConnection, setHoveredConnection] = useState<ConnectionInfo | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const modelStore = useModelStore()
 
-  // Mock 데이터 - 실제로는 modelStore에서 가져올 예정
+  // Mock 신경망 구조
   const [layers] = useState<LayerInfo[]>([
     { id: 'input', nodes: 2, type: 'input' },
     { id: 'hidden1', nodes: 4, type: 'hidden', activation: 'tanh' },
-    { id: 'hidden2', nodes: 3, type: 'hidden', activation: 'tanh' },
+    { id: 'hidden2', nodes: 4, type: 'hidden', activation: 'tanh' },
     { id: 'output', nodes: 1, type: 'output', activation: 'sigmoid' }
   ])
 
-  // Mock 가중치 데이터 - 실제로는 TensorFlow.js 모델에서 가져올 예정
+  // Mock 가중치 데이터
   const generateMockWeights = (): ConnectionInfo[] => {
     const connections: ConnectionInfo[] = []
     
@@ -64,7 +73,8 @@ export const NeuralNetworkVisualization: React.FC<{
             sourceNode: sourceIdx,
             targetLayer: layerIdx + 1,
             targetNode: targetIdx,
-            weight: (Math.random() - 0.5) * 4 // -2 ~ 2 범위의 가중치
+            weight: (Math.random() - 0.5) * 4, // -2 ~ 2 범위
+            id: `${layerIdx}-${sourceIdx}-${layerIdx + 1}-${targetIdx}`
           })
         }
       }
@@ -75,21 +85,86 @@ export const NeuralNetworkVisualization: React.FC<{
 
   const [connections] = useState<ConnectionInfo[]>(generateMockWeights())
 
+  // 뉴런의 출력을 시각화하는 작은 캔버스 생성
+  const createNeuronCanvas = (nodeId: string, x: number, y: number) => {
+    if (!containerRef.current) return
+
+    // 기존 캔버스 제거
+    const existingCanvas = containerRef.current.querySelector(`#canvas-${nodeId}`)
+    if (existingCanvas) {
+      existingCanvas.remove()
+    }
+
+    const canvas = document.createElement('canvas')
+    canvas.id = `canvas-${nodeId}`
+    canvas.width = NEURON_CANVAS_SIZE
+    canvas.height = NEURON_CANVAS_SIZE
+    canvas.className = 'neuron-canvas absolute pointer-events-none border border-gray-300'
+    canvas.style.left = `${x + 3}px`
+    canvas.style.top = `${y + 3}px`
+    
+    containerRef.current.appendChild(canvas)
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // 간단한 뉴런 출력 히트맵 생성 (2D 그리드)
+    const imageData = ctx.createImageData(NEURON_CANVAS_SIZE, NEURON_CANVAS_SIZE)
+    const data = imageData.data
+
+    for (let i = 0; i < NEURON_CANVAS_SIZE; i++) {
+      for (let j = 0; j < NEURON_CANVAS_SIZE; j++) {
+        const x = (i / NEURON_CANVAS_SIZE) * 2 - 1 // -1 to 1
+        const y = (j / NEURON_CANVAS_SIZE) * 2 - 1 // -1 to 1
+        
+        // Mock 뉴런 출력 계산 (실제로는 신경망 결과를 사용)
+        let output = 0
+        if (nodeId.includes('input')) {
+          output = nodeId.includes('0') ? x : y
+        } else if (nodeId.includes('hidden1')) {
+          output = Math.tanh(x + y)
+        } else if (nodeId.includes('hidden2')) {
+          output = Math.tanh(x * y)
+        } else {
+          output = 1 / (1 + Math.exp(-(x + y)))
+        }
+
+        const pixelIndex = (j * NEURON_CANVAS_SIZE + i) * 4
+        
+        // 출력값에 따른 색상 (파란색-주황색)
+        if (output > 0) {
+          data[pixelIndex] = 255 * (1 - output)     // R
+          data[pixelIndex + 1] = 165 * (1 - output) // G  
+          data[pixelIndex + 2] = 0                  // B
+        } else {
+          data[pixelIndex] = 0                      // R
+          data[pixelIndex + 1] = 100 * (1 + output) // G
+          data[pixelIndex + 2] = 255 * (1 + output) // B
+        }
+        data[pixelIndex + 3] = 255 // A
+      }
+    }
+    
+    ctx.putImageData(imageData, 0, 0)
+  }
+
   useEffect(() => {
-    if (!svgRef.current) return
+    if (!svgRef.current || !containerRef.current) return
 
     const svg = d3.select(svgRef.current)
-    svg.selectAll('*').remove() // 기존 내용 제거
+    svg.selectAll('*').remove()
 
-    // 색상 스케일 정의 (가중치에 따른 색상)
+    // 모든 기존 캔버스 제거
+    containerRef.current.querySelectorAll('.neuron-canvas').forEach(canvas => canvas.remove())
+
+    // 색상 및 스케일 설정
     const colorScale = d3.scaleLinear<string>()
       .domain([-2, 0, 2])
-      .range(['#ff6b6b', '#ffffff', '#4ecdc4'])
+      .range(['#f59e0b', '#ffffff', '#3b82f6']) // 주황색-흰색-파란색
 
-    // 선 굵기 스케일 (가중치 절댓값에 따른 굵기)
     const strokeWidthScale = d3.scaleLinear()
       .domain([0, 2])
-      .range([0.5, 4])
+      .range([0.5, 6])
 
     // 레이어별 노드 위치 계산
     const layerSpacing = width / (layers.length + 1)
@@ -108,29 +183,34 @@ export const NeuralNetworkVisualization: React.FC<{
       nodePositions.push(layerNodes)
     })
 
-    // 연결선 그리기
+    // 곡선 연결선 그리기
     const linkGroup = svg.append('g').attr('class', 'links')
     
     connections.forEach(conn => {
       const sourcePos = nodePositions[conn.sourceLayer][conn.sourceNode]
       const targetPos = nodePositions[conn.targetLayer][conn.targetNode]
       
-      linkGroup.append('line')
-        .attr('x1', sourcePos.x + 15) // 노드 반지름만큼 오프셋
-        .attr('y1', sourcePos.y)
-        .attr('x2', targetPos.x - 15)
-        .attr('y2', targetPos.y)
+      // 베지어 곡선 경로 계산
+      const midX = (sourcePos.x + targetPos.x) / 2
+      const path = d3.path()
+      path.moveTo(sourcePos.x + RECT_SIZE / 2, sourcePos.y)
+      path.quadraticCurveTo(
+        midX, sourcePos.y, // 제어점
+        targetPos.x - RECT_SIZE / 2, targetPos.y
+      )
+      
+      linkGroup.append('path')
+        .attr('d', path.toString())
         .attr('stroke', colorScale(conn.weight))
         .attr('stroke-width', strokeWidthScale(Math.abs(conn.weight)))
-        .attr('stroke-opacity', 0.7)
+        .attr('stroke-opacity', 0.6)
+        .attr('fill', 'none')
         .style('cursor', 'pointer')
         .on('mouseenter', function() {
           d3.select(this).attr('stroke-opacity', 1)
-          setHoveredConnection(conn)
         })
         .on('mouseleave', function() {
-          d3.select(this).attr('stroke-opacity', 0.7)
-          setHoveredConnection(null)
+          d3.select(this).attr('stroke-opacity', 0.6)
         })
     })
 
@@ -138,114 +218,85 @@ export const NeuralNetworkVisualization: React.FC<{
     const nodeGroup = svg.append('g').attr('class', 'nodes')
     
     layers.forEach((layer, layerIdx) => {
-      const layerGroup = nodeGroup.append('g').attr('class', `layer-${layerIdx}`)
-      
       layer.nodes && Array.from({ length: layer.nodes }).forEach((_, nodeIdx) => {
         const pos = nodePositions[layerIdx][nodeIdx]
-        const nodeColor = layer.type === 'input' ? '#ffd93d' : 
-                         layer.type === 'output' ? '#ff6b6b' : '#4ecdc4'
+        const nodeId = `${layer.id}-${nodeIdx}`
         
-        // 노드 원 그리기
-        layerGroup.append('circle')
-          .attr('cx', pos.x)
-          .attr('cy', pos.y)
-          .attr('r', 15)
-          .attr('fill', nodeColor)
+        const nodeEl = nodeGroup.append('g')
+          .attr('class', 'node')
+          .attr('id', `node-${nodeId}`)
+        
+        // 노드 사각형 (TensorFlow Playground 스타일)
+        nodeEl.append('rect')
+          .attr('x', pos.x - RECT_SIZE / 2)
+          .attr('y', pos.y - RECT_SIZE / 2)
+          .attr('width', RECT_SIZE)
+          .attr('height', RECT_SIZE)
+          .attr('fill', layer.type === 'input' ? '#ff7043' : 
+                       layer.type === 'output' ? '#42a5f5' : '#ffa726')
           .attr('stroke', '#333')
-          .attr('stroke-width', 2)
+          .attr('stroke-width', 1)
+          .attr('rx', 3)
           .style('cursor', 'pointer')
           .on('mouseenter', function() {
-            d3.select(this).attr('r', 18)
+            d3.select(this).attr('stroke-width', 2)
+            setSelectedNodeId(nodeId)
           })
           .on('mouseleave', function() {
-            d3.select(this).attr('r', 15)
+            d3.select(this).attr('stroke-width', 1)
+            setSelectedNodeId(null)
           })
-        
-        // 바이어스 표시 (입력 레이어 제외)
+
+        // 바이어스 (입력 레이어 제외)
         if (layer.type !== 'input') {
-          layerGroup.append('rect')
-            .attr('x', pos.x - 20)
-            .attr('y', pos.y + 12)
-            .attr('width', 8)
-            .attr('height', 8)
+          nodeEl.append('rect')
+            .attr('x', pos.x - RECT_SIZE / 2 - BIAS_SIZE - 2)
+            .attr('y', pos.y + RECT_SIZE / 2 - BIAS_SIZE + 3)
+            .attr('width', BIAS_SIZE)
+            .attr('height', BIAS_SIZE)
             .attr('fill', '#666')
             .attr('stroke', '#333')
             .attr('stroke-width', 1)
         }
+
+        // 각 뉴런의 출력 시각화 (작은 캔버스)
+        if (showNodeOutputs && (layer.type === 'input' || layer.type === 'hidden')) {
+          setTimeout(() => {
+            createNeuronCanvas(nodeId, pos.x - RECT_SIZE / 2, pos.y - RECT_SIZE / 2)
+          }, 100)
+        }
+
+        // 입력 레이어 라벨
+        if (layer.type === 'input') {
+          nodeEl.append('text')
+            .attr('x', pos.x - RECT_SIZE / 2 - 10)
+            .attr('y', pos.y)
+            .attr('text-anchor', 'end')
+            .attr('dominant-baseline', 'central')
+            .attr('font-size', '12px')
+            .attr('font-weight', 'bold')
+            .attr('fill', '#333')
+            .text(nodeIdx === 0 ? 'X₁' : 'X₂')
+        }
       })
-      
-      // 레이어 라벨 추가
-      const firstNodePos = nodePositions[layerIdx][0]
-      const lastNodePos = nodePositions[layerIdx][layer.nodes - 1]
-      const labelY = firstNodePos.y - 30
-      
-      layerGroup.append('text')
-        .attr('x', firstNodePos.x)
-        .attr('y', labelY)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '12px')
-        .attr('font-weight', 'bold')
-        .attr('fill', '#333')
-        .text(layer.type === 'input' ? 'Input' :
-              layer.type === 'output' ? 'Output' :
-              `Hidden ${layerIdx}`)
-      
-      // 활성화 함수 표시 (히든/아웃풋 레이어)
-      if (layer.activation) {
-        layerGroup.append('text')
-          .attr('x', firstNodePos.x)
-          .attr('y', lastNodePos.y + 40)
-          .attr('text-anchor', 'middle')
-          .attr('font-size', '10px')
-          .attr('fill', '#666')
-          .text(layer.activation)
-      }
     })
 
-  }, [layers, connections, width, height])
+  }, [layers, connections, width, height, showNodeOutputs])
 
   return (
-    <div className={`neural-network-viz ${className || ''}`}>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">신경망 구조</h3>
-        <p className="text-sm text-gray-600">
-          노드와 연결선의 색상은 가중치를 나타냅니다. 
-          <span className="text-red-500 mx-1">빨간색</span>은 음수, 
-          <span className="text-teal-500 mx-1">청록색</span>은 양수 가중치입니다.
-        </p>
-      </div>
-      
+    <div className={`neural-network-viz relative ${className || ''}`} ref={containerRef}>
       <svg
         ref={svgRef}
         width={width}
         height={height}
-        className="border border-gray-200 rounded-lg bg-white"
+        className="bg-white"
       />
       
-      {/* 호버된 연결 정보 표시 */}
-      {hoveredConnection && (
-        <div className="mt-2 p-2 bg-gray-100 rounded text-sm">
-          <strong>연결 정보:</strong> 
-          레이어 {hoveredConnection.sourceLayer} → 레이어 {hoveredConnection.targetLayer}, 
-          가중치: {hoveredConnection.weight.toFixed(3)}
+      {selectedNodeId && (
+        <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
+          뉴런: {selectedNodeId}
         </div>
       )}
-      
-      {/* 범례 */}
-      <div className="flex items-center justify-center mt-4 space-x-6 text-sm">
-        <div className="flex items-center">
-          <div className="w-4 h-4 rounded-full bg-yellow-400 mr-2"></div>
-          <span>입력 레이어</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 rounded-full bg-teal-400 mr-2"></div>
-          <span>히든 레이어</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 rounded-full bg-red-400 mr-2"></div>
-          <span>출력 레이어</span>
-        </div>
-      </div>
     </div>
   )
 }

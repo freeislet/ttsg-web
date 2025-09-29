@@ -164,53 +164,47 @@ export const NeuralNetworkDashboard: React.FC<{
         </div>
       </div>
 
-      {/* 메인 시각화 영역 */}
-      <div className="h-[600px]">
+      {/* 메인 시각화 영역 - TensorFlow Playground 스타일 */}
+      <div className="h-[700px] bg-gray-50">
         <PanelGroup direction="horizontal">
           {/* 신경망 구조 패널 */}
           {settings.showNetwork && (
             <>
               <Panel defaultSize={60} minSize={30}>
-                <div className="h-full p-4 bg-white">
-                  <NeuralNetworkVisualization
-                    modelId="current"
-                    width={700}
-                    height={500}
-                    className="h-full"
-                  />
+                <div className="h-full bg-white border-r border-gray-200">
+                  <div className="p-4 border-b border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                      Neural Network
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <NeuralNetworkVisualization
+                      width={550}
+                      height={500}
+                      showNodeOutputs={true}
+                      className="w-full h-full"
+                    />
+                  </div>
                 </div>
               </Panel>
-              <PanelResizeHandle className="w-2 bg-gray-300 hover:bg-gray-400" />
+              <PanelResizeHandle className="w-1 bg-gray-300 hover:bg-gray-400" />
             </>
           )}
           
-          {/* 히트맵 패널 */}
+          {/* 출력 영역 패널 */}
           {settings.showHeatmap && (
             <Panel defaultSize={40} minSize={30}>
-              <div className="h-full p-4 bg-white">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    데이터셋 선택:
-                  </label>
-                  <select
-                    value={settings.heatmapDataset}
-                    onChange={(e) => updateSetting('heatmapDataset', e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="linear">Linear</option>
-                    <option value="sine">Sine Wave</option>
-                    <option value="iris">Iris (2D)</option>
-                  </select>
-                </div>
-                
-                <DecisionBoundaryHeatmap
-                  datasetId={settings.heatmapDataset}
-                  modelPredictFn={modelPredictFn}
-                  width={350}
-                  height={350}
-                  className="h-full"
-                />
-              </div>
+              <DecisionBoundaryHeatmap
+                datasetId={settings.heatmapDataset}
+                modelPredictFn={modelPredictFn}
+                width={450}
+                height={450}
+                showTestData={true}
+                discretize={false}
+                loss={loss}
+                trainingLoss={0.510}
+                className="h-full"
+              />
             </Panel>
           )}
         </PanelGroup>
