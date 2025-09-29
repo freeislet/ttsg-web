@@ -15,6 +15,7 @@ import {
   Target,
   Eye,
   Loader2,
+  RotateCcw,
 } from 'lucide-react'
 import { ModelNode, ModelNodeState, TrainingConfig } from '@/types/ModelNode'
 import { DataNodeData } from '@/types/DataNode'
@@ -875,6 +876,31 @@ export const ModelNodeComponent: React.FC<NodeProps<ModelNode>> = ({ id, data, s
                   <span className="font-mono">{(data.metrics.accuracy * 100).toFixed(1)}%</span>
                 </div>
               )}
+            </div>
+
+            {/* 재학습 버튼 */}
+            <div className="pt-1 border-t border-gray-200">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const updatedData = {
+                    ...data,
+                    state: 'compiled' as const,
+                    metrics: undefined,
+                    trainingProgress: undefined,
+                    predictions: undefined,
+                    lastPredictionTime: undefined
+                  }
+                  updateNodeData(data.modelId, updatedData)
+                }}
+                className="w-full p-1.5 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded border border-orange-200"
+                title="학습 설정을 변경하고 재학습"
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <RotateCcw className="w-3 h-3" />
+                  <span>재학습</span>
+                </div>
+              </button>
             </div>
 
             {/* 예측 섹션 */}

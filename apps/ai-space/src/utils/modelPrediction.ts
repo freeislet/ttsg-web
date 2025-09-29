@@ -16,37 +16,47 @@ export class ModelPredictor {
   }
 
   /**
-   * 테스트 데이터에 대해 예측 수행
+   * 테스트 데이터에서 예측 수행
    */
   async predictOnTestData(
     dataset: IDataset,
     sampleCount: number = 10
   ): Promise<PredictionResult[]> {
-    if (!dataset.testInputs || !dataset.testLabels) {
-      console.warn('테스트 데이터가 없어 전체 데이터에서 샘플링합니다.')
-      return this.predictOnSampleData(dataset, sampleCount)
+    // 테스트 데이터가 있는지 확인
+    const useTestSet = dataset.testInputs && dataset.testLabels && !dataset.testInputs.isDisposed
+    const targetInputs = useTestSet ? dataset.testInputs : dataset.inputs
+    const targetLabels = useTestSet ? dataset.testLabels : dataset.labels
+
+    // 데이터셋 텐서가 dispose되었는지 확인
+    if (targetInputs.isDisposed || targetLabels.isDisposed) {
+      throw new Error('Target dataset tensors have been disposed. Please reload the dataset.')
     }
 
-    // 샘플 수만큼 무작위로 선택
-    const totalSamples = dataset.testInputs.shape[0]
+    const totalSamples = targetInputs.shape[0]
     const sampleIndices = this.getRandomIndices(totalSamples, Math.min(sampleCount, totalSamples))
 
     const results: PredictionResult[] = []
 
     for (const index of sampleIndices) {
-      // 단일 샘플 추출
-      const inputSample = dataset.testInputs.slice([index, 0], [1, -1])
-      const labelSample = dataset.testLabels.slice([index, 0], [1, -1])
+      let inputSample: tf.Tensor | null = null
+      let labelSample: tf.Tensor | null = null
+      let prediction: tf.Tensor | null = null
 
       try {
-        // 예측 수행
-        const prediction = this.model.predict(inputSample) as tf.Tensor
-        const predictionArray = await prediction.data()
+        // 안전한 텐서 생성 - 복사본 생성으로 dispose 문제 방지
+        inputSample = targetInputs.slice([index, 0], [1, -1])
+        labelSample = targetLabels.slice([index, 0], [1, -1])
 
-        // 라벨 데이터 추출
+        // 텐서가 올바르게 생성되었는지 확인
+        if (inputSample.isDisposed || labelSample.isDisposed) {
+          console.warn(`Skipping index ${index}: tensors disposed during slicing`)
+          continue
+        }
+
+        prediction = this.model.predict(inputSample) as tf.Tensor
+        const predictionArray = await prediction.data()
         const labelArray = await labelSample.data()
 
-        // 결과 생성
         const result = await this.createPredictionResult(
           inputSample,
           Array.from(predictionArray),
@@ -55,15 +65,19 @@ export class ModelPredictor {
         )
 
         results.push(result)
-
-        // 메모리 정리
-        prediction.dispose()
       } catch (error) {
         console.error(`예측 중 오류 발생 (index: ${index}):`, error)
       } finally {
-        // 임시 텐서 정리
-        inputSample.dispose()
-        labelSample.dispose()
+        // 안전한 메모리 정리
+        if (prediction && !prediction.isDisposed) {
+          prediction.dispose()
+        }
+        if (inputSample && !inputSample.isDisposed) {
+          inputSample.dispose()
+        }
+        if (labelSample && !labelSample.isDisposed) {
+          labelSample.dispose()
+        }
       }
     }
 
@@ -77,17 +91,33 @@ export class ModelPredictor {
     dataset: IDataset,
     sampleCount: number = 10
   ): Promise<PredictionResult[]> {
+    // 데이터셋 텐서가 dispose되었는지 확인
+    if (dataset.inputs.isDisposed || dataset.labels.isDisposed) {
+      throw new Error('Dataset tensors have been disposed. Please reload the dataset.')
+    }
+
     const totalSamples = dataset.inputs.shape[0]
     const sampleIndices = this.getRandomIndices(totalSamples, Math.min(sampleCount, totalSamples))
 
     const results: PredictionResult[] = []
 
     for (const index of sampleIndices) {
-      const inputSample = dataset.inputs.slice([index, 0], [1, -1])
-      const labelSample = dataset.labels.slice([index, 0], [1, -1])
+      let inputSample: tf.Tensor | null = null
+      let labelSample: tf.Tensor | null = null
+      let prediction: tf.Tensor | null = null
 
       try {
-        const prediction = this.model.predict(inputSample) as tf.Tensor
+        // 안전한 텐서 생성 - 복사본 생성으로 dispose 문제 방지
+        inputSample = dataset.inputs.slice([index, 0], [1, -1])
+        labelSample = dataset.labels.slice([index, 0], [1, -1])
+
+        // 텐서가 올바르게 생성되었는지 확인
+        if (inputSample.isDisposed || labelSample.isDisposed) {
+          console.warn(`Skipping index ${index}: tensors disposed during slicing`)
+          continue
+        }
+
+        prediction = this.model.predict(inputSample) as tf.Tensor
         const predictionArray = await prediction.data()
         const labelArray = await labelSample.data()
 
@@ -99,12 +129,19 @@ export class ModelPredictor {
         )
 
         results.push(result)
-        prediction.dispose()
       } catch (error) {
         console.error(`예측 중 오류 발생 (index: ${index}):`, error)
       } finally {
-        inputSample.dispose()
-        labelSample.dispose()
+        // 안전한 메모리 정리
+        if (prediction && !prediction.isDisposed) {
+          prediction.dispose()
+        }
+        if (inputSample && !inputSample.isDisposed) {
+          inputSample.dispose()
+        }
+        if (labelSample && !labelSample.isDisposed) {
+          labelSample.dispose()
+        }
       }
     }
 

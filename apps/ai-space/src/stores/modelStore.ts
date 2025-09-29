@@ -207,8 +207,8 @@ export const useModelStore = create<ModelStore>()(
             },
             {
               type: 'dense' as const,
-              units: 1,
-              activation: 'linear',
+              units: 8,
+              activation: 'relu',
             },
           ]
 
