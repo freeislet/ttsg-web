@@ -83,9 +83,20 @@ export interface ModelMetrics {
 export interface ConnectedDataNode {
   id: string
   name: string
+  datasetId: string
   type: string
-  shape?: number[]
+  inputShape?: number[]
+  outputShape?: number[]
+  outputUnits?: number
   size?: number
+  samples?: number
+  features?: number
+  // 캐시된 데이터셋 정보
+  dataset?: any
+  // 마지막 업데이트 시간 (캐시 무효화 용도)
+  lastUpdated?: Date
+  // 연결 상태
+  isConnected: boolean
 }
 
 /**
@@ -115,9 +126,13 @@ export interface ModelNodeData {
   // 성능 지표
   metrics?: ModelMetrics
   
-  // 연결된 데이터 노드 정보
+  // 연결된 데이터 노드 정보 (캐시된 정보)
   dataNodeId?: string
   connectedDataNode?: ConnectedDataNode
+  
+  // Shape 캐시 정보
+  shapeLastUpdated?: Date
+  datasetVersion?: string // 데이터셋 변경 감지용
   
   // 오류 정보
   error?: string

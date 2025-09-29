@@ -38,6 +38,11 @@ interface ModelActions {
   addVisualizationNode: (position: { x: number; y: number }) => void
   updateNodeData: (nodeId: string, data: Partial<any>) => void
   setSelectedNode: (nodeId: string | null) => void
+  
+  // === 캐시 관리 ===
+  invalidateModelCache: (nodeId: string) => void
+  invalidateAllModelCaches: () => void
+  getConnectedDataInfo: (modelId: string) => any
 
   // === 모델 인스턴스 관리 ===
   setModelInstance: (nodeId: string, instance: any) => void
@@ -125,6 +130,22 @@ export const useModelStore = create<ModelStore>()(
 
         onEdgesChange: (changes: AppEdgeChange[]) => {
           set((state) => {
+            // 연결이 변경되는 모델들의 캐시 무효화
+            changes.forEach((change) => {
+              if (change.type === 'remove') {
+                // 삭제되는 엣지와 연결된 모델의 캐시 무효화
+                const edge = state.edges.find(e => e.id === change.id)
+                if (edge) {
+                  const targetModelIndex = state.nodes.findIndex(n => n.id === edge.target && n.type === 'model')
+                  if (targetModelIndex !== -1) {
+                    state.nodes[targetModelIndex].data.connectedDataNode = undefined
+                    state.nodes[targetModelIndex].data.dataNodeId = undefined
+                    console.log(`🗑️ Invalidated cache for model: ${edge.target} due to edge removal`)
+                  }
+                }
+              }
+            })
+            
             state.edges = applyEdgeChanges(changes, state.edges)
             state.nodes = updateModelShapes(state.nodes, state.edges)
           })
@@ -132,10 +153,21 @@ export const useModelStore = create<ModelStore>()(
 
         onConnect: (connection: Connection) => {
           set((state) => {
+            // 새로운 연결이 생성되는 경우 대상 모델의 캐시 무효화
+            if (connection.target) {
+              const targetModelIndex = state.nodes.findIndex(n => n.id === connection.target && n.type === 'model')
+              if (targetModelIndex !== -1) {
+                state.nodes[targetModelIndex].data.connectedDataNode = undefined
+                state.nodes[targetModelIndex].data.dataNodeId = undefined
+                console.log(`🔄 Invalidated cache for model: ${connection.target} due to new connection`)
+              }
+            }
+            
             state.edges = addEdge(connection, state.edges)
             state.nodes = updateModelShapes(state.nodes, state.edges)
           })
         },
+
 
         onSelectionChange: ({ nodes: selectedNodes }) => {
           set((state) => {
@@ -218,8 +250,31 @@ export const useModelStore = create<ModelStore>()(
           set((state) => {
             const nodeIndex = state.nodes.findIndex((node) => node.id === nodeId)
             if (nodeIndex !== -1) {
+              const node = state.nodes[nodeIndex]
+              
+              // 데이터 노드의 중요한 속성이 변경된 경우 연결된 모델들의 캐시 무효화
+              if (node.type === 'data' && (data.selectedPresetId || data.dataset)) {
+                // 이 데이터 노드에 연결된 모든 모델 찾기
+                const connectedModelIds = state.edges
+                  .filter(edge => edge.source === nodeId)
+                  .map(edge => edge.target)
+                
+                // 연결된 모델들의 캐시 무효화
+                connectedModelIds.forEach(modelId => {
+                  const modelIndex = state.nodes.findIndex(n => n.id === modelId && n.type === 'model')
+                  if (modelIndex !== -1) {
+                    state.nodes[modelIndex].data.connectedDataNode = undefined
+                    state.nodes[modelIndex].data.dataNodeId = undefined
+                    console.log(`🔄 Invalidated cache for model: ${modelId} due to data node update`)
+                  }
+                })
+              }
+              
               // mutative를 사용하므로 직접 수정 가능
               Object.assign(state.nodes[nodeIndex].data, data)
+              
+              // 모델 shape 업데이트
+              state.nodes = updateModelShapes(state.nodes, state.edges)
             }
           })
         },
@@ -271,12 +326,53 @@ export const useModelStore = create<ModelStore>()(
         },
 
         // === 유틸리티 ===
+        // === 캐시 관리 ===
+        invalidateModelCache: (nodeId) => {
+          set((state) => {
+            const nodeIndex = state.nodes.findIndex(node => node.id === nodeId && node.type === 'model')
+            if (nodeIndex !== -1) {
+              state.nodes[nodeIndex].data.connectedDataNode = undefined
+              state.nodes[nodeIndex].data.dataNodeId = undefined
+              state.nodes[nodeIndex].data.shapeLastUpdated = undefined
+              console.log(`🗑️ Manual cache invalidation for model: ${nodeId}`)
+            }
+          })
+        },
+
+        invalidateAllModelCaches: () => {
+          set((state) => {
+            state.nodes.forEach((node, index) => {
+              if (node.type === 'model') {
+                state.nodes[index].data.connectedDataNode = undefined
+                state.nodes[index].data.dataNodeId = undefined
+                state.nodes[index].data.shapeLastUpdated = undefined
+              }
+            })
+            console.log(`🗑️ All model caches invalidated`)
+            
+            // 캐시 무효화 후 재계산
+            state.nodes = updateModelShapes(state.nodes, state.edges)
+          })
+        },
+
+        getConnectedDataInfo: (modelId) => {
+          const state = get()
+          const modelNode = state.nodes.find(node => node.id === modelId && node.type === 'model')
+          return modelNode?.data.connectedDataNode || null
+        },
+
         getStats: () => {
           const state = get()
+          const modelsWithCache = state.nodes.filter(node => 
+            node.type === 'model' && node.data.connectedDataNode
+          ).length
+          
           return {
             nodeCount: state.nodes.length,
             edgeCount: state.edges.length,
             modelInstanceCount: Object.keys(state.modelInstances).length,
+            modelsWithCache,
+            cacheHitRate: state.nodes.length > 0 ? (modelsWithCache / state.nodes.filter(n => n.type === 'model').length) * 100 : 0,
             registeredModelTypes: ['neural-network'],
             registeredNodeTypes: ['model', 'data', 'visualization'],
           }
@@ -311,3 +407,23 @@ export const useLoading = () => useModelStore((state) => state.isLoading)
 
 // 에러 상태만 구독
 export const useError = () => useModelStore((state) => state.error)
+
+// 연결된 데이터 정보만 구독 (특정 모델)
+export const useConnectedData = (modelId: string | null) => {
+  return useModelStore((state) => {
+    if (!modelId) return null
+    const modelNode = state.nodes.find(node => node.id === modelId && node.type === 'model')
+    return modelNode?.data.connectedDataNode || null
+  })
+}
+
+// 캐시 통계 구독
+export const useCacheStats = () => {
+  return useModelStore((state) => {
+    const stats = state.getStats()
+    return {
+      modelsWithCache: stats.modelsWithCache,
+      cacheHitRate: stats.cacheHitRate,
+    }
+  })
+}

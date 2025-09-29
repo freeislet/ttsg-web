@@ -4,6 +4,7 @@ import {
   DataNode,
   ModelNode,
 } from '@/types/AppNodes'
+import { ConnectedDataNode } from '@/types/ModelNode'
 
 /**
  * 데이터 타입별 기본 shape 매핑
@@ -40,87 +41,178 @@ const DATA_TYPE_OUTPUT_UNITS: Record<string, number> = {
 }
 
 /**
- * 연결된 데이터 노드에서 입력 shape 추론
+ * 연결된 데이터 노드에서 입력 shape 추론 (레거시 지원)
  */
 export function inferInputShapeFromDataNode(
   modelNode: ModelNode,
   dataNodes: DataNode[],
   edges: AppEdge[]
 ): number[] | null {
-  // 모델 노드로 연결되는 엣지 찾기
-  const incomingEdges = edges.filter((edge) => edge.target === modelNode.id)
-
-  if (incomingEdges.length === 0) {
-    return null
-  }
-
-  // 첫 번째 연결된 데이터 노드 찾기
-  const connectedDataNode = dataNodes.find((node) =>
-    incomingEdges.some((edge) => edge.source === node.id)
-  )
-
-  if (!connectedDataNode || !connectedDataNode.data.selectedPresetId) {
-    return null
-  }
-
-  // 실제 데이터셋에서 shape 추론 (우선)
-  if (connectedDataNode.data.dataset && connectedDataNode.data.dataset.inputShape) {
-    console.log(`📊 Using actual dataset inputShape: ${connectedDataNode.data.dataset.inputShape}`)
-    return connectedDataNode.data.dataset.inputShape
-  }
-
-  // 데이터셋 ID에서 shape 추론 (fallback)
-  const datasetId = connectedDataNode.data.selectedPresetId
-  const inferredShape = DATA_TYPE_SHAPES[datasetId] || [1]
-  console.log(`📊 Fallback to preset shape for ${datasetId}: ${inferredShape}`)
-  return inferredShape
+  // 캐시 기반 버전 사용 권장
+  return inferInputShapeFromDataNodeCached(modelNode, dataNodes, edges)
 }
 
 /**
- * 연결된 데이터 노드에서 출력 유닛 수 추론
+ * 연결된 데이터 노드에서 출력 유닛 수 추론 (레거시 지원)
  */
 export function inferOutputUnitsFromDataNode(
   modelNode: ModelNode,
   dataNodes: DataNode[],
   edges: AppEdge[]
 ): number | null {
-  // 모델 노드로 연결되는 엣지 찾기
-  const incomingEdges = edges.filter((edge) => edge.target === modelNode.id)
+  // 캐시 기반 버전 사용 권장
+  return inferOutputUnitsFromDataNodeCached(modelNode, dataNodes, edges)
+}
 
+/**
+ * 데이터 노드에서 ConnectedDataNode 정보 추출
+ */
+export function extractConnectedDataInfo(dataNode: DataNode): ConnectedDataNode {
+  const now = new Date()
+  return {
+    id: dataNode.id,
+    name: dataNode.data.label || '데이터',
+    datasetId: dataNode.data.selectedPresetId || '',
+    type: dataNode.data.dataType || 'unknown',
+    inputShape: dataNode.data.dataset?.inputShape,
+    outputShape: dataNode.data.dataset?.outputShape,
+    outputUnits: dataNode.data.dataset?.outputShape?.reduce((a: number, b: number) => a * b, 1),
+    size: dataNode.data.dataset?.size,
+    samples: dataNode.data.samples,
+    features: dataNode.data.inputFeatures,
+    dataset: dataNode.data.dataset,
+    lastUpdated: now,
+    isConnected: true,
+  }
+}
+
+/**
+ * 캐시된 정보가 유효한지 확인
+ */
+export function isConnectedDataCacheValid(
+  connectedData: ConnectedDataNode | undefined,
+  dataNode: DataNode | null,
+  maxCacheAge: number = 5000 // 5초
+): boolean {
+  if (!connectedData || !dataNode) {
+    return false
+  }
+
+  // ID 변경 확인
+  if (connectedData.id !== dataNode.id) {
+    return false
+  }
+
+  // 데이터셋 ID 변경 확인
+  if (connectedData.datasetId !== dataNode.data.selectedPresetId) {
+    return false
+  }
+
+  // 캐시 나이 확인
+  if (connectedData.lastUpdated) {
+    const cacheAge = Date.now() - connectedData.lastUpdated.getTime()
+    if (cacheAge > maxCacheAge) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * 캐시 기반 연결된 데이터 노드 정보 가져오기
+ */
+export function getConnectedDataNodeCached(
+  modelNode: ModelNode,
+  dataNodes: DataNode[],
+  edges: AppEdge[]
+): ConnectedDataNode | null {
+  // 기존 캐시 확인
+  if (modelNode.data.connectedDataNode) {
+    // 연결된 데이터 노드 찾기
+    const connectedDataNode = dataNodes.find(
+      (node) => node.id === modelNode.data.connectedDataNode!.id
+    )
+
+    // 캐시 유효성 검사
+    if (isConnectedDataCacheValid(modelNode.data.connectedDataNode, connectedDataNode || null)) {
+      console.log(`🚀 Using cached data connection for model: ${modelNode.id}`)
+      return modelNode.data.connectedDataNode
+    }
+  }
+
+  // 캐시가 없거나 무효한 경우 새로 찾기
+  const incomingEdges = edges.filter((edge) => edge.target === modelNode.id)
   if (incomingEdges.length === 0) {
     return null
   }
 
-  // 첫 번째 연결된 데이터 노드 찾기
   const connectedDataNode = dataNodes.find((node) =>
     incomingEdges.some((edge) => edge.source === node.id)
   )
 
-  if (!connectedDataNode || !connectedDataNode.data.selectedPresetId) {
+  if (!connectedDataNode) {
     return null
   }
 
-  // 실제 데이터셋에서 출력 shape 추론 (우선)
-  if (connectedDataNode.data.dataset && connectedDataNode.data.dataset.outputShape) {
-    const outputUnits = connectedDataNode.data.dataset.outputShape.reduce(
-      (a: number, b: number) => a * b,
-      1
-    )
-    console.log(
-      `🎯 Using actual dataset outputShape: ${connectedDataNode.data.dataset.outputShape} -> ${outputUnits} units`
-    )
-    return outputUnits
-  }
-
-  // 데이터셋 ID에서 출력 유닛 수 추론 (fallback)
-  const datasetId = connectedDataNode.data.selectedPresetId
-  const inferredUnits = DATA_TYPE_OUTPUT_UNITS[datasetId] || 1
-  console.log(`🎯 Fallback to preset output units for ${datasetId}: ${inferredUnits}`)
-  return inferredUnits
+  console.log(`🔄 Refreshing data connection cache for model: ${modelNode.id}`)
+  return extractConnectedDataInfo(connectedDataNode)
 }
 
 /**
- * 모든 모델 노드의 shape 자동 업데이트
+ * 캐시 기반 입력 shape 추론
+ */
+export function inferInputShapeFromDataNodeCached(
+  modelNode: ModelNode,
+  dataNodes: DataNode[],
+  edges: AppEdge[]
+): number[] | null {
+  const connectedData = getConnectedDataNodeCached(modelNode, dataNodes, edges)
+  
+  if (!connectedData || !connectedData.datasetId) {
+    return null
+  }
+
+  // 실제 데이터셋에서 shape 추론 (우선)
+  if (connectedData.inputShape) {
+    console.log(`📊 Using cached inputShape: ${connectedData.inputShape}`)
+    return connectedData.inputShape
+  }
+
+  // 데이터셋 ID에서 shape 추론 (fallback)
+  const fallbackShape = DATA_TYPE_SHAPES[connectedData.datasetId] || [1]
+  console.log(`📊 Fallback to preset shape for ${connectedData.datasetId}: ${fallbackShape}`)
+  return fallbackShape
+}
+
+/**
+ * 캐시 기반 출력 유닛 수 추론
+ */
+export function inferOutputUnitsFromDataNodeCached(
+  modelNode: ModelNode,
+  dataNodes: DataNode[],
+  edges: AppEdge[]
+): number | null {
+  const connectedData = getConnectedDataNodeCached(modelNode, dataNodes, edges)
+  
+  if (!connectedData || !connectedData.datasetId) {
+    return null
+  }
+
+  // 실제 데이터셋에서 출력 유닛 추론 (우선)
+  if (connectedData.outputUnits) {
+    console.log(`🎯 Using cached outputUnits: ${connectedData.outputUnits}`)
+    return connectedData.outputUnits
+  }
+
+  // 데이터셋 ID에서 출력 유닛 수 추론 (fallback)
+  const fallbackUnits = DATA_TYPE_OUTPUT_UNITS[connectedData.datasetId] || 1
+  console.log(`🎯 Fallback to preset output units for ${connectedData.datasetId}: ${fallbackUnits}`)
+  return fallbackUnits
+}
+
+/**
+ * 모든 모델 노드의 shape 자동 업데이트 (캐시 기반)
  */
 export function updateModelShapes(nodes: AppNode[], edges: AppEdge[]): AppNode[] {
   const dataNodes = nodes.filter((node) => node.type === 'data') as DataNode[]
@@ -131,21 +223,31 @@ export function updateModelShapes(nodes: AppNode[], edges: AppEdge[]): AppNode[]
     }
 
     const modelNode = node as ModelNode
-    const inputShape = inferInputShapeFromDataNode(modelNode, dataNodes, edges)
-    const outputUnits = inferOutputUnitsFromDataNode(modelNode, dataNodes, edges)
+    
+    // 캐시 기반 추론 사용
+    const connectedData = getConnectedDataNodeCached(modelNode, dataNodes, edges)
+    const inputShape = inferInputShapeFromDataNodeCached(modelNode, dataNodes, edges)
+    const outputUnits = inferOutputUnitsFromDataNodeCached(modelNode, dataNodes, edges)
 
     // shape이 변경된 경우에만 업데이트
     const needsUpdate =
       (inputShape && JSON.stringify(inputShape) !== JSON.stringify(modelNode.data.inputShape)) ||
-      (outputUnits && outputUnits !== modelNode.data.outputUnits)
+      (outputUnits && outputUnits !== modelNode.data.outputUnits) ||
+      (!modelNode.data.connectedDataNode && connectedData)
 
     if (needsUpdate) {
+      const now = new Date()
       return {
         ...modelNode,
         data: {
           ...modelNode.data,
           ...(inputShape && { inputShape }),
           ...(outputUnits && { outputUnits }),
+          ...(connectedData && { 
+            connectedDataNode: connectedData,
+            dataNodeId: connectedData.id,
+            shapeLastUpdated: now,
+          }),
         },
       }
     }
