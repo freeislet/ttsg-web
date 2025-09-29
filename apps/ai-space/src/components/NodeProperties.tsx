@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useModelStore } from '@/stores/modelStore'
 import {
   Brain,
   Database,
@@ -11,12 +10,12 @@ import {
   BarChart3,
   Eye,
 } from 'lucide-react'
+import { useModelStore } from '@/stores/modelStore'
+import { AppNode, DataNode } from '@/types/AppNodes'
 import { dataRegistry } from '@/data'
 import DataInspector from './DataInspector'
 import DatasetSelector from './DatasetSelector'
 import PredictionResultsDisplay from './model-editor/PredictionResultsDisplay'
-import { getPredictionConfig } from '@/data/presets'
-import { AppNode, DataNode } from '@/types/AppNodes'
 
 /**
  * 데이터 노드 속성 컴포넌트
@@ -260,7 +259,7 @@ const ModelNodeProperties: React.FC<ModelNodePropsType> = ({ nodeId, nodeData })
           <div className="p-3">
             <PredictionResultsDisplay
               predictions={nodeData.predictions}
-              displayConfig={getPredictionConfig(datasetId || '')?.display}
+              displayConfig={dataRegistry.getById(datasetId || '')?.prediction?.display}
               datasetId={datasetId || ''}
               className="max-h-96 overflow-y-auto"
             />

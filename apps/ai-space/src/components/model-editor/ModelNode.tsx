@@ -22,7 +22,7 @@ import { LayerEditor } from '@/components/layer-editor'
 import { useModelStore } from '@/stores/modelStore'
 import { NNModel } from '@/models/NNModel'
 import { createNeuralNetworkConfig } from '@/models/training'
-import { getPredictionConfig } from '@/data/presets'
+import { dataRegistry } from '@/data'
 import { generateModelPredictions } from '@/utils/modelPrediction'
 import * as tf from '@tensorflow/tfjs'
 
@@ -255,9 +255,10 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
     // 연결된 데이터 노드 정보 가져오기
     const connectedDataNode = nodes.find(
-      (node) => node.type === 'data' && edges.some((edge) => edge.source === node.id && edge.target === id)
+      (node) =>
+        node.type === 'data' && edges.some((edge) => edge.source === node.id && edge.target === id)
     )
-    
+
     if (!connectedDataNode) {
       console.warn('Connected data node not found')
       return
@@ -283,19 +284,19 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       // 현재 학습된 모델 인스턴스 가져오기
       const { getModelInstance } = useModelStore.getState()
       const modelInstance = getModelInstance(id)
-      
+
       if (!modelInstance || !modelInstance.tfModel) {
         throw new Error('학습된 모델 인스턴스를 찾을 수 없습니다')
       }
 
-      const predictionConfig = getPredictionConfig(datasetId)
+      const predictionConfig = dataRegistry.getById(datasetId)?.prediction
       const defaultSamples = predictionConfig?.defaultSamples
 
       console.log('🔮 Using trained model for predictions:', {
         modelType: nodeData.modelType,
         layers: nodeData.layers?.length,
         datasetId,
-        sampleCount: defaultSamples?.count || 10
+        sampleCount: defaultSamples?.count || 10,
       })
 
       // 실제 모델 예측 수행
@@ -318,7 +319,6 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       })
 
       console.log('✅ Predictions generated successfully:', predictions.length)
-      
     } catch (error) {
       console.error('❌ Prediction generation failed:', error)
       updateNodeData(id, {
@@ -327,7 +327,6 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       })
     }
   }
-
 
   /**
    * 모델 학습 시작
@@ -460,7 +459,11 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       }
 
       // 실제 모델 학습 실행
-      const { model: trainedModel, result } = await nnModel.createAndTrain(dataset, modelTrainingConfig, onProgress)
+      const { model: trainedModel, result } = await nnModel.createAndTrain(
+        dataset,
+        modelTrainingConfig,
+        onProgress
+      )
 
       // 학습된 모델 인스턴스를 스토어에 저장
       const { setModelInstance } = useModelStore.getState()
@@ -471,7 +474,6 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         trainingConfig: modelTrainingConfig,
         trainingResult: result,
       })
-
 
       // 학습 완료 상태로 업데이트
       updateNodeData(id, {
@@ -883,7 +885,7 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                   <Target className="w-3 h-3" />
                   <span>예측</span>
                 </div>
-                
+
                 {/* 예측 생성 버튼 */}
                 <button
                   onClick={(e) => {
@@ -913,19 +915,21 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                       </span>
                     )}
                   </div>
-                  
+
                   {/* 첫 번째 예측 결과 미리보기 */}
                   <div className="bg-blue-50 border border-blue-200 p-2 rounded text-xs">
                     <div className="font-medium text-blue-700 mb-1">샘플 예측:</div>
                     {(() => {
                       const firstPrediction = nodeData.predictions[0]
                       const datasetId = connectedDataInfo?.name?.toLowerCase()
-                      
+
                       if (datasetId === 'mnist') {
                         return (
                           <div className="flex justify-between items-center">
                             <span>예측: {firstPrediction.predictedClass}</span>
-                            <span>신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%</span>
+                            <span>
+                              신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%
+                            </span>
                           </div>
                         )
                       } else if (datasetId?.includes('iris')) {
@@ -933,7 +937,9 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                           <div className="space-y-1">
                             <div className="flex justify-between">
                               <span>예측: {firstPrediction.predictedClass}</span>
-                              <span>신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%</span>
+                              <span>
+                                신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%
+                              </span>
                             </div>
                           </div>
                         )
@@ -949,8 +955,12 @@ const ModelNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                       } else {
                         return (
                           <div className="flex justify-between">
-                            <span>예측값: {String(firstPrediction.predictedClass).substring(0, 10)}</span>
-                            <span>신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%</span>
+                            <span>
+                              예측값: {String(firstPrediction.predictedClass).substring(0, 10)}
+                            </span>
+                            <span>
+                              신뢰도: {((firstPrediction.confidence || 0) * 100).toFixed(1)}%
+                            </span>
                           </div>
                         )
                       }
