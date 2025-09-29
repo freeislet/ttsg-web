@@ -23,7 +23,7 @@ function App() {
       <div className="flex-1 overflow-hidden">
         <PanelGroup direction="vertical">
           {/* 상단: 플로우 에디터 + 속성 패널 */}
-          <Panel defaultSize={70} minSize={50} maxSize={85}>
+          <Panel defaultSize={70} minSize={20} maxSize={85}>
             <PanelGroup direction="horizontal">
               {/* 플로우 에디터 */}
               <Panel defaultSize={75} minSize={60}>
@@ -46,7 +46,7 @@ function App() {
           <PanelResizeHandleVertical />
 
           {/* 하단: 대시보드 + 로그 패널 */}
-          <Panel defaultSize={30} minSize={15} maxSize={50}>
+          <Panel defaultSize={30} minSize={15} maxSize={80}>
             <BottomPanel />
           </Panel>
         </PanelGroup>
