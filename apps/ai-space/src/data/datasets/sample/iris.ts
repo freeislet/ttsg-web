@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
 import { IDataset, ProgressCallback } from '../../types'
+import { dataRegistry } from '../../registry'
 
 // Iris 클래스 정의
 export const IRIS_CLASSES = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
@@ -173,40 +174,18 @@ class IrisDataset extends BaseDataset {
   readonly outputColumns: string[] = ['species']
   readonly sampleCount: number
 
-  readonly trainInputs: tf.Tensor
-  readonly trainLabels: tf.Tensor
-  readonly testInputs: tf.Tensor
-  readonly testLabels: tf.Tensor
-  readonly trainCount: number
-  readonly testCount: number
-
-  constructor(
-    trainInputs: tf.Tensor,
-    trainLabels: tf.Tensor,
-    testInputs: tf.Tensor,
-    testLabels: tf.Tensor
-  ) {
+  constructor(inputs: tf.Tensor, labels: tf.Tensor) {
     super()
-
-    this.trainInputs = trainInputs
-    this.trainLabels = trainLabels
-    this.testInputs = testInputs
-    this.testLabels = testLabels
-
-    this.trainCount = trainInputs.shape[0]
-    this.testCount = testInputs.shape[0]
-    this.sampleCount = this.trainCount + this.testCount
-
-    // 전체 데이터 결합
-    this.inputs = tf.concat([trainInputs, testInputs], 0)
-    this.labels = tf.concat([trainLabels, testLabels], 0)
+    this.inputs = inputs
+    this.labels = labels
+    this.sampleCount = inputs.shape[0]
   }
 }
 
 /**
- * 데이터를 텐서로 변환하고 훈련/테스트 분할
+ * 데이터를 텐서로 변환
  */
-function convertToTensors(testSplit: number = 0.2): [tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor] {
+function convertToTensors(): { inputs: tf.Tensor; labels: tf.Tensor } {
   return tf.tidy(() => {
     const numExamples = IRIS_DATA.length
 
@@ -222,23 +201,13 @@ function convertToTensors(testSplit: number = 0.2): [tf.Tensor, tf.Tensor, tf.Te
       shuffledTargets.push(example[4]) // 레이블
     }
 
-    // 훈련/테스트 분할
-    const numTestExamples = Math.round(numExamples * testSplit)
-    const numTrainExamples = numExamples - numTestExamples
-
     // 특성 데이터 텐서 생성
-    const xs = tf.tensor2d(shuffledData, [numExamples, 4])
+    const inputs = tf.tensor2d(shuffledData, [numExamples, 4])
 
     // 레이블을 원-핫 인코딩
-    const ys = tf.oneHot(tf.tensor1d(shuffledTargets, 'int32'), IRIS_NUM_CLASSES)
+    const labels = tf.oneHot(tf.tensor1d(shuffledTargets, 'int32'), IRIS_NUM_CLASSES)
 
-    // 훈련/테스트 분할
-    const xTrain = xs.slice([0, 0], [numTrainExamples, 4])
-    const xTest = xs.slice([numTrainExamples, 0], [numTestExamples, 4])
-    const yTrain = ys.slice([0, 0], [numTrainExamples, IRIS_NUM_CLASSES])
-    const yTest = ys.slice([numTrainExamples, 0], [numTestExamples, IRIS_NUM_CLASSES])
-
-    return [xTrain, yTrain, xTest, yTest]
+    return { inputs, labels }
   })
 }
 
@@ -251,14 +220,14 @@ export async function loadIris(onProgress?: ProgressCallback): Promise<IDataset>
 
   try {
     onProgress?.(20, 'processing', '데이터 변환 중...')
-    const [trainInputs, trainLabels, testInputs, testLabels] = convertToTensors(0.2)
+    const { inputs, labels } = convertToTensors()
 
     onProgress?.(80, 'creating', '데이터셋 생성 중...')
-    const dataset = new IrisDataset(trainInputs, trainLabels, testInputs, testLabels)
+    const dataset = new IrisDataset(inputs, labels)
 
     onProgress?.(100, 'completed', '로딩 완료!')
     console.log('✅ Iris dataset loaded successfully')
-    console.log(`📊 Train samples: ${dataset.trainCount}, Test samples: ${dataset.testCount}`)
+    console.log(`📊 Total samples: ${dataset.sampleCount}`)
     console.log(`🏷️ Classes: ${IRIS_CLASSES.join(', ')}`)
 
     return dataset
@@ -267,3 +236,76 @@ export async function loadIris(onProgress?: ProgressCallback): Promise<IDataset>
     throw error
   }
 }
+
+// 레지스트리 등록
+dataRegistry.register({
+  id: 'iris',
+  name: 'Iris Flower Classification',
+  description: '붓꽃 분류 데이터셋 (꽃잎/꽃받침 크기 → 품종 분류)',
+  category: 'sample',
+  loader: loadIris,
+  tags: ['classification', 'tabular', 'beginner'],
+  difficulty: 'beginner',
+  estimatedSize: '5KB',
+  visualizations: [
+    {
+      type: 'scatter',
+      title: '특성 산점도',
+      description: '꽃잎 길이 vs 너비 산점도 (품종별 색상)',
+      chartConfig: {
+        type: 'scatter',
+        xAxis: { column: 'petal_length', label: '꽃잎 길이 (cm)', type: 'continuous' },
+        yAxis: { column: 'petal_width', label: '꽃잎 너비 (cm)', type: 'continuous' },
+        colorBy: 'species',
+        title: 'Iris 꽃잎 특성 분포',
+      },
+    },
+    {
+      type: 'chart',
+      title: '특성 분포',
+      description: '각 특성별 히스토그램',
+      chartConfig: {
+        type: 'histogram',
+        xAxis: { column: 'sepal_length', label: '꽃받침 길이 (cm)', type: 'continuous' },
+        yAxis: { column: 'count', label: '빈도', type: 'continuous' },
+        colorBy: 'species',
+        title: '꽃받침 길이 분포',
+      },
+    },
+    {
+      type: 'table',
+      title: '데이터 테이블',
+      description: '붓꽃 특성 및 품종 정보',
+    },
+  ],
+  prediction: {
+    display: {
+      type: 'tabular',
+      title: 'Iris 품종 예측 결과',
+      description: '꽃잎/꽃받침 특성에 따른 붓꽃 품종 분류 결과',
+      columns: [
+        { key: 'sepal_length', label: '꽃받침 길이 (cm)', type: 'number', format: { precision: 1 } },
+        { key: 'sepal_width', label: '꽃받침 너비 (cm)', type: 'number', format: { precision: 1 } },
+        { key: 'petal_length', label: '꽃잎 길이 (cm)', type: 'number', format: { precision: 1 } },
+        { key: 'petal_width', label: '꽃잎 너비 (cm)', type: 'number', format: { precision: 1 } },
+        { key: 'predicted_class', label: '예측 품종', type: 'text' },
+        { key: 'confidence', label: '신뢰도', type: 'probability', format: { precision: 2, percentage: true } },
+        { key: 'actual_class', label: '실제 품종', type: 'text' },
+      ],
+      sampleLimit: 15,
+      supportsRealtime: true,
+    },
+    input: {
+      type: 'form',
+      title: '붓꽃 특성 입력',
+      description: '꽃받침과 꽃잎의 크기를 입력하여 품종을 예측해보세요',
+      formFields: [
+        { key: 'sepal_length', label: '꽃받침 길이 (cm)', type: 'number', min: 3.0, max: 8.0, step: 0.1, defaultValue: 5.8 },
+        { key: 'sepal_width', label: '꽃받침 너비 (cm)', type: 'number', min: 1.5, max: 5.0, step: 0.1, defaultValue: 3.0 },
+        { key: 'petal_length', label: '꽃잎 길이 (cm)', type: 'number', min: 0.5, max: 7.0, step: 0.1, defaultValue: 3.8 },
+        { key: 'petal_width', label: '꽃잎 너비 (cm)', type: 'number', min: 0.1, max: 3.0, step: 0.1, defaultValue: 1.2 },
+      ],
+    },
+    defaultSamples: { count: 15, useTestSet: true, shuffled: true },
+  },
+})

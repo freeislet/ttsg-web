@@ -8,6 +8,7 @@ export type {
   IDataset,
   DataLoader,
   DataPreset,
+  DatasetDesc,
   ComputedDataFunction,
   ComputedDataConfig,
   DataViewMode,
@@ -18,10 +19,13 @@ export type {
   ChartType,
   AxisConfig,
   ChartConfig,
-  VisualizationConfig
+  VisualizationConfig,
 } from './types'
 
-// 프리셋들
+// 레지스트리
+export { DataRegistry, dataRegistry } from './registry'
+
+// 프리셋들 (레거시 호환성)
 export {
   DATA_PRESETS,
   DATA_PRESETS_MAP,
@@ -31,7 +35,7 @@ export {
   getDataPresets,
   getDataPreset,
   getDefaultVisualization,
-  getVisualizationConfigs
+  getVisualizationConfigs,
 } from './presets'
 
 // 데이터셋 로더들
@@ -45,5 +49,5 @@ export {
   createComputedDataLoader,
   loadLinearData,
   loadSineData,
-  getFunctionsByCategory
+  getFunctionsByCategory,
 } from './datasets'

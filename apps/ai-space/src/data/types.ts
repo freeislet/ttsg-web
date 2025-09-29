@@ -13,24 +13,14 @@ export interface IDataset {
   // 필수 텐서 데이터
   readonly inputs: tf.Tensor
   readonly labels: tf.Tensor
-  
+
   // 메타데이터
   readonly inputShape: number[]
   readonly outputShape: number[]
   readonly inputColumns: string[]
   readonly outputColumns: string[]
   readonly sampleCount: number
-  
-  // 선택적 분할 데이터 (훈련/테스트)
-  readonly trainInputs?: tf.Tensor
-  readonly trainLabels?: tf.Tensor
-  readonly testInputs?: tf.Tensor
-  readonly testLabels?: tf.Tensor
-  
-  // 통계 정보
-  readonly trainCount?: number
-  readonly testCount?: number
-  
+
   // 메모리 정리 함수
   dispose(): void
 }
@@ -48,27 +38,32 @@ export interface ProgressCallback {
 export type DataLoader = (onProgress?: ProgressCallback) => Promise<IDataset>
 
 /**
- * 데이터 프리셋 정의
- * name과 description은 여기서만 정의하여 중복 제거
+ * 데이터셋 설명 정의
  */
-export interface DataPreset {
+export interface DatasetDesc {
   id: string
   name: string
   description: string
   category: DataCategory
   loader: DataLoader
-  
+
   // 메타데이터
   tags?: string[]
   difficulty?: 'beginner' | 'intermediate' | 'advanced'
   estimatedSize?: string // '1.2MB', '50KB' 등
-  
+
   // 시각화 설정
   visualizations?: VisualizationConfig[]
-  
+
   // 예측 결과 표시 설정
   prediction?: PredictionConfig
 }
+
+/**
+ * 임시 호환성 타입 별칭 (점진적 마이그레이션용)
+ * TODO: 모든 참조가 DatasetDesc로 변경되면 제거
+ */
+export type DataPreset = DatasetDesc
 
 /**
  * 계산된 데이터 함수 타입
@@ -107,7 +102,14 @@ export type DataViewMode = 'table' | 'chart' | 'scatter' | 'histogram'
 /**
  * 시각화 타입
  */
-export type VisualizationType = 'table' | 'chart' | 'image' | 'scatter' | 'histogram' | 'heatmap' | 'distribution'
+export type VisualizationType =
+  | 'table'
+  | 'chart'
+  | 'image'
+  | 'scatter'
+  | 'histogram'
+  | 'heatmap'
+  | 'distribution'
 
 /**
  * 차트 타입
@@ -160,7 +162,7 @@ export interface DataNodeState {
   isLoading: boolean
   error?: string
   viewMode: DataViewMode
-  
+
   // 프로그레스 정보
   progress?: {
     percentage: number
@@ -202,7 +204,12 @@ export interface DatasetStats {
 /**
  * 예측 결과 표시 타입
  */
-export type PredictionDisplayType = 'tabular' | 'image-classification' | 'image-grid' | 'chart' | 'custom'
+export type PredictionDisplayType =
+  | 'tabular'
+  | 'image-classification'
+  | 'image-grid'
+  | 'chart'
+  | 'custom'
 
 /**
  * 예측 결과 컬럼 설정
@@ -232,10 +239,10 @@ export interface PredictionDisplayConfig {
   type: PredictionDisplayType
   title: string
   description?: string
-  
+
   // Tabular 타입용 설정
   columns?: PredictionColumn[]
-  
+
   // Image Classification 타입용 설정
   imageConfig?: {
     width: number
@@ -244,16 +251,16 @@ export interface PredictionDisplayConfig {
     colormap?: string
     showOriginal?: boolean // 원본 이미지도 표시할지
   }
-  
+
   // 차트 타입용 설정 (기존 ChartConfig 재사용)
   chartConfig?: ChartConfig
-  
+
   // 커스텀 컴포넌트 설정
   customComponent?: string
-  
+
   // 샘플 수 제한 (너무 많은 결과 방지)
   sampleLimit?: number
-  
+
   // 실시간 예측 지원 여부
   supportsRealtime?: boolean
 }
@@ -270,7 +277,7 @@ export interface PredictionInputConfig {
   type: PredictionInputType
   title: string
   description?: string
-  
+
   // Form 타입용 설정
   formFields?: Array<{
     key: string
@@ -282,7 +289,7 @@ export interface PredictionInputConfig {
     options?: string[]
     defaultValue?: any
   }>
-  
+
   // Canvas 타입용 설정 (MNIST 등)
   canvasConfig?: {
     width: number
@@ -291,14 +298,14 @@ export interface PredictionInputConfig {
     strokeColor?: string
     strokeWidth?: number
   }
-  
+
   // Graph Click 타입용 설정
   graphConfig?: {
     xAxis: AxisConfig
     yAxis: AxisConfig
     clickToPredict?: boolean
   }
-  
+
   // File Upload 타입용 설정
   uploadConfig?: {
     acceptedTypes: string[]
@@ -313,10 +320,10 @@ export interface PredictionInputConfig {
 export interface PredictionConfig {
   // 표시 설정
   display: PredictionDisplayConfig
-  
+
   // 입력 설정 (모델 예측 노드용)
   input?: PredictionInputConfig
-  
+
   // 기본 예측 샘플 (테스트용)
   defaultSamples?: {
     count: number

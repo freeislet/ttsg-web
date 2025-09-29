@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
 import { IDataset, ProgressCallback } from '../../types'
+import { dataRegistry } from '../../registry'
 
 // MNIST 데이터 상수
 const IMAGE_HEIGHT = 28
@@ -20,19 +21,19 @@ const MNIST_LABELS_PATH = 'https://storage.googleapis.com/learnjs-data/model-bui
 class MNISTDataset extends BaseDataset {
   readonly inputs: tf.Tensor
   readonly labels: tf.Tensor
-  readonly trainInputs: tf.Tensor
-  readonly trainLabels: tf.Tensor
-  readonly testInputs: tf.Tensor
-  readonly testLabels: tf.Tensor
-  readonly trainCount: number
-  readonly testCount: number
-
-  // BaseDataset 추상 속성 구현
   readonly inputShape = [28, 28, 1]
   readonly outputShape = [10]
   readonly inputColumns = ['pixel']
   readonly outputColumns = ['digit']
   readonly sampleCount: number
+
+  // 내부적으로 분할 데이터 보관 (헬퍼 메서드용)
+  private readonly trainInputs: tf.Tensor
+  private readonly trainLabels: tf.Tensor
+  private readonly testInputs: tf.Tensor
+  private readonly testLabels: tf.Tensor
+  private readonly trainCount: number
+  private readonly testCount: number
 
   constructor(
     inputs: tf.Tensor,
@@ -185,7 +186,7 @@ export async function loadMNIST(onProgress?: ProgressCallback): Promise<IDataset
 
     onProgress?.(100, 'completed', '로딩 완료!')
     console.log('✅ MNIST dataset loaded successfully')
-    console.log(`📊 Train samples: ${dataset.trainCount}, Test samples: ${dataset.testCount}`)
+    console.log(`📊 Total samples: ${dataset.sampleCount}`)
     
     return dataset
     
@@ -194,3 +195,109 @@ export async function loadMNIST(onProgress?: ProgressCallback): Promise<IDataset
     throw error
   }
 }
+
+// 레지스트리 등록
+dataRegistry.register({
+  id: 'mnist',
+  name: 'MNIST Handwritten Digits (Full)',
+  description: '손글씨 숫자 인식 데이터셋 (28x28 이미지 → 0-9 숫자, 70,000개)',
+  category: 'sample',
+  loader: loadMNIST,
+  tags: ['classification', 'computer-vision', 'beginner'],
+  difficulty: 'beginner',
+  estimatedSize: '11MB',
+  visualizations: [
+    {
+      type: 'image',
+      title: '이미지 그리드',
+      description: '28x28 손글씨 숫자 이미지들을 그리드 형태로 표시',
+      imageConfig: {
+        width: 28,
+        height: 28,
+        channels: 1,
+        colormap: 'grayscale',
+      },
+    },
+    {
+      type: 'chart',
+      title: '클래스 분포',
+      description: '0-9 숫자별 샘플 수 분포',
+      chartConfig: {
+        type: 'bar',
+        xAxis: { column: 'label', label: '숫자', type: 'categorical' },
+        yAxis: { column: 'count', label: '샘플 수', type: 'continuous' },
+        title: 'MNIST 클래스 분포',
+      },
+    },
+    {
+      type: 'table',
+      title: '데이터 테이블',
+      description: '이미지 데이터와 라벨 정보',
+    },
+  ],
+  prediction: {
+    display: {
+      type: 'image-classification',
+      title: 'MNIST 숫자 예측 결과',
+      description: '28x28 이미지와 예측된 숫자를 함께 표시',
+      imageConfig: {
+        width: 28,
+        height: 28,
+        channels: 1,
+        colormap: 'grayscale',
+        showOriginal: true,
+      },
+      columns: [
+        {
+          key: 'image',
+          label: '이미지',
+          type: 'image',
+          format: {
+            width: 56,
+            height: 56,
+            channels: 1,
+            colormap: 'grayscale',
+          },
+        },
+        {
+          key: 'predicted_class',
+          label: '예측 숫자',
+          type: 'text',
+        },
+        {
+          key: 'confidence',
+          label: '신뢰도',
+          type: 'probability',
+          format: {
+            precision: 2,
+            percentage: true,
+          },
+        },
+        {
+          key: 'actual_class',
+          label: '실제 숫자',
+          type: 'text',
+        },
+      ],
+      sampleLimit: 20,
+      supportsRealtime: false,
+    },
+    input: {
+      type: 'canvas',
+      title: '손글씨 숫자 그리기',
+      description: '캔버스에 0-9 숫자를 그려서 예측해보세요',
+      canvasConfig: {
+        width: 280,
+        height: 280,
+        backgroundColor: '#000000',
+        strokeColor: '#ffffff',
+        strokeWidth: 20,
+      },
+    },
+    defaultSamples: {
+      count: 10,
+      useTestSet: true,
+      shuffled: true,
+    },
+  },
+})

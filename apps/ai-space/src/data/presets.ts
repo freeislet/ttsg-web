@@ -3,10 +3,13 @@ import { loadMNIST } from './datasets/sample/mnist'
 import { loadIris } from './datasets/sample/iris'
 import { loadCarMPG } from './datasets/sample/car-mpg'
 import { loadLinearData, loadSineData, createComputedDataLoader } from './datasets/computed'
+import { dataRegistry } from './registry'
 
 /**
  * 사전 정의된 데이터셋 프리셋 배열
  */
+// DEPRECATED: 정적 배열은 점진적으로 제거 예정
+// 현재는 레지스트리 초기 시딩 용도로만 사용
 export const DATA_PRESETS: DataPreset[] = [
   // Sample 데이터 (외부에서 로드)
   {
@@ -590,30 +593,28 @@ export const DATA_PRESETS: DataPreset[] = [
   },
 ]
 
+// 레지스트리 초기화 시딩
+dataRegistry.registerMany(DATA_PRESETS)
+
 /**
- * ID를 키로 하는 프리셋 맵
+ * ID를 키로 하는 프리셋 맵 (레지스트리 기반)
  */
-export const DATA_PRESETS_MAP: Record<string, DataPreset> = DATA_PRESETS.reduce(
-  (map, preset) => {
-    map[preset.id] = preset
-    return map
-  },
-  {} as Record<string, DataPreset>
-)
+export const DATA_PRESETS_MAP: Record<string, DataPreset> = (() => {
+  const map: Record<string, DataPreset> = {}
+  for (const p of dataRegistry.all()) {
+    map[p.id] = p
+  }
+  return map
+})()
 
 /**
  * 카테고리별 프리셋 그룹화
  */
 export const getPresetsByCategory = () => {
-  const categories: Record<string, DataPreset[]> = {
-    sample: [],
-    computed: [],
+  const categories: Record<string, DataPreset[]> = { sample: [], computed: [] }
+  for (const p of dataRegistry.all()) {
+    categories[p.category].push(p)
   }
-
-  DATA_PRESETS.forEach((preset) => {
-    categories[preset.category].push(preset)
-  })
-
   return categories
 }
 
@@ -621,7 +622,7 @@ export const getPresetsByCategory = () => {
  * 태그별 프리셋 필터링
  */
 export const getPresetsByTag = (tag: string): DataPreset[] => {
-  return DATA_PRESETS.filter((preset) => preset.tags?.includes(tag))
+  return dataRegistry.byTag(tag)
 }
 
 /**
@@ -630,21 +631,21 @@ export const getPresetsByTag = (tag: string): DataPreset[] => {
 export const getPresetsByDifficulty = (
   difficulty: 'beginner' | 'intermediate' | 'advanced'
 ): DataPreset[] => {
-  return DATA_PRESETS.filter((preset) => preset.difficulty === difficulty)
+  return dataRegistry.byDifficulty(difficulty)
 }
 
 /**
  * 프리셋 목록 반환
  */
 export const getDataPresets = (): DataPreset[] => {
-  return DATA_PRESETS
+  return dataRegistry.all()
 }
 
 /**
  * 특정 프리셋 반환
  */
 export const getDataPreset = (id: string): DataPreset | undefined => {
-  return DATA_PRESETS_MAP[id]
+  return dataRegistry.get(id)
 }
 
 /**

@@ -1,6 +1,13 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
-import { IDataset, ComputedDataFunction, ComputedDataConfig, FunctionInfo, ProgressCallback } from '../../types'
+import {
+  IDataset,
+  ComputedDataFunction,
+  ComputedDataConfig,
+  FunctionInfo,
+  ProgressCallback,
+} from '../../types'
+import { dataRegistry } from '../../registry'
 
 /**
  * 계산된 데이터 함수 정의
@@ -105,34 +112,11 @@ class ComputedDataset extends BaseDataset {
   readonly outputColumns: string[] = ['y']
   readonly sampleCount: number
 
-  readonly trainInputs: tf.Tensor
-  readonly trainLabels: tf.Tensor
-  readonly testInputs: tf.Tensor
-  readonly testLabels: tf.Tensor
-  readonly trainCount: number
-  readonly testCount: number
-
-  constructor(
-    inputs: tf.Tensor,
-    labels: tf.Tensor,
-    trainInputs: tf.Tensor,
-    trainLabels: tf.Tensor,
-    testInputs: tf.Tensor,
-    testLabels: tf.Tensor
-  ) {
+  constructor(inputs: tf.Tensor, labels: tf.Tensor) {
     super()
-
     this.inputs = inputs
     this.labels = labels
     this.sampleCount = inputs.shape[0]
-
-    this.trainInputs = trainInputs
-    this.trainLabels = trainLabels
-    this.testInputs = testInputs
-    this.testLabels = testLabels
-
-    this.trainCount = trainInputs.shape[0]
-    this.testCount = testInputs.shape[0]
   }
 }
 
@@ -144,7 +128,7 @@ export function createComputedDataLoader(config: ComputedDataConfig) {
     console.log(`🧮 Generating ${config.functionType} data...`)
     onProgress?.(0, 'initializing', '데이터 생성 초기화...')
 
-    const { minX, maxX, numPoints, trainSplit, noiseAmount } = config.parameters
+    const { minX, maxX, numPoints, noiseAmount } = config.parameters
 
     console.log(`🧮 Generating ${config.functionType} dataset with ${numPoints} points`)
 
@@ -172,31 +156,12 @@ export function createComputedDataLoader(config: ComputedDataConfig) {
     const inputs = tf.tensor2d(xValues.map((x) => [x]))
     const labels = tf.tensor2d(yValues.map((y) => [y]))
 
-    // 훈련/테스트 분할
-    onProgress?.(50, 'splitting', '데이터 분할 중...')
-    const trainCount = Math.floor((numPoints * trainSplit) / 100)
-    const testCount = numPoints - trainCount
-
-    const trainInputs = inputs.slice([0, 0], [trainCount, 1])
-    const trainLabels = labels.slice([0, 0], [trainCount, 1])
-    const testInputs = inputs.slice([trainCount, 0], [testCount, 1])
-    const testLabels = labels.slice([trainCount, 0], [testCount, 1])
-
     // 데이터셋 생성
     onProgress?.(90, 'finalizing', '데이터셋 생성 중...')
-    const dataset = new ComputedDataset(
-      inputs,
-      labels,
-      trainInputs,
-      trainLabels,
-      testInputs,
-      testLabels
-    )
+    const dataset = new ComputedDataset(inputs, labels)
 
     onProgress?.(100, 'completed', '데이터 생성 완료!')
-    console.log(
-      `✅ Generated ${config.functionType} dataset: ${trainCount} train, ${testCount} test samples`
-    )
+    console.log(`✅ Generated ${config.functionType} dataset: ${numPoints} samples`)
 
     return dataset
   }
@@ -261,3 +226,84 @@ export const getFunctionsByCategory = () => {
 
   return categories
 }
+
+// computed 데이터셋들을 레지스트리에 등록
+dataRegistry.register({
+  id: 'linear',
+  name: 'Linear Function',
+  description: '선형 함수 데이터 (y = ax + b)',
+  category: 'computed',
+  loader: loadLinearData,
+  tags: ['regression', 'basic', 'beginner'],
+  difficulty: 'beginner',
+  estimatedSize: '1KB',
+  visualizations: [
+    {
+      type: 'chart',
+      title: '선형 함수 그래프',
+      description: 'y = ax + b 형태의 선형 관계',
+      chartConfig: {
+        type: 'line',
+        xAxis: { column: 'x', label: 'X', type: 'continuous' },
+        yAxis: { column: 'y', label: 'Y', type: 'continuous' },
+        title: '선형 함수 (y = ax + b)',
+      },
+    },
+    {
+      type: 'scatter',
+      title: '데이터 포인트',
+      description: '노이즈가 포함된 선형 데이터 포인트',
+      chartConfig: {
+        type: 'scatter',
+        xAxis: { column: 'x', label: 'X', type: 'continuous' },
+        yAxis: { column: 'y', label: 'Y', type: 'continuous' },
+        title: '선형 데이터 포인트',
+      },
+    },
+    {
+      type: 'table',
+      title: '데이터 테이블',
+      description: 'X, Y 좌표 값',
+    },
+  ],
+})
+
+dataRegistry.register({
+  id: 'sine',
+  name: 'Sine Wave',
+  description: '사인파 함수 데이터 (y = A·sin(ωx + φ))',
+  category: 'computed',
+  loader: loadSineData,
+  tags: ['regression', 'trigonometric', 'intermediate'],
+  difficulty: 'intermediate',
+  estimatedSize: '2KB',
+  visualizations: [
+    {
+      type: 'chart',
+      title: '사인파 그래프',
+      description: 'y = A·sin(ωx + φ) 형태의 주기적 함수',
+      chartConfig: {
+        type: 'line',
+        xAxis: { column: 'x', label: 'X (라디안)', type: 'continuous' },
+        yAxis: { column: 'y', label: 'Y', type: 'continuous' },
+        title: '사인파 함수',
+      },
+    },
+    {
+      type: 'chart',
+      title: '주파수 분석',
+      description: '사인파의 주파수 스펙트럼',
+      chartConfig: {
+        type: 'area',
+        xAxis: { column: 'frequency', label: '주파수 (Hz)', type: 'continuous' },
+        yAxis: { column: 'amplitude', label: '진폭', type: 'continuous' },
+        title: '주파수 스펙트럼',
+      },
+    },
+    {
+      type: 'table',
+      title: '데이터 테이블',
+      description: 'X, Y 좌표 값과 위상 정보',
+    },
+  ],
+})

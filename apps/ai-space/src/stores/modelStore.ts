@@ -111,11 +111,7 @@ export const useModelStore = create<ModelStore>()(
               }
             })
 
-            // mutative를 사용하므로 직접 수정 가능
-            // const newNodes = applyNodeChanges(changes, state.nodes as any[])
-            // state.nodes = newNodes as AppNode[]
             state.nodes = applyNodeChanges(changes, state.nodes)
-            // const updatedNodes = updateModelShapes(state.nodes, state.edges) as AppNode[]
             state.nodes = updateModelShapes(state.nodes, state.edges)
 
             // 삭제된 노드들의 모델 인스턴스 제거
