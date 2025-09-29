@@ -58,6 +58,8 @@ interface ModelActions {
     nodeCount: number
     edgeCount: number
     modelInstanceCount: number
+    modelsWithCache: number
+    cacheHitRate: number
     registeredModelTypes: string[]
     registeredNodeTypes: string[]
   }
