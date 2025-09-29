@@ -1,17 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import { useModelStore } from '@/stores/modelStore'
-import { Brain, Database, Trash2, Info, Settings, RefreshCw, Target, BarChart3, Eye } from 'lucide-react'
-import { getDataPreset } from '@/data'
+import {
+  Brain,
+  Database,
+  Trash2,
+  Info,
+  Settings,
+  RefreshCw,
+  Target,
+  BarChart3,
+  Eye,
+} from 'lucide-react'
+import { dataRegistry } from '@/data'
 import DataInspector from './DataInspector'
 import DatasetSelector from './DatasetSelector'
 import PredictionResultsDisplay from './model-editor/PredictionResultsDisplay'
 import { getPredictionConfig } from '@/data/presets'
-import { AppNode } from '@/types/AppNodes'
+import { AppNode, DataNode } from '@/types/AppNodes'
 
 /**
  * 데이터 노드 속성 컴포넌트
  */
-const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeId, nodeData }) => {
+interface DataNodePropsType {
+  nodeId: string
+  nodeData: any
+}
+
+const DataNodeProperties: React.FC<DataNodePropsType> = ({ nodeId, nodeData }) => {
   const { updateNodeData } = useModelStore()
   const [selectedPresetId, setSelectedPresetId] = useState(nodeData?.selectedPresetId || '')
   const [isLoading, setIsLoading] = useState(false)
@@ -23,11 +38,10 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
     setDataset(nodeData?.dataset || null)
   }, [nodeData?.selectedPresetId, nodeData?.dataset])
 
-
   // 데이터셋 선택 및 로드 핸들러
   const handleDatasetSelect = async (presetId: string | null) => {
     setSelectedPresetId(presetId || '')
-    
+
     if (!presetId) {
       // 데이터셋 선택 해제
       setDataset(null)
@@ -37,18 +51,18 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
         dataset: null,
         samples: 0,
         inputFeatures: 0,
-        outputFeatures: 0
+        outputFeatures: 0,
       })
       return
     }
 
     setIsLoading(true)
     try {
-      const preset = getDataPreset(presetId)
+      const preset = dataRegistry.getById(presetId)
       if (preset) {
         const loadedDataset = await preset.loader()
         setDataset(loadedDataset)
-        
+
         // 노드 데이터 업데이트
         updateNodeData(nodeId, {
           ...nodeData,
@@ -58,9 +72,9 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
           inputFeatures: loadedDataset.inputColumns.length,
           outputFeatures: loadedDataset.outputColumns.length,
           inputShape: loadedDataset.inputShape,
-          outputShape: loadedDataset.outputShape
+          outputShape: loadedDataset.outputShape,
         })
-        
+
         console.log(`✅ Dataset loaded: ${preset.name}`)
       }
     } catch (error) {
@@ -84,7 +98,7 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
             isDisabled={isLoading}
             className="text-sm nodrag"
           />
-          
+
           {/* 로딩 상태 */}
           {isLoading && (
             <div className="flex items-center justify-center gap-2 py-2 text-sm text-gray-600">
@@ -142,7 +156,12 @@ const DataNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeI
 /**
  * 모델 노드 속성 컴포넌트
  */
-const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ nodeId, nodeData }) => {
+interface ModelNodePropsType {
+  nodeId: string
+  nodeData: any
+}
+
+const ModelNodeProperties: React.FC<ModelNodePropsType> = ({ nodeId, nodeData }) => {
   const { edges, nodes } = useModelStore()
 
   // 연결된 데이터 노드 정보 찾기
@@ -155,7 +174,7 @@ const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ node
 
     const connectedDataNode = nodes.find(
       (node) => node.type === 'data' && incomingEdges.some((edge) => edge.source === node.id)
-    )
+    ) as DataNode | undefined
 
     return connectedDataNode?.data
   }
@@ -180,7 +199,7 @@ const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ node
             <span className="text-gray-600">모델 타입:</span>
             <span>{nodeData?.modelType || '알 수 없음'}</span>
           </div>
-          {nodeData?.layers && (
+          {nodeData?.layers && Array.isArray(nodeData.layers) && (
             <div className="flex justify-between">
               <span className="text-gray-600">레이어 수:</span>
               <span>{nodeData.layers.length}</span>
@@ -212,9 +231,11 @@ const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ node
                 <span className="text-gray-600">학습 시간:</span>
                 <span>
                   {Math.round(
-                    (nodeData.trainingProgress.endTime.getTime() - 
-                     nodeData.trainingProgress.startTime.getTime()) / 1000
-                  )}초
+                    (nodeData.trainingProgress.endTime.getTime() -
+                      nodeData.trainingProgress.startTime.getTime()) /
+                      1000
+                  )}
+                  초
                 </span>
               </div>
             )}
@@ -228,7 +249,7 @@ const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ node
           <div className="p-3 border-b border-gray-200">
             <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
               <Target className="w-4 h-4 text-blue-500" />
-              예측 결과 ({nodeData.predictions.length}개)
+              예측 결과 ({nodeData.predictions?.length || 0}개)
             </h4>
             {nodeData.lastPredictionTime && (
               <p className="text-xs text-gray-500 mt-1">
@@ -248,18 +269,19 @@ const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ node
       )}
 
       {/* 예측 결과가 없을 때 */}
-      {nodeData?.state === 'trained' && (!nodeData?.predictions || nodeData.predictions.length === 0) && (
-        <div className="bg-blue-50 rounded-lg p-3">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-            <Target className="w-4 h-4 text-blue-500" />
-            예측 테스트
-          </h4>
-          <div className="text-sm text-gray-600">
-            <Eye className="w-4 h-4 inline mr-2" />
-            모델이 학습되었습니다. 노드에서 예측 버튼을 클릭하여 테스트해보세요.
+      {nodeData?.state === 'trained' &&
+        (!nodeData?.predictions || nodeData.predictions.length === 0) && (
+          <div className="bg-blue-50 rounded-lg p-3">
+            <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Target className="w-4 h-4 text-blue-500" />
+              예측 테스트
+            </h4>
+            <div className="text-sm text-gray-600">
+              <Eye className="w-4 h-4 inline mr-2" />
+              모델이 학습되었습니다. 노드에서 예측 버튼을 클릭하여 테스트해보세요.
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* 연결된 데이터 정보 */}
       {connectedDataInfo && (
@@ -268,12 +290,21 @@ const ModelNodeProperties: React.FC<{ nodeId: string; nodeData: any }> = ({ node
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">데이터셋:</span>
-              <span>{String(connectedDataInfo.selectedPresetId || '없음')}</span>
+              <span>
+                {connectedDataInfo?.selectedPresetId
+                  ? String(connectedDataInfo.selectedPresetId)
+                  : '없음'}
+              </span>
             </div>
-            {connectedDataInfo.samples && (
+            {connectedDataInfo?.samples && (
               <div className="flex justify-between">
                 <span className="text-gray-600">샘플 수:</span>
-                <span>{Number(connectedDataInfo.samples).toLocaleString()}</span>
+                <span>
+                  {typeof connectedDataInfo.samples === 'number' ||
+                  typeof connectedDataInfo.samples === 'string'
+                    ? Number(connectedDataInfo.samples).toLocaleString()
+                    : '0'}
+                </span>
               </div>
             )}
           </div>

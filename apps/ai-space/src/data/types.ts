@@ -60,12 +60,6 @@ export interface DatasetDesc {
 }
 
 /**
- * 임시 호환성 타입 별칭 (점진적 마이그레이션용)
- * TODO: 모든 참조가 DatasetDesc로 변경되면 제거
- */
-export type DataPreset = DatasetDesc
-
-/**
  * 계산된 데이터 함수 타입
  */
 export type ComputedDataFunction =
@@ -157,7 +151,7 @@ export interface VisualizationConfig {
  * 데이터 노드 상태
  */
 export interface DataNodeState {
-  preset?: DataPreset
+  preset?: DatasetDesc
   dataset?: IDataset
   isLoading: boolean
   error?: string

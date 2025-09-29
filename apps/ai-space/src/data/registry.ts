@@ -14,7 +14,7 @@ export class DataRegistry {
 
   /** 여러 개 일괄 등록 */
   registerMany(descs: DatasetDesc[]) {
-    for (const d of descs) this.register(d)
+    descs.forEach((desc) => this.register(desc))
   }
 
   /** 전체 목록 */
@@ -22,9 +22,18 @@ export class DataRegistry {
     return Array.from(this.byId.values())
   }
 
-  /** 단건 조회 */
+  /**
+   * ID로 데이터셋 조회
+   */
   get(id: string): DatasetDesc | undefined {
     return this.byId.get(id)
+  }
+
+  /**
+   * ID로 데이터셋 조회 (별칭)
+   */
+  getById(id: string): DatasetDesc | undefined {
+    return this.get(id)
   }
 
   /** 카테고리별 */

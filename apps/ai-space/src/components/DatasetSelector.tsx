@@ -1,7 +1,7 @@
 import React from 'react'
 import Select, { GroupBase, OptionsOrGroups } from 'react-select'
-import { DataPreset } from '@/data/types'
-import { getDataPresets, getPresetsByCategory } from '@/data'
+import { DatasetDesc } from '@/data/types'
+import { dataRegistry } from '@/data'
 
 /**
  * 데이터셋 선택 옵션 타입
@@ -9,7 +9,7 @@ import { getDataPresets, getPresetsByCategory } from '@/data'
 interface DatasetOption {
   value: string
   label: string
-  preset: DataPreset
+  preset: DatasetDesc
 }
 
 /**
@@ -36,25 +36,25 @@ interface DatasetSelectorProps {
  */
 const CATEGORY_LABELS: Record<string, string> = {
   sample: '📊 샘플 데이터',
-  computed: '🧮 계산된 데이터'
+  computed: '🧮 계산된 데이터',
 }
-
 
 /**
  * 커스텀 옵션 컴포넌트
  */
 const CustomOption: React.FC<any> = ({ data, ...props }) => {
   const { preset } = data
-  
+
   return (
-    <div {...props.innerProps} className={`px-3 py-2 cursor-pointer hover:bg-gray-50 ${props.isFocused ? 'bg-blue-50' : ''}`}>
+    <div
+      {...props.innerProps}
+      className={`px-3 py-2 cursor-pointer hover:bg-gray-50 ${props.isFocused ? 'bg-blue-50' : ''}`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-sm font-medium text-gray-900">{preset.name}</span>
-            <span className="text-xs text-gray-500 flex-shrink-0">
-              {preset.estimatedSize}
-            </span>
+            <span className="text-xs text-gray-500 flex-shrink-0">{preset.estimatedSize}</span>
           </div>
           <div className="text-xs text-gray-600 truncate">{preset.description}</div>
         </div>
@@ -67,7 +67,10 @@ const CustomOption: React.FC<any> = ({ data, ...props }) => {
  * 커스텀 그룹 헤더 컴포넌트
  */
 const CustomGroupHeading: React.FC<any> = ({ children, ...props }) => (
-  <div {...props.innerProps} className="px-3 py-1.5 bg-gray-100 font-semibold text-gray-700 text-xs border-b">
+  <div
+    {...props.innerProps}
+    className="px-3 py-1.5 bg-gray-100 font-semibold text-gray-700 text-xs border-b"
+  >
     {children}
   </div>
 )
@@ -78,37 +81,37 @@ const CustomGroupHeading: React.FC<any> = ({ children, ...props }) => (
 const DatasetSelector: React.FC<DatasetSelectorProps> = ({
   value,
   onChange,
-  placeholder = "데이터셋을 선택하세요",
   isDisabled = false,
-  className = ""
+  className = '',
 }) => {
   // 데이터셋을 카테고리별로 그룹화
   const createOptions = (): OptionsOrGroups<DatasetOption, DatasetGroup> => {
-    const categorizedPresets = getPresetsByCategory()
-    
-    return Object.entries(categorizedPresets).map(([category, presets]) => ({
-      label: CATEGORY_LABELS[category] || category,
+    const categories = [
+      { id: 'sample', name: '📊 샘플 데이터', presets: dataRegistry.byCategory('sample') },
+      { id: 'computed', name: '🧮 계산된 데이터', presets: dataRegistry.byCategory('computed') },
+    ]
+    return categories.map(({ id, name, presets }) => ({
+      label: CATEGORY_LABELS[id] || name,
       options: presets.map((preset) => ({
         value: preset.id,
         label: preset.name,
-        preset
-      }))
+        preset,
+      })),
     }))
   }
 
   // 선택된 값 찾기
   const findSelectedOption = (presetId: string | undefined): DatasetOption | null => {
     if (!presetId) return null
-    
-    const allPresets = getDataPresets()
-    const preset = allPresets.find(p => p.id === presetId)
-    
+
+    const preset = dataRegistry.getById(presetId)
+
     if (!preset) return null
-    
+
     return {
       value: preset.id,
       label: preset.name,
-      preset
+      preset,
     }
   }
 
@@ -120,7 +123,7 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
         value={selectedOption}
         onChange={(option) => onChange(option?.value || null)}
         options={createOptions()}
-        placeholder={placeholder}
+        placeholder="데이터셋을 선택하세요..."
         isDisabled={isDisabled}
         isClearable
         isSearchable
@@ -129,7 +132,7 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
         menuPosition="fixed"
         components={{
           Option: CustomOption,
-          GroupHeading: CustomGroupHeading
+          GroupHeading: CustomGroupHeading,
         }}
         styles={{
           control: (base, state) => ({
@@ -138,30 +141,30 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
             borderColor: state.isFocused ? '#f59e0b' : '#d1d5db',
             boxShadow: state.isFocused ? '0 0 0 1px #f59e0b' : 'none',
             '&:hover': {
-              borderColor: '#f59e0b'
-            }
+              borderColor: '#f59e0b',
+            },
           }),
           menu: (base) => ({
             ...base,
             minWidth: '280px',
             right: 0,
             left: 'auto',
-            zIndex: 99999
+            zIndex: 99999,
           }),
           menuPortal: (base) => ({
             ...base,
-            zIndex: 99999
+            zIndex: 99999,
           }),
           menuList: (base) => ({
             ...base,
-            padding: 0
+            padding: 0,
           }),
           option: () => ({
             // 커스텀 옵션 컴포넌트에서 스타일 처리
           }),
           groupHeading: () => ({
             // 커스텀 그룹 헤더에서 스타일 처리
-          })
+          }),
         }}
         className="text-sm"
         classNamePrefix="dataset-select"

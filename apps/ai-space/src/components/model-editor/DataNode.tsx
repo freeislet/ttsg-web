@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Database, Eye, BarChart3, RefreshCw, Settings, X } from 'lucide-react'
 import { useModelStore } from '@/stores/modelStore'
-import { getDataPreset, getDefaultVisualization } from '@/data'
+import { dataRegistry, getDefaultVisualization } from '@/data'
 import DatasetSelector from '@/components/DatasetSelector'
 
 /**
@@ -18,14 +18,16 @@ export type { DataNodeData }
 const DIFFICULTY_COLORS: Record<string, string> = {
   beginner: 'bg-green-100 text-green-800',
   intermediate: 'bg-yellow-100 text-yellow-800',
-  advanced: 'bg-red-100 text-red-800'
+  advanced: 'bg-red-100 text-red-800',
 }
 
 /**
  * 난이도 배지 컴포넌트
  */
 const DifficultyBadge: React.FC<{ difficulty: string }> = ({ difficulty }) => (
-  <span className={`inline-block px-1.5 py-0.5 text-xs rounded ${DIFFICULTY_COLORS[difficulty] || 'bg-gray-100 text-gray-800'}`}>
+  <span
+    className={`inline-block px-1.5 py-0.5 text-xs rounded ${DIFFICULTY_COLORS[difficulty] || 'bg-gray-100 text-gray-800'}`}
+  >
     {difficulty}
   </span>
 )
@@ -35,7 +37,7 @@ const DifficultyBadge: React.FC<{ difficulty: string }> = ({ difficulty }) => (
  */
 const filterNonDifficultyTags = (tags: string[]): string[] => {
   const difficultyTags = ['beginner', 'intermediate', 'advanced']
-  return tags.filter(tag => !difficultyTags.includes(tag.toLowerCase()))
+  return tags.filter((tag) => !difficultyTags.includes(tag.toLowerCase()))
 }
 
 /**
@@ -95,16 +97,11 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       event.stopPropagation()
       console.log(`🔍 Creating visualization node for data node: ${id}`)
 
-      // 기본 시각화 설정 가져오기
-      const defaultVisualization = nodeData.selectedPresetId
-        ? getDefaultVisualization(nodeData.selectedPresetId)
-        : null
-
       if (addVisualizationNode) {
-        addVisualizationNode(id, { x: 300, y: 0 }, defaultVisualization)
+        addVisualizationNode({ x: 300, y: 0 })
       }
     },
-    [id, nodeData.selectedPresetId, addVisualizationNode]
+    [id, addVisualizationNode]
   )
 
   // 데이터 분할 설정 업데이트 핸들러
@@ -151,9 +148,9 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       setIsLoading(true)
       setError(null) // 로딩 시작 시 이전 에러 초기화
       setProgress({ percentage: 0, stage: 'initializing', message: '초기화 중...' })
-      
+
       try {
-        const preset = getDataPreset(presetId)
+        const preset = dataRegistry.getById(presetId)
         if (preset) {
           // 프로그레스 콜백 정의
           const onProgress = (percentage: number, stage: string, message?: string) => {
@@ -180,7 +177,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         console.error('❌ Failed to load dataset:', error)
         const errorMessage = error instanceof Error ? error.message : '데이터셋 로딩에 실패했습니다'
         setError(errorMessage)
-        
+
         // 에러 발생 시 선택 상태 초기화
         setSelectedPresetId(null)
         updateNodeData(id, {
@@ -204,7 +201,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const sampleCount = nodeData.samples || 0
   const inputCount = nodeData.inputFeatures || 0
   const outputCount = nodeData.outputFeatures || 0
-  const preset = nodeData.selectedPresetId ? getDataPreset(nodeData.selectedPresetId) : null
+  const preset = nodeData.selectedPresetId ? dataRegistry.getById(nodeData.selectedPresetId) : null
 
   return (
     <div
@@ -256,9 +253,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
               {/* 데이터셋 설명 */}
               {preset?.description && (
-                <div className="text-xs text-gray-600 mb-2 line-clamp-2">
-                  {preset.description}
-                </div>
+                <div className="text-xs text-gray-600 mb-2 line-clamp-2">{preset.description}</div>
               )}
 
               {/* 태그 및 난이도 배지 표시 */}
@@ -266,27 +261,33 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 <div className="flex flex-wrap gap-1 mb-2">
                   {/* 난이도 배지 */}
                   {preset?.difficulty && <DifficultyBadge difficulty={preset.difficulty} />}
-                  
+
                   {/* 태그들 */}
-                  {preset?.tags && preset.tags.length > 0 && (() => {
-                    const filteredTags = filterNonDifficultyTags(preset.tags)
-                    return filteredTags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-block px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))
-                  })()}
-                  
+                  {preset?.tags &&
+                    preset.tags.length > 0 &&
+                    (() => {
+                      const filteredTags = filterNonDifficultyTags(preset.tags)
+                      return filteredTags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-block px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    })()}
+
                   {/* 추가 태그 개수 표시 */}
-                  {preset?.tags && preset.tags.length > 0 && (() => {
-                    const filteredTags = filterNonDifficultyTags(preset.tags)
-                    return filteredTags.length > 3 && (
-                      <span className="text-xs text-gray-500">+{filteredTags.length - 3}</span>
-                    )
-                  })()}
+                  {preset?.tags &&
+                    preset.tags.length > 0 &&
+                    (() => {
+                      const filteredTags = filterNonDifficultyTags(preset.tags)
+                      return (
+                        filteredTags.length > 3 && (
+                          <span className="text-xs text-gray-500">+{filteredTags.length - 3}</span>
+                        )
+                      )
+                    })()}
                 </div>
               ) : null}
 
@@ -419,7 +420,7 @@ const DataNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     데이터 로딩 중...
                   </div>
-                  
+
                   {/* 프로그레스바 */}
                   {progress && (
                     <div className="space-y-1">

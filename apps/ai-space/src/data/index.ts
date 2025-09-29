@@ -7,7 +7,6 @@ export type {
   DataCategory,
   IDataset,
   DataLoader,
-  DataPreset,
   DatasetDesc,
   ComputedDataFunction,
   ComputedDataConfig,
@@ -15,20 +14,19 @@ export type {
   DataNodeState,
   FunctionInfo,
   DatasetStats,
+  VisualizationConfig,
+  PredictionConfig,
   VisualizationType,
   ChartType,
   AxisConfig,
   ChartConfig,
-  VisualizationConfig,
 } from './types'
 
 // 레지스트리
 export { DataRegistry, dataRegistry } from './registry'
 
-// 프리셋들 (레거시 호환성)
+// 헬퍼 함수들 (레지스트리 기반)
 export {
-  DATA_PRESETS,
-  DATA_PRESETS_MAP,
   getPresetsByCategory,
   getPresetsByTag,
   getPresetsByDifficulty,
@@ -36,6 +34,9 @@ export {
   getDataPreset,
   getDefaultVisualization,
   getVisualizationConfigs,
+  getPredictionConfig,
+  getPredictionDisplayConfig,
+  getPredictionInputConfig,
 } from './presets'
 
 // 데이터셋 로더들
