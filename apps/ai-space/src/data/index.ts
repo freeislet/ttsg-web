@@ -7,3 +7,6 @@ export * from './types'
 
 // 레지스트리
 export { DataRegistry, dataRegistry } from './registry'
+
+// 데이터셋들 등록 실행 (side-effect)
+import './datasets'

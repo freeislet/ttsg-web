@@ -1,43 +1,6 @@
 import * as tf from '@tensorflow/tfjs'
 
 /**
- * 데이터 카테고리 타입
- */
-export type DataCategory = 'sample' | 'computed'
-
-/**
- * 데이터셋 인터페이스
- * 모든 데이터는 이 형태로 통일됨
- */
-export interface IDataset {
-  // 필수 텐서 데이터
-  readonly inputs: tf.Tensor
-  readonly labels: tf.Tensor
-
-  // 메타데이터
-  readonly inputShape: number[]
-  readonly outputShape: number[]
-  readonly inputColumns: string[]
-  readonly outputColumns: string[]
-  readonly sampleCount: number
-
-  // 메모리 정리 함수
-  dispose(): void
-}
-
-/**
- * 프로그레스 콜백 타입 (재사용을 위해 여기서도 정의)
- */
-export interface ProgressCallback {
-  (progress: number, stage: string, message?: string): void
-}
-
-/**
- * 데이터 로더 함수 타입
- */
-export type DataLoader = (onProgress?: ProgressCallback) => Promise<IDataset>
-
-/**
  * 데이터셋 설명 정의
  */
 export interface DatasetDesc {
@@ -60,32 +23,39 @@ export interface DatasetDesc {
 }
 
 /**
- * 계산된 데이터 함수 타입
+ * 데이터 카테고리 타입
  */
-export type ComputedDataFunction =
-  | 'linear'
-  | 'quadratic'
-  | 'cubic'
-  | 'polynomial'
-  | 'sine'
-  | 'cosine'
-  | 'tangent'
-  | 'sigmoid'
-  | 'gaussian'
+export type DataCategory = 'sample' | 'computed'
 
 /**
- * 계산된 데이터 설정
+ * 데이터 로더 함수 타입
  */
-export interface ComputedDataConfig {
-  functionType: ComputedDataFunction
-  parameters: {
-    minX: number
-    maxX: number
-    numPoints: number
-    trainSplit: number
-    noiseAmount: number
-    [key: string]: number // 함수별 추가 파라미터
-  }
+export type DataLoader = (onProgress?: ProgressCallback) => Promise<IDataset>
+
+/**
+ * 데이터셋 인터페이스
+ */
+export interface IDataset {
+  // 필수 텐서 데이터
+  readonly inputs: tf.Tensor
+  readonly labels: tf.Tensor
+
+  // 메타데이터
+  readonly inputShape: number[]
+  readonly outputShape: number[]
+  readonly inputColumns: string[]
+  readonly outputColumns: string[]
+  readonly sampleCount: number
+
+  // 메모리 정리 함수
+  dispose(): void
+}
+
+/**
+ * 프로그레스 콜백 타입
+ */
+export interface ProgressCallback {
+  (progress: number, stage: string, message?: string): void
 }
 
 /**
@@ -163,17 +133,6 @@ export interface DataNodeState {
     stage: string
     message?: string
   }
-}
-
-/**
- * 함수 정보 (computed 데이터용)
- */
-export interface FunctionInfo {
-  name: string
-  description: string
-  formula: string
-  category: 'basic' | 'trigonometric' | 'advanced'
-  defaultParams?: Record<string, number>
 }
 
 /**

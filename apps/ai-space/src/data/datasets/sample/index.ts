@@ -1,13 +1,13 @@
 /**
- * Sample 데이터셋 로더들
- * 외부에서 다운로드하는 실제 데이터셋들
+ * Sample 데이터셋 등록
+ * 각 데이터셋을 import하여 dataRegistry에 자동 등록
  */
 
-export { loadMNIST } from './mnist'
-export { loadIris, IRIS_CLASSES } from './iris'
-export { loadCarMPG } from './car-mpg'
+import './mnist'
+import './iris'  
+import './car-mpg'
 
 // 향후 추가될 sample 데이터셋들:
-// export { loadCIFAR10 } from './cifar10'
-// export { loadFashionMNIST } from './fashion-mnist'
-// export { loadTitanic } from './titanic'
+// import './cifar10'
+// import './fashion-mnist'
+// import './titanic'

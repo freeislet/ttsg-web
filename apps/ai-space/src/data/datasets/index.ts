@@ -1,26 +1,10 @@
 /**
- * 데이터셋 로더들의 통합 export
+ * 데이터셋 등록 모듈
+ * 각 데이터셋들이 자동으로 dataRegistry에 등록되도록 import
  */
 
-// 기본 클래스
-export { BaseDataset } from './BaseDataset'
+// Sample 데이터셋들을 import하여 registry 등록 실행
+import './sample'
 
-// Sample 데이터셋들 (외부 다운로드)
-export {
-  loadMNIST,
-  loadIris,
-  loadCarMPG,
-  IRIS_CLASSES
-} from './sample'
-
-// Computed 데이터셋들 (프로그래밍 생성)
-export {
-  COMPUTED_FUNCTIONS,
-  createComputedDataLoader,
-  loadLinearData,
-  loadSineData,
-  getFunctionsByCategory
-} from './computed'
-
-// 타입들
-export type { IDataset, DataPreset, DataLoader } from '../types'
+// Computed 데이터셋들을 import하여 registry 등록 실행  
+import './computed'

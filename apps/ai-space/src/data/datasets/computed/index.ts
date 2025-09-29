@@ -1,13 +1,47 @@
 import * as tf from '@tensorflow/tfjs'
 import { BaseDataset } from '../BaseDataset'
-import {
-  IDataset,
-  ComputedDataFunction,
-  ComputedDataConfig,
-  FunctionInfo,
-  ProgressCallback,
-} from '../../types'
+import { IDataset, ProgressCallback } from '../../types'
 import { dataRegistry } from '../../registry'
+
+/**
+ * 계산된 데이터 함수 타입
+ */
+export type ComputedDataFunction =
+  | 'linear'
+  | 'quadratic'
+  | 'cubic'
+  | 'polynomial'
+  | 'sine'
+  | 'cosine'
+  | 'tangent'
+  | 'sigmoid'
+  | 'gaussian'
+
+/**
+ * 계산된 데이터 설정
+ */
+export interface ComputedDataConfig {
+  functionType: ComputedDataFunction
+  parameters: {
+    minX: number
+    maxX: number
+    numPoints: number
+    trainSplit: number
+    noiseAmount: number
+    [key: string]: number // 함수별 추가 파라미터
+  }
+}
+
+/**
+ * 함수 정보 (computed 데이터용)
+ */
+export interface FunctionInfo {
+  name: string
+  description: string
+  formula: string
+  category: 'basic' | 'trigonometric' | 'advanced'
+  defaultParams?: Record<string, number>
+}
 
 /**
  * 계산된 데이터 함수 정의
